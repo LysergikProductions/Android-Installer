@@ -80,7 +80,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 	else
 		export OBBname=$(basename "$OBBfilePath"); printf "OBB Name: $OBBname\n\n"
 		export launchCMD="monkey -p $OBBname -v 1"; export amazonBuild="false"
-		export OBBvalid="false"
+		export OBBvalid="true"
 	fi
 	
 	until [ $OBBvalid == "true" ]
