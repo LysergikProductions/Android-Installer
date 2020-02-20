@@ -41,7 +41,7 @@ function MAIN() {
 		MAIN
   	fi
 	wait
-	
+
 	#Check for device connection; reset script in case of error
 	printf "\nMounting device...\n\n"
 	if adb shell exit && adb devices; then
@@ -57,7 +57,7 @@ function MAIN() {
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 		MAIN
 	fi
-	
+
 	getOBB; getAPK; INSTALL
 	exit
 }
@@ -82,7 +82,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		export launchCMD="monkey -p $OBBname -v 1"; export amazonBuild="false"
 		export OBBvalid="true"
 	fi
-	
+
 	until [ $OBBvalid == "true" ]
 	do
 		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n-----------------------------------------\n\n"
@@ -117,7 +117,7 @@ function INSTALL(){
 	}; then
 		printf "\nSuccess! Launching app..\n\n"
 		adb shell "$launchCMD"
-		
+
 		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n-----------------------------------------\n\n"
 		printf "Success!\n\n"
 	else
@@ -129,7 +129,7 @@ function INSTALL(){
 
 		sleep 1; printf "\nRE0 - The install process could not be executed; resetting script in..\n"; sleep 1
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-		
+
 		MAIN
 	fi
 }
