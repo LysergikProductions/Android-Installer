@@ -108,11 +108,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		export OBBvalid="false"; printHead
 		checkDeviceConnection; printTitle
 		printf "\n%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
-		getOBB
-	elif [ "$OBBfilePath" == "bw" ]; then
-		export OBBvalid="true"
-		export OBBname="com.budgestudios.googleplay.BudgeWorld"; printf "OBB Name: $OBBname\n\n"
-		export launchCMD="monkey -p $OBBname -v 1"
+		getOBB"
 	elif [[ ! "$OBBfilePath" == *"com."* ]]; then
 		export OBBvalid="false"
 		export OBBname=$(basename "$OBBfilePath"); printf "OBB Name: $OBBname\n\n"
