@@ -1,5 +1,5 @@
 #!/bin/bash
-#InstallGoogle_1.1.1-release.sh
+#InstallGoogle_1.1.2-release.sh
 #Nikolas A. Wagner © 2020
 #License: GNU GPLv3
 
@@ -7,8 +7,8 @@
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 
 #some global variables
-scriptName="InstallGoogle_1.1.1-release"; scriptTitle="*MONKEY INSTALLER*"; author="Nikolas A. Wagner"
-scriptVersion="1.1.1"; scriptVersionType="release"; license="GNU GPLv3"
+scriptName="InstallGoogle_1.1.2-release"; scriptTitle="*MONKEY INSTALLER*"; author="Nikolas A. Wagner"
+scriptVersion="1.1.2"; scriptVersionType="release"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; adbVersion=$(adb version)
 
@@ -57,11 +57,9 @@ function printTitle(){
 }
 
 #Check for device connection; reset script in case of error
-function checkDeviceConnection(){
-	printf "\nMounting device...\n\n"
-	if adb shell settings put global development_settings_enabled 1; then
-		deviceConnect="true"
-
+function adbWAIT(){ #update the script on status of adb connection
+	if (adb shell settings put global development_settings_enabled 1); then
+		export deviceConnect="true"
 	else
 		loopFromError="true"; deviceConnect="false"
 		export errorMessage="RE0 - No devices found, or found more than one connected.\n\n"
@@ -75,20 +73,11 @@ function checkDeviceConnection(){
 	fi
 }
 
-function adbWAIT(){ #update the script on status of adb connection
-	until adb shell settings put global development_settings_enabled 1
-	do
-		deviceConnect="false"
-		printHead
-	done
-	deviceConnect="true"
-}
-
 function MAIN(){
 	#checking for fatal error while calling the main functions of the script
 	if {
-		printHead
-		checkDeviceConnection; adb devices
+		printHead; printf "\nMounting device...\n\n"
+		adbWAIT; adb devices
 		printTitle
 		getOBB; adbWAIT
 		getAPK; adbWAIT
@@ -99,14 +88,13 @@ function MAIN(){
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 		echo; exit 1
 	fi
-	exit
 }
 
 function getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
 	read -p 'Drag OBB anywhere in here: ' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	if [ "$OBBfilePath" == "" ]; then
-		export OBBvalid="false"; printHead
-		checkDeviceConnection; printTitle
+		export OBBvalid="false"; printHead | wait
+		printTitle
 		printf "\n%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
 	elif [[ ! "$OBBfilePath" == *"com."* ]]; then
@@ -127,6 +115,13 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getOBB
 	done
+	
+	adbWAIT
+	if [[ $deviceConnect == "true" ]]; then
+		getAPK
+	else
+		export deviceConnect="false"; printHead
+	fi
 }
 
 function getAPK(){
@@ -139,6 +134,15 @@ function getAPK(){
 		getAPK
 	elif [[ "$APKfilePath" == *".apk"* ]]; then
 		export APKvalid="true"
+		export APKname=$(basename "$APKfilePath")
+		
+		adbWAIT
+		if [[ $deviceConnect == "true" ]]; then
+			INSTALL
+		else
+			export deviceConnect="false"
+			printHead
+		fi
 	else
 		export APKvalid="false"
 	fi
@@ -150,8 +154,6 @@ function getAPK(){
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getAPK
 	done
-
-	export APKname=$(basename "$APKfilePath")
 }
 
 function INSTALL(){
@@ -161,13 +163,13 @@ function INSTALL(){
 		printf "\nInstalling APK..\n"
 		adb install --no-streaming "$APKfilePath"
 	}; then
-		printf "\nSuccess! Launching app..\n\n"
-		adb shell "$launchCMD"
+		printf "\n\nLaunching app."
+		adb shell "$launchCMD" > /dev/null 2>&1; sleep 1; printf " ."; sleep 1; printf " .\n"
 
 		errorMessage="Any previous error messages will be printed to a log at this time in the next release!"
-		printf "\nSuccess!\n\n"
+		printf "\nGoodbye!\n\n"; exit
 	else
-		export loopFromError="true"
+			export loopFromError="true"
     		export errorMessage="RE1 - Fatal error while executing INSTALL function.\n\n"
     		export errorMessage+="             $UItrouble\n"
     		export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
