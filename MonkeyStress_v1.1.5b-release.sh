@@ -172,6 +172,10 @@ function RUN(){ #this function triggers adb monkey on the device
 	if adb shell "$CMD"; then
 		wait; printf "\nSuccess!!! The monkey dances in celebration!\n\n"
 
+		#disable pointer location debug and unlock screen rotation
+		adb shell settings put system pointer_location 0
+		adb shell settings put system user_rotation 1
+		
 		echo "$instruct" #here the user is asked if they want to exit the scipt or perform it again
 		select opt in "${options[@]}"
 		do
@@ -224,10 +228,6 @@ function RUN(){ #this function triggers adb monkey on the device
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 		MAIN
 	fi
-	
-	#disable pointer location debug and unlock screen rotation
-	adb shell settings put system pointer_location 0
-	adb shell settings put system user_rotation 1
 }
 
 function getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
