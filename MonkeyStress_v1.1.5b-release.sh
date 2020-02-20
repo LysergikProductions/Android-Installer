@@ -238,10 +238,12 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		printf "You forgot to drag the OBB!\n\n"; getOBB
 	elif [ "$FilePath" == *".amazon."* ]; then
 		export amazonBuild="true"
-		export OBB=$(basename "$FilePath"); printf "OBB Name: $OBB\n"
+		OBB="${FilePath#*:*}"
+		export OBB=$(basename "$OBB"); printf "OBB Name: $OBB\n"
 	else
 		export amazonBuild="false"
-		export OBB=$(basename "$FilePath"); printf "OBB Name: $OBB\n"
+		OBB="${FilePath#*:*}"
+		export OBB=$(basename "$OBB"); printf "OBB Name: $OBB\n"
 	fi
 
 	until [[ $OBB == *"com."* ]] #ensures that the OBB name at least *appears* correct
