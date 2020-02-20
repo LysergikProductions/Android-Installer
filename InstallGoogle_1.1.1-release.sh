@@ -137,8 +137,8 @@ function getAPK(){
 		export APKvalid="false"
 		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
 		getAPK
-	elif [[ ! "$APKfilePath" == *".apk"* ]]; then
-		export APKvalid="false"
+	elif [[ "$APKfilePath" == *".apk"* ]]; then
+		export APKvalid="true"
 	else
 		export APKvalid="false"
 	fi
