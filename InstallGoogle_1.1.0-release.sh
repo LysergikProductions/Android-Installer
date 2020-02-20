@@ -72,11 +72,6 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 	elif [ "$OBBfilePath" == *".amazon."* ]; then
 		export amazonBuild="true"; export OBBvalid="true"
 		export OBBname=$(basename "$OBBfilePath"); printf "OBB Name: $OBBname\n\n"
-	elif [ "$OBBfilePath" == "bw" ]; then
-		export OBB="com.budgestudios.googleplay.BudgeWorld"
-		export OBBname="com.budgestudios.googleplay.BudgeWorld"; printf "OBB Name: $OBBname\n\n"
-		export OBBvalid="true"
-		export launchCMD="monkey -p $OBBname -v 1"
 	else
 		export OBBname=$(basename "$OBBfilePath"); printf "OBB Name: $OBBname\n\n"
 		export launchCMD="monkey -p $OBBname -v 1"; export amazonBuild="false"
