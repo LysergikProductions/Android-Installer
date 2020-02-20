@@ -61,7 +61,7 @@ function checkDeviceConnection(){
 	printf "\nMounting device...\n\n"
 	if adb shell settings put global development_settings_enabled 1; then
 		deviceConnect="true"
-		
+
 	else
 		loopFromError="true"; deviceConnect="false"
 		export errorMessage="RE0 - No devices found, or found more than one connected.\n\n"
@@ -136,7 +136,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 function getAPK(){
 	APKvalid="true"; echo
 	read -p 'Drag APK anywhere in here: ' APKfilePath
-	
+
 	if [ "$APKfilePath" == "" ]; then
 		export APKvalid="false"
 		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
@@ -146,7 +146,7 @@ function getAPK(){
 	else
 		export APKvalid="false"
 	fi
-	
+
 	until [ "$APKvalid" == "true" ]
 	do
 		echo
@@ -154,7 +154,7 @@ function getAPK(){
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getAPK
 	done
-	
+
 	export APKname=$(basename "$APKfilePath")
 }
 
@@ -172,10 +172,10 @@ function INSTALL(){
 		printf "\nSuccess!\n\n"
 	else
 		export loopFromError="true"
-    	export errorMessage="RE1 - Fatal error while executing INSTALL function.\n\n"
-    	export errorMessage+="             $UItrouble\n"
-    	export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
-    	export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
+    		export errorMessage="RE1 - Fatal error while executing INSTALL function.\n\n"
+    		export errorMessage+="             $UItrouble\n"
+    		export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
+    		export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
 
 		sleep 1; printf "\nRE1 - The install process could not be executed; resetting script in..\n"; sleep 1
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
