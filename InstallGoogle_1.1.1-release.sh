@@ -108,7 +108,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		export OBBvalid="false"; printHead
 		checkDeviceConnection; printTitle
 		printf "\n%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
-		getOBB"
+		getOBB
 	elif [[ ! "$OBBfilePath" == *"com."* ]]; then
 		export OBBvalid="false"
 		export OBBname=$(basename "$OBBfilePath"); printf "OBB Name: $OBBname\n\n"
@@ -123,7 +123,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 
 	until [ $OBBvalid == "true" ]
 	do
-		printf "%*s\n\n" $[$COLS/2] "That's not an OBB!"
+		printf "%*s\n\n" $[$COLS/2] "That\'s not an OBB!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getOBB
 	done
@@ -146,7 +146,7 @@ function getAPK(){
 	until [ "$APKvalid" == "true" ]
 	do
 		echo
-		printf "%*s\n\n" $[$COLS/2] "That's not an APK!"
+		printf "%*s\n\n" $[$COLS/2] "That\'s not an APK!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getAPK
 	done
@@ -171,7 +171,7 @@ function INSTALL(){
     		export errorMessage="RE1 - Fatal error while executing INSTALL function.\n\n"
     		export errorMessage+="             $UItrouble\n"
     		export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
-    		export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
+    		export errorMessage+="For more help on this, search for ADB fixAll in google drive."
 
 		sleep 1; printf "\nRE1 - The install process could not be executed; resetting script in..\n"; sleep 1
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
