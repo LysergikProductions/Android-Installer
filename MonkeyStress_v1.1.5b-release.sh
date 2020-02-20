@@ -107,7 +107,7 @@ function checkADB(){
 			echo "error in netReady"
 		fi
 		
-		echo "Connected to network!
+		echo "Connected to network!"
 		printf "\nADB is not installed on this computer.. ADB is required to run this script.\n\n"; sleep 1
 		echo "$instruct" #here the user is asked if they want to install ADB on their machine
 		select opt in "${options[@]}"
