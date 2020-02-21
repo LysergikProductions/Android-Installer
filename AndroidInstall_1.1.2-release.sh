@@ -24,14 +24,13 @@ function printHead(){
     	printf "$errorMessage\n\n"
 
     	if [ $deviceConnect = "false" ]; then
-			until adb shell exit
-			do
+			until adb shell exit; do
 				clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
     			printf "$errorMessage\n\n\n -- waiting for device --\n"
 				printf " ."; sleep 1; printf " ."; sleep 1; printf " ."; sleep 1
-				$deviceConnect = "false"
+				export deviceConnect="false"
 			done
-			$deviceConnect = "true"
+			export deviceConnect="true"
 		elif [ $deviceConnect = "true" ]; then
 			echo
 		else
@@ -56,23 +55,6 @@ function printTitle(){
 	printf "%*s\n\n" $[$COLS/2] "$UIsep_title"
 }
 
-#Check for device connection; reset script in case of error
-function adbWAIT(){ #update the script on status of adb connection
-	if (adb shell settings put global development_settings_enabled 1); then
-		export deviceConnect="true"
-	else
-		loopFromError="true"; deviceConnect="false"
-		export errorMessage="RE0 - No devices found, or found more than one connected.\n\n"
-    	export errorMessage+="             $UItrouble\n"
-    	export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
-    	export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
-
-		sleep 1; printf "\nRE0 - Could not connect to just one device; resetting script in..\n"; sleep 1
-		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-		MAIN
-	fi
-}
-
 function MAIN(){
 	#checking for fatal error while calling the main functions of the script
 	if {
@@ -90,11 +72,28 @@ function MAIN(){
 	fi
 }
 
+#Check for device connection; reset script in case of error
+function adbWAIT(){ #update the script on status of adb connection
+	if (adb shell settings put global development_settings_enabled 1); then
+		export deviceConnect="true"
+	else
+		loopFromError="true"; deviceConnect="false"
+		export errorMessage="RE0 - No devices found, or found more than one connected.\n\n"
+    	export errorMessage+="             $UItrouble\n"
+    	export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
+    	export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
+
+		sleep 1; printf "\nRE0 - Could not connect to just one device; resetting script in..\n"; sleep 1
+		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+		MAIN
+	fi
+}
+
 function getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
 	read -r -p 'Drag OBB anywhere in here: ' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	if [ "$OBBfilePath" == "" ]; then
-		export OBBvalid="false"; printHead | wait
-		printTitle
+		export OBBvalid="false"
+		printHead; printTitle
 		printf "\n%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
 	elif [[ ! "$OBBfilePath" == *"com."* ]]; then
@@ -111,19 +110,15 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		export launchCMD="monkey -p $OBBname -v 1"
 	fi
 
-	until [ $OBBvalid == "true" ]
-	do
-		printf "%*s\n\n" $[$COLS/2] "That\'s not an OBB!"
+	until [ $OBBvalid == "true" ]; do
+		printHead; printTitle
+		printf "%*s\n\n" $[$COLS/2] "That is not an OBB!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getOBB
 	done
 
 	adbWAIT
-	if [[ $deviceConnect == "true" ]]; then
-		getAPK
-	else
-		export deviceConnect="false"; printHead
-	fi
+	if [[ $deviceConnect == "true" ]]; then getAPK; else export deviceConnect="false"; printHead; fi
 }
 
 function getAPK(){
@@ -142,20 +137,14 @@ function getAPK(){
 		printf "APK Name: $APKname\n\n"
 
 		adbWAIT
-		if [[ $deviceConnect == "true" ]]; then
-			INSTALL
-		else
-			export deviceConnect="false"
-			printHead
-		fi
+		if [[ $deviceConnect == "true" ]]; then INSTALL; else export deviceConnect="false"; printHead; fi
 	else
 		export APKvalid="false"
 	fi
 
-	until [ "$APKvalid" == "true" ]
-	do
+	until [ "$APKvalid" == "true" ]; do
 		echo
-		printf "%*s\n\n" $[$COLS/2] "That\'s not an APK!"
+		printf "%*s\n\n" $[$COLS/2] "That is not an APK!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getAPK
 	done
@@ -187,4 +176,11 @@ function INSTALL(){
 	fi
 }
 
+function checkVersion(){
+	#clone Android-Install repo and mv properties.txt into working directory of this script
+	currentVersion=$(grep -n "_version " properties.txt); export currentVersion="${currentVersion##* }"
+	if [ "$scriptVersion" == "$currentVersion" ]; then echo "This script is up-to-date!"; else echo "Update required.."; fi
+}
+
+#sleep 2 | checkVersion
 MAIN
