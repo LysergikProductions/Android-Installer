@@ -112,7 +112,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 
 	until [ $OBBvalid == "true" ]; do
 		printHead; printTitle
-		printf "%*s\n\n" $[$COLS/2] "That is not an OBB!"
+		printf "\n%*s\n\n" $[$COLS/2] "That is not an OBB!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getOBB
 	done
@@ -126,6 +126,7 @@ function getAPK(){
 	read -r -p 'Drag APK anywhere in here: ' APKfilePath
 
 	if [ "$APKfilePath" == "" ]; then
+		printHead; printTitle
 		export APKvalid="false"
 		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
 		getAPK
@@ -143,7 +144,7 @@ function getAPK(){
 	fi
 
 	until [ "$APKvalid" == "true" ]; do
-		echo
+		printHead; printTitle
 		printf "%*s\n\n" $[$COLS/2] "That is not an APK!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getAPK
