@@ -18,15 +18,15 @@ UItrouble="-- Troubleshooting --"
 
 function printHead(){
 	if [ $loopFromError = "false" ]; then
-    	clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
+    		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then
-    	clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
-    	printf "$errorMessage\n\n"
+    		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
+    		printf "$errorMessage\n\n"
 
     		if [ $deviceConnect = "false" ]; then
 			until adb shell exit; do
 				clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
-    			printf "$errorMessage\n\n\n -- waiting for device --\n"
+    				printf "$errorMessage\n\n\n -- waiting for device --\n"
 				printf " ."; sleep 1; printf " ."; sleep 1; printf " ."; sleep 1
 				export deviceConnect="false"
 			done
@@ -139,9 +139,7 @@ function getAPK(){
 
 		adbWAIT
 		if [[ $deviceConnect == "true" ]]; then INSTALL; else export deviceConnect="false"; printHead; fi
-	else
-		export APKvalid="false"
-	fi
+	else export APKvalid="false"; fi
 
 	until [ "$APKvalid" == "true" ]; do
 		printHead; printTitle
