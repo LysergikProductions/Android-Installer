@@ -23,7 +23,7 @@ function printHead(){
     	clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
     	printf "$errorMessage\n\n"
 
-    	if [ $deviceConnect = "false" ]; then
+    		if [ $deviceConnect = "false" ]; then
 			until adb shell exit; do
 				clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
     			printf "$errorMessage\n\n\n -- waiting for device --\n"
@@ -40,9 +40,9 @@ function printHead(){
 		fi
 		echo
   	else
-    	export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
-    	export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
-    	export loopFromError="true"
+    		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
+    		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
+    		export loopFromError="true"
 
 		printf "\nER1 - Unexpected value in 'loopFromError'; resetting script in..\n"
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
@@ -79,9 +79,9 @@ function adbWAIT(){ #update the script on status of adb connection
 	else
 		loopFromError="true"; deviceConnect="false"
 		export errorMessage="RE0 - No devices found, or found more than one connected.\n\n"
-    	export errorMessage+="             $UItrouble\n"
-    	export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
-    	export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
+    		export errorMessage+="             $UItrouble\n"
+    		export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
+    		export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
 
 		sleep 1; printf "\nRE0 - Could not connect to just one device; resetting script in..\n"; sleep 1
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
@@ -164,7 +164,7 @@ function INSTALL(){
 		errorMessage="Any previous error messages will be printed to a log at this time in the next release!"
 		printf "\nGoodbye!\n\n"; exit
 	else
-			export loopFromError="true"
+		export loopFromError="true"
     		export errorMessage="RE1 - Fatal error while executing INSTALL function.\n\n"
     		export errorMessage+="             $UItrouble\n"
     		export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
