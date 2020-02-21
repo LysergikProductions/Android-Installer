@@ -138,7 +138,7 @@ function getAPK(){
 		export APKvalid="true"
 		local cleanPath="${APKfilePath#*:*}"
 		export APKname=$(basename "$cleanPath")
-		
+
 		printf "APK Name: $APKname\n\n"
 
 		adbWAIT
