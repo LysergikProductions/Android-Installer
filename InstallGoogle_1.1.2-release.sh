@@ -91,7 +91,7 @@ function MAIN(){
 }
 
 function getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
-	read -p 'Drag OBB anywhere in here: ' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
+	read -r -p 'Drag OBB anywhere in here: ' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	if [ "$OBBfilePath" == "" ]; then
 		export OBBvalid="false"; printHead | wait
 		printTitle
@@ -99,13 +99,15 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		getOBB
 	elif [[ ! "$OBBfilePath" == *"com."* ]]; then
 		export OBBvalid="false"
-		export OBBname=$(basename "$OBBfilePath"); printf "OBB Name: $OBBname\n\n"
-	elif [[ "$OBBfilePath" == *".amazon."* ]]; then
-		export OBBvalid="true"; export amazonBuild="true"
-		export OBBname=$(basename "$OBBfilePath"); printf "OBB Name: $OBBname\n\n"
+	elif [ "$OBBfilePath" == "fire" ]; then
+		export OBBvalid="true"
+		local cleanPath="${OBBfilePath#*:*}"
+		export OBBname=$(basename "$cleanPath"); printf "OBB Name: $OBBname\n\n"
+		export launchCMD="monkey -p $OBBname -v 1"
 	else
 		export OBBvalid="true"
-		export OBBname=$(basename "$OBBfilePath"); printf "OBB Name: $OBBname\n\n"
+		local cleanPath="${OBBfilePath#*:*}"
+		export OBBname=$(basename "$cleanPath"); printf "OBB Name: $OBBname\n\n"
 		export launchCMD="monkey -p $OBBname -v 1"
 	fi
 
@@ -115,7 +117,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getOBB
 	done
-	
+
 	adbWAIT
 	if [[ $deviceConnect == "true" ]]; then
 		getAPK
@@ -126,7 +128,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 
 function getAPK(){
 	APKvalid="true"; echo
-	read -p 'Drag APK anywhere in here: ' APKfilePath
+	read -r -p 'Drag APK anywhere in here: ' APKfilePath
 
 	if [ "$APKfilePath" == "" ]; then
 		export APKvalid="false"
@@ -134,8 +136,11 @@ function getAPK(){
 		getAPK
 	elif [[ "$APKfilePath" == *".apk"* ]]; then
 		export APKvalid="true"
-		export APKname=$(basename "$APKfilePath")
+		local cleanPath="${APKfilePath#*:*}"
+		export APKname=$(basename "$cleanPath")
 		
+		printf "APK Name: $APKname\n\n"
+
 		adbWAIT
 		if [[ $deviceConnect == "true" ]]; then
 			INSTALL
