@@ -25,20 +25,18 @@ osascript -e "tell application \"Terminal\" to set the font size of window 1 to 
 
 function INIT(){
 	clear; echo "Initializing.."; sleep 0.8
-	if toilet -h; then clear
+	if toilet -h > /dev/null 2>&1; then echo;
 	else
 		printf "\n\nUpdating toilet:"
 		echo "cmd"
 		sleep 2
 		sudo apt install toilet
 	fi
-}
-
-INIT
+}; INIT
 
 function printHead(){
 	if [ $loopFromError = "false" ]; then
-    	clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
+		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then
 		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
@@ -70,7 +68,7 @@ function printHead(){
 }
 
 function printTitle(){
-	toilet -t -F gay "Monkey Installer"
+	toilet -t --gay "Monkey Installer"
 	#printf "\n%*s\n" $[$COLS/2] "$title"
 	#printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
 }
@@ -83,9 +81,14 @@ function MAIN(){
 		getOBB; adbWAIT; getAPK; adbWAIT; INSTALL
 	}; then printf "\nGoodbye!\n"; echo; exit
 	else
-		printf "\nFE0 - Fatal Error; problem calling main functions.\nPlease report this error code to Nick.\n"; sleep 1
-		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-		echo; exit 1
+		printf "\nFE0 - Fatal Error; problem calling main functions.\nCopying all var data into ./logs/vaLog.txt\n\n"; sleep 1
+
+		mkdir ./logs/ > /dev/null 2>&1;
+		( set -o posix ; set ) >/tmp/variables.after
+		diff /tmp/variables.before /tmp/variables.after > ./logs/varLog.txt
+		rm /tmp/variables.before /tmp/variables.after
+
+		sleep 1; echo "Please report this error code (FE0) to Nick."; exit 1
 	fi
 }
 
@@ -102,7 +105,6 @@ function checkConnect(){
 
 		echo; printf "\nRE0 - Could not connect to just one device; resetting script in..\n"; sleep 0.5
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
-		echo; echo "debug back to printHead"; sleep 1
 		printHead
 	fi
 }
@@ -192,17 +194,14 @@ function INSTALL(){
 		errorMessage="Any previous error messages will be printed to a log at this time in the next release!"
 		printf "\nGoodbye!\n\n"; exit
 	else
-		printf "\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nPlease report this error code to Nick.\n"; sleep 0.5
-		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1..\n"; sleep 0.5
-		
+		printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ./logs/vaLog.txt\n\n"; sleep 1
+
 		mkdir ./logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
-		
-		echo "Sending all variables to ./logs/varLog.txt"
 		diff /tmp/variables.before /tmp/variables.after > ./logs/varLog.txt
 		rm /tmp/variables.before /tmp/variables.after
 
-		exit 1
+		sleep 1; echo "Please report this error code (FE1) to Nick."; exit 1
 	fi
 }
 
