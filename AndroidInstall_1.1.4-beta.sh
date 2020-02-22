@@ -155,7 +155,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 
 function getAPK(){
 	APKvalid="true"
-	printf "%*s\n" $[$COLS/2] "Drag APK anywhere here:"
+	printf "\n%*s\n" $[$COLS/2] "Drag APK anywhere here:"
 	read -p '' APKfilePath
 
 	if [ "$APKfilePath" == "" ]; then
