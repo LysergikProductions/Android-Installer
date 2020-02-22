@@ -21,15 +21,14 @@ UIsep_title="------------------"; UIsep_head="----------------------------------
 UItrouble="-- Troubleshooting --"
 
 # set font size on Mac OSX Terminal
-osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" >/dev/null 2>&1
+osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 
 function INIT(){
 	clear; echo "Initializing.."; sleep 0.8
 	if toilet -h > /dev/null 2>&1; then echo;
 	else
 		printf "\n\nUpdating toilet:"
-		echo "cmd"
-		sleep 2
+		echo ""; sleep 2
 		sudo apt install toilet
 	fi
 }; INIT
@@ -99,9 +98,9 @@ function checkConnect(){
 	else
 		loopFromError="true"; deviceConnect="false"
 		export errorMessage="RE0 - No devices found, or found more than one connected.\n\n"
-    	export errorMessage+="				$UItrouble\n"
-    	export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
-    	export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
+		export errorMessage+="				$UItrouble\n"
+		export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
+		export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
 
 		echo; printf "\nRE0 - Could not connect to just one device; resetting script in..\n"; sleep 0.5
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
