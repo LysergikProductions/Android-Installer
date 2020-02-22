@@ -86,7 +86,7 @@ function MAIN(){
 }
 
 #Check for device connection; reset script in case of error
-function checkConnect(){	
+function checkConnect(){
 	if (adb shell settings put global development_settings_enabled 1); then
 		export deviceConnect="true"
 	else
@@ -201,7 +201,7 @@ function checkVersion(){
 		pushd ~/Android-Installer > /dev/null 2>&1; git pull > /dev/null 2>&1; popd > /dev/null 2>&1
 	}
 	currentVersion=$(grep -n "_version " properties.txt); export currentVersion="${currentVersion##* }"
-	
+
 	printf "\n\n\n\n\n%*s\n" $[$COLS/2] "This script: v$scriptVersion"
 	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
 
