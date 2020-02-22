@@ -1,5 +1,5 @@
 #!/bin/bash
-#AndroidInstall_1.1.3-release.sh
+#AndroidInstall_1.1.4-release.sh
 #Nikolas A. Wagner © 2020
 #License: GNU GPLv3
 
@@ -7,8 +7,8 @@
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 
 #some global variables
-scriptName="AndroidInstall_1.1.3-release"; scriptTitle="*MONKEY INSTALLER*"; author="Nikolas A. Wagner"
-scriptVersion="1.1.3"; scriptVersionType="release"; license="GNU GPLv3"
+scriptName="AndroidInstall_1.1.4-release"; scriptTitle="*MONKEY INSTALLER*"; author="Nikolas A. Wagner"
+scriptVersion="1.1.4"; scriptVersionType="release"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="false"; adbVersion=$(adb version)
 
