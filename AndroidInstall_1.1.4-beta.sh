@@ -6,6 +6,10 @@
 #                                          -- Description --
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 
+# make a temp file that includes all variables in the system to later compare to after this script is run
+# this allows the script to print out the value of every variable in this script into a log file on fatal exit
+( set -o posix ; set ) >/tmp/variables.before
+
 #some global variables
 scriptName="AndroidInstall_1.1.4-release"; scriptTitle="*MONKEY INSTALLER*"; author="Nikolas A. Wagner"
 scriptVersion="1.1.4"; scriptVersionType="release"; license="GNU GPLv3"
@@ -188,9 +192,17 @@ function INSTALL(){
 		errorMessage="Any previous error messages will be printed to a log at this time in the next release!"
 		printf "\nGoodbye!\n\n"; exit
 	else
-		printf "\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nPlease report this error code to Nick.\n"; sleep 1
-		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-		echo; exit 1
+		printf "\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nPlease report this error code to Nick.\n"; sleep 0.5
+		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1..\n"; sleep 0.5
+		
+		mkdir ./logs/ > /dev/null 2>&1;
+		( set -o posix ; set ) >/tmp/variables.after
+		
+		echo "Sending all variables to ./logs/varLog.txt"
+		diff /tmp/variables.before /tmp/variables.after > ./logs/varLog.txt
+		rm /tmp/variables.before /tmp/variables.after
+
+		exit 1
 	fi
 }
 
