@@ -112,7 +112,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here:"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	local cleanPath="${OBBfilePath#*:*}"; export OBBname=$(basename "$cleanPath")
-	
+
 	if [ "$OBBfilePath" == "" ]; then
 		export OBBvalid="false"
 		printHead; printTitle
@@ -244,7 +244,6 @@ function waiting(){
 }
 
 function installAgain(){
-	
 	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" == "q" ]; then echo; exit; else echo; INSTALL; fi
