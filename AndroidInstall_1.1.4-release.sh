@@ -45,7 +45,7 @@ function printHead(){
 				export deviceConnect="false"
 				waiting
 			done
-			printf "\r%*s\n\n" $[$COLS/2] "Device Connected!   "
+			printf "\r%*s\n\n" $[$COLS/2] "Device Connected!  "
 		elif [ $deviceConnect = "true" ]; then
 			echo
 		else
@@ -81,13 +81,12 @@ function MAIN(){
 	}; then printf "\nGoodbye!\n"; echo; exit
 	else
 		export errorMessage="FE0 - Fatal Error; problem calling main functions."
-		printf "\nFE0 - Fatal Error; problem calling main functions.\nCopying all var data into ./logs/vaLog.txt\n\n"; sleep 1
-
 		scriptEndDate=$(date)
+		printf "\nFE0 - Fatal Error; problem calling main functions.\nCopying all var data into ./logs/$scriptEndDate.txt\n\n"; sleep 1
 
 		mkdir ./logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
-		diff /tmp/variables.before /tmp/variables.after > ./logs/varLog.txt
+		diff /tmp/variables.before /tmp/variables.after > ./logs/"$scriptEndDate".txt
 		rm /tmp/variables.before /tmp/variables.after
 
 		sleep 1; echo "Please report this error code (FE0) to Nick."; exit 1
@@ -184,13 +183,12 @@ function INSTALL(){
 		printf "\nGoodbye!\n\n"; exit
 	else
 		export errorMessage="FE1 - Fatal Error; install was unsuccesful for unknown reasons."
-		printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ./logs/vaLog.txt\n\n"; sleep 1
-
 		scriptEndDate=$(date)
+		printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ./logs/$scriptEndDate.txt\n\n"; sleep 1
 
 		mkdir ./logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
-		diff /tmp/variables.before /tmp/variables.after > ./logs/varLog.txt
+		diff /tmp/variables.before /tmp/variables.after > ./logs/"$scriptEndDate".txt
 		rm /tmp/variables.before /tmp/variables.after
 
 		sleep 1; echo "Please report this error code (FE1) to Nick."; exit 1
@@ -221,7 +219,7 @@ function adbWAIT(){
 	else
 		until (adb shell exit >/dev/null 2>&1); do waiting; done
 		export deviceConnect="true"
-		printf "\r%*s\n\n" $[$COLS/2] "Device Connected!   "
+		printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
 		printTitle
 	fi
 }
