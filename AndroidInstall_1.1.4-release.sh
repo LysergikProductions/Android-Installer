@@ -6,7 +6,7 @@
 #                                          -- Description --
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 
-# make a temp file that includes all variables in the system to later compare to after this script is run
+# make a temp file that includes all variables in the system to later compare to after this script is run..
 # this allows the script to print out the value of every variable in this script into a log file on fatal exit
 ( set -o posix ; set ) >/tmp/variables.before
 
@@ -20,11 +20,11 @@ COLS=$(tput cols) # Text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 UItrouble="-- Troubleshooting --"
 
-# set font size on Mac OSX Terminal
-osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
-
 function INIT(){
+	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
 	clear; echo "Initializing.."; sleep 0.8
+	scriptStartDate=$(date)
+
 	if toilet -h > /dev/null 2>&1; then echo;
 	else
 		printf "\n\nUpdating toilet:"
@@ -80,7 +80,10 @@ function MAIN(){
 		getOBB; adbWAIT; getAPK; adbWAIT; INSTALL
 	}; then printf "\nGoodbye!\n"; echo; exit
 	else
+		export errorMessage="FE0 - Fatal Error; problem calling main functions."
 		printf "\nFE0 - Fatal Error; problem calling main functions.\nCopying all var data into ./logs/vaLog.txt\n\n"; sleep 1
+
+		scriptEndDate=$(date)
 
 		mkdir ./logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
@@ -180,7 +183,10 @@ function INSTALL(){
 		errorMessage="Any previous error messages will be printed to a log at this time in the next release!"
 		printf "\nGoodbye!\n\n"; exit
 	else
+		export errorMessage="FE1 - Fatal Error; install was unsuccesful for unknown reasons."
 		printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ./logs/vaLog.txt\n\n"; sleep 1
+
+		scriptEndDate=$(date)
 
 		mkdir ./logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
