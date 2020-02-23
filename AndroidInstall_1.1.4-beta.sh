@@ -98,7 +98,7 @@ function checkConnect(){
 	else
 		loopFromError="true"; deviceConnect="false"
 		export errorMessage="RE0 - No devices found, or found more than one connected.\n\n"
-		export errorMessage+="				$UItrouble\n"
+		export errorMessage+="			    $UItrouble\n"
 		export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
 		export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
 
@@ -108,37 +108,25 @@ function checkConnect(){
 	fi
 }
 
-#update the script on status of adb connection
-function adbWAIT(){
-	if (adb shell exit >/dev/null 2>&1); then
-		export deviceConnect="true"
-	else
-		until (adb shell exit >/dev/null 2>&1); do waiting; done
-		export deviceConnect="true"
-		printf "\r%*s\n\n" $[$COLS/2] "Device Connected!   "
-		printTitle
-	fi
-}
-
 function getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
 	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here:"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
+	local cleanPath="${OBBfilePath#*:*}"; export OBBname=$(basename "$cleanPath")
+	
 	if [ "$OBBfilePath" == "" ]; then
 		export OBBvalid="false"
 		printHead; printTitle
 		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
-	elif [[ ! "$OBBfilePath" == "com."* ]]; then
+	elif [[ ! "$OBBname" == "com."* ]]; then
 		export OBBvalid="false"
 	elif [ "$OBBfilePath" == "fire" ]; then
 		export OBBvalid="true"
-		local cleanPath="${OBBfilePath#*:*}"
-		export OBBname=$(basename "$cleanPath"); printf "OBB Name: $OBBname\n\n"
+		printf "OBB Name: $OBBname\n\n"
 		export launchCMD="monkey -p $OBBname -v 1"
 	else
 		export OBBvalid="true"
-		local cleanPath="${OBBfilePath#*:*}"
-		export OBBname=$(basename "$cleanPath"); printf "OBB Name: $OBBname\n\n"
+		printf "OBB Name: $OBBname\n\n"
 		export launchCMD="monkey -p $OBBname -v 1"
 	fi
 
@@ -157,17 +145,16 @@ function getAPK(){
 	APKvalid="true"
 	printf "\n%*s\n" $[$COLS/2] "Drag APK anywhere here:"
 	read -p '' APKfilePath
+	local cleanPath="${APKfilePath#*:*}"
+	export APKname=$(basename "$cleanPath")
 
 	if [ "$APKfilePath" == "" ]; then
 		printHead; printTitle
 		export APKvalid="false"
 		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
 		getAPK
-	elif [[ "$APKfilePath" == *".apk" ]]; then
+	elif [[ "$APKname" == *".apk" ]]; then
 		export APKvalid="true"
-		local cleanPath="${APKfilePath#*:*}"
-		export APKname=$(basename "$cleanPath")
-
 		printf "APK Name: $APKname\n\n"
 
 		adbWAIT
@@ -202,6 +189,7 @@ function INSTALL(){
 
 		sleep 1; echo "Please report this error code (FE1) to Nick."; exit 1
 	fi
+	installAgain
 }
 
 function checkVersion(){
@@ -218,9 +206,21 @@ function checkVersion(){
 	if [ "$scriptVersion" == "$currentVersion" ]; then
 		printf "\n%*s" $[$COLS/2] "This script is up-to-date!"
 	else printf "\n%*s" $[$COLS/2] "Update required..."; fi
-}
-checkVersion; sleep 2
+}; checkVersion; sleep 2
 
+# update the script on status of adb connection
+function adbWAIT(){
+	if (adb shell exit >/dev/null 2>&1); then
+		export deviceConnect="true"
+	else
+		until (adb shell exit >/dev/null 2>&1); do waiting; done
+		export deviceConnect="true"
+		printf "\r%*s\n\n" $[$COLS/2] "Device Connected!   "
+		printTitle
+	fi
+}
+
+# pause until device is connected
 function waiting(){
 	waitMessage="-- waiting for device --"
 	local anim1=( "" " ." " . ." " . . ." " . . . ." " . . . . ." )
@@ -243,7 +243,14 @@ function waiting(){
 	done
 }
 
-{ # try to run the script
+function installAgain(){
+	
+	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
+	read -n 1 -s -r -p ''
+	if [ "$REPLY" == "q" ]; then echo; exit; else echo; INSTALL; fi
+}
+
+{ # try to run the MAIN function
     MAIN &&
     printf "\nDebug: MAIN completed without errors!\n"
 } || {
