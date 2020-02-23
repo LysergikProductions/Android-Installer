@@ -123,7 +123,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		printHead; printTitle
 		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
-	elif [[ ! "$OBBfilePath" == "*com."* ]]; then
+	elif [[ ! "$OBBfilePath" == *"com."* ]]; then
 		export OBBvalid="false"
 	elif [ "$OBBfilePath" == "fire" ]; then
 		export OBBvalid="true"
