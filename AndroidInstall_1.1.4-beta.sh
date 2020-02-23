@@ -208,7 +208,7 @@ function checkVersion(){
 	else printf "\n%*s" $[$COLS/2] "Update required..."; fi
 }; checkVersion; sleep 2
 
-# update the script on status of adb connection
+# update the script on status of adb connection and wait until it is ready
 function adbWAIT(){
 	if (adb shell exit >/dev/null 2>&1); then
 		export deviceConnect="true"
@@ -220,7 +220,7 @@ function adbWAIT(){
 	fi
 }
 
-# pause until device is connected
+# show the waiting 'animation'
 function waiting(){
 	waitMessage="-- waiting for device --"
 	local anim1=( "" " ." " . ." " . . ." " . . . ." " . . . . ." )
