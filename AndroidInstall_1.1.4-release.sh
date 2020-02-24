@@ -24,10 +24,11 @@ function INIT(){
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
 	clear; echo "Initializing.."; sleep 0.8
 	scriptStartDate=$(date)
+	checkADB > /dev/null 2>&1
 
 	if toilet -h > /dev/null 2>&1; then echo;
 	else
-		printf "\n\nUpdating toilet:"
+		printf "\n\nInstalling missing packages.."
 		echo ""; sleep 2
 		sudo apt install toilet
 	fi
@@ -45,7 +46,7 @@ function printHead(){
 				export deviceConnect="false"
 				waiting
 			done
-			printf "\r%*s\n\n" $[$COLS/2] "Device Connected!  "
+			printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
 		elif [ $deviceConnect = "true" ]; then
 			echo
 		else
@@ -77,19 +78,89 @@ function MAIN(){
 
 	#checking for fatal error while calling the main functions of the script
 	if {
-		getOBB; adbWAIT; getAPK; adbWAIT; INSTALL
+		getOBB; getAPK; adbWAIT; INSTALL
 	}; then printf "\nGoodbye!\n"; echo; exit
 	else
 		export errorMessage="FE0 - Fatal Error; problem calling main functions."
 		scriptEndDate=$(date)
 		printf "\nFE0 - Fatal Error; problem calling main functions.\nCopying all var data into ./logs/$scriptEndDate.txt\n\n"; sleep 1
 
-		mkdir ./logs/ > /dev/null 2>&1;
+		mkdir ~/logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
-		diff /tmp/variables.before /tmp/variables.after > ./logs/"$scriptEndDate".txt
+		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 		rm /tmp/variables.before /tmp/variables.after
 
 		sleep 1; echo "Please report this error code (FE0) to Nick."; exit 1
+	fi
+}
+
+#check if the user has ADB installed, and if not then it install it on Mac OSX using HomeBrew
+function checkADB(){
+	local instruct="Would you like to install ADB now?"
+	local options=("OK" "Cancel and Exit")
+
+	#check if a network is available and update netReady boolean
+	ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
+
+	if adb version > /dev/null 2>&1; then
+		wait; clear
+	else #ADB is not installed; attempt to install it with HomeBrew..
+		if [ $netReady == "false" ]; then
+			until [ $netReady == "true" ]
+			do
+				clear; ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
+				printf "\nWaiting for an available network ."; sleep 1; printf " ."; sleep 1; printf " ."; sleep 1; wait
+			done
+			echo
+			checkADB
+		elif [ $netReady == "true" ]; then
+			echo
+		else
+			echo "error in netReady"
+		fi
+		
+		echo "Connected to network!"
+		printf "\nADB is not installed on this computer.. ADB is required to run this script.\n\n"; sleep 1
+		echo "$instruct" #here the user is asked if they want to install ADB on their machine
+		select opt in "${options[@]}"
+		do
+			case $opt in
+	        "OK")
+				echo
+				if {brew cask install android-platform-tools}; then
+					wait; echo; adbVersion=$(adb version)
+					wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
+					printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+				else #HomeBrew is not installed; installing HomeBrew..
+					printf "\nHomeBrew needs to be installed for this. Installing HomeBrew..\n"
+					if {ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"}; then
+						wait; sleep 3; printf "\nHomebrew has been successfully installed. Installing ADB next..\n"
+					else
+						printf "\nFE2a - Fatal Error; ADB not installed and there was a problem while trying to install HomeBrew.\nPlease report this error code (FE2a) to Nick.\n"; sleep 1
+						printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						echo; exit 1
+					fi
+					#now that HomeBrew is installed, install ADB using HomeBrew
+					if {brew cask install android-platform-tools}; then
+						wait; echo; adbVersion=$(adb version)
+						wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
+						printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+					else
+						printf "\nFE2b - Fatal Error; ADB not installed and there was a problem while trying to install platform-tools.\nPlease report this error code (FE2b) to Nick.\n"; sleep 1
+						printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						echo; exit 1
+					fi
+				fi
+				break
+					;;
+			"Cancel and Exit")
+				printf "\nGoodbye!\n"; sleep 1
+				exit
+				break
+					;;
+			*) printf "\nSorry, $REPLY is not an option!\n";;
+			esac
+		done
 	fi
 }
 
@@ -120,12 +191,11 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		printHead; printTitle
 		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
-	elif [[ ! "$OBBname" == "com."* ]]; then
-		export OBBvalid="false"
 	elif [ "$OBBfilePath" == "fire" ]; then
 		export OBBvalid="true"
-		printf "OBB Name: $OBBname\n\n"
-		export launchCMD="monkey -p $OBBname -v 1"
+		printf "OBB Name: Amazon Build"
+	elif [[ ! "$OBBname" == "com."* ]]; then
+		export OBBvalid="false"
 	else
 		export OBBvalid="true"
 		printf "OBB Name: $OBBname\n\n"
@@ -172,28 +242,28 @@ function getAPK(){
 }
 
 function INSTALL(){
+	adbWAIT
 	if {
 		printf "\nUploading OBB..\n"; adb push "$OBBfilePath" /sdcard/Android/OBB
+		adbWAIT
 		printf "\nInstalling APK..\n"; adb install --no-streaming "$APKfilePath"
 	}; then
 		printf "\n\nLaunching app."
 		adb shell "$launchCMD" > /dev/null 2>&1; sleep 1; printf " ."; sleep 1; printf " .\n"
 
-		errorMessage="Any previous error messages will be printed to a log at this time in the next release!"
-		printf "\nGoodbye!\n\n"; exit
+		installAgain
 	else
 		export errorMessage="FE1 - Fatal Error; install was unsuccesful for unknown reasons."
 		scriptEndDate=$(date)
 		printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ./logs/$scriptEndDate.txt\n\n"; sleep 1
 
-		mkdir ./logs/ > /dev/null 2>&1;
+		mkdir ~/logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
-		diff /tmp/variables.before /tmp/variables.after > ./logs/"$scriptEndDate".txt
+		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 		rm /tmp/variables.before /tmp/variables.after
 
 		sleep 1; echo "Please report this error code (FE1) to Nick."; exit 1
 	fi
-	installAgain
 }
 
 function checkVersion(){
