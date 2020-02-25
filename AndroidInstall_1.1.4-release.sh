@@ -83,7 +83,7 @@ function MAIN(){
 	else
 		export errorMessage="FE0 - Fatal Error; problem calling main functions."
 		scriptEndDate=$(date)
-		printf "\nFE0 - Fatal Error; problem calling main functions.\nCopying all var data into ./logs/$scriptEndDate.txt\n\n"; sleep 1
+		printf "\nFE0 - Fatal Error; problem calling main functions.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"; sleep 1
 
 		mkdir ~/logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
@@ -118,7 +118,7 @@ function checkADB(){
 		else
 			echo "error in netReady"
 		fi
-		
+
 		echo "Connected to network!"
 		printf "\nADB is not installed on this computer.. ADB is required to run this script.\n\n"; sleep 1
 		echo "$instruct" #here the user is asked if they want to install ADB on their machine
@@ -255,7 +255,7 @@ function INSTALL(){
 	else
 		export errorMessage="FE1 - Fatal Error; install was unsuccesful for unknown reasons."
 		scriptEndDate=$(date)
-		printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ./logs/$scriptEndDate.txt\n\n"; sleep 1
+		printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"; sleep 1
 
 		mkdir ~/logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
