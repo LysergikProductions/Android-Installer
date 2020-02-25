@@ -65,7 +65,7 @@ function printHead(){
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 		MAIN
   	fi
-  	printf "\nMounting device...\n\n"; export deviceID=$(adb devices)
+  	printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
 }
 
 function printTitle(){
