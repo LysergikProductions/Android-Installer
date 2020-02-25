@@ -31,7 +31,7 @@ function INIT(){
 	else
 		printf "\n\nInstalling missing packages.."
 		echo ""; sleep 2
-		sudo apt install toilet
+		sudo apt install toilet || brew install toilet
 	fi
 }; INIT
 
@@ -327,12 +327,12 @@ function installAgain(){
 	if [ "$REPLY" == "q" ]; then
 		echo; exit
 	else
-		deviceID2=$(adb devices)
+		export deviceID2=$(adb devices); wait
 		if [ "$deviceID" == "$deviceID2" ]; then
 			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
 			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 			read -n 1 -s -r -p ''
-			if [ "$REPLY" == "y" ]; then INSTALL; else deviceID2=$(adb devices); installAgain; fi
+			if [ "$REPLY" == "y" ]; then INSTALL; else export deviceID=$(adb devices); wait; installAgain; fi
 		else
 			INSTALL
 		fi
