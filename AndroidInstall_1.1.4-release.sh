@@ -137,8 +137,8 @@ function checkADB(){
 					if {ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"}; then
 						wait; sleep 3; printf "\nHomebrew has been successfully installed. Installing ADB next..\n"
 					else
-						printf "\nFE2a - Fatal Error; ADB not installed and there was a problem while trying to install HomeBrew.\nPlease report this error code (FE2a) to Nick.\n"; sleep 1
-						printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						printf "\nFE2a - Fatal Error; ADB not installed and there was a problem while trying to install HomeBrew.\nPlease report this error code (FE2a) to Nick.\n"
+						sleep 1; printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 						echo; exit 1
 					fi
 					#now that HomeBrew is installed, install ADB using HomeBrew
@@ -147,8 +147,8 @@ function checkADB(){
 						wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
 						printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 					else
-						printf "\nFE2b - Fatal Error; ADB not installed and there was a problem while trying to install platform-tools.\nPlease report this error code (FE2b) to Nick.\n"; sleep 1
-						printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						printf "\nFE2b - Fatal Error; ADB not installed and there was a problem while trying to install platform-tools.\nPlease report this error code (FE2b) to Nick.\n"
+						sleep 1; printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 						echo; exit 1
 					fi
 				fi
@@ -246,8 +246,11 @@ function INSTALL(){
 	adbWAIT
 	if {
 		printf "\nUploading OBB..\n"; adb push "$OBBfilePath" /sdcard/Android/OBB
-		adbWAIT
-		printf "\nInstalling APK..\n"; adb install --no-streaming "$APKfilePath"
+		wait; OBBdone="true"; adbWAIT
+		printf "\nInstalling APK..\n"
+		if (adb install --no-streaming "$APKfilePath" 2>/dev/null); then
+			wait; APKdone="true"
+		else adb install "$APKfilePath"; fi
 	}; then
 		printf "\n\nLaunching app."
 		adb shell "$launchCMD" > /dev/null 2>&1; sleep 1; printf " ."; sleep 1; printf " .\n"
@@ -326,10 +329,10 @@ function installAgain(){
 	else
 		deviceID2=$(adb devices)
 		if [ "$deviceID" == "$deviceID2" ]; then
-			printf "\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
+			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
 			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 			read -n 1 -s -r -p ''
-			if [ "$REPLY" == "y" ]; then INSTALL; else deviceID=$(adb devices); installAgain; fi
+			if [ "$REPLY" == "y" ]; then INSTALL; else deviceID2=$(adb devices); installAgain; fi
 		else
 			INSTALL
 		fi
