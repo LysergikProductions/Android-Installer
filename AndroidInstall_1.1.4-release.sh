@@ -317,7 +317,7 @@ function waiting(){
 	for i in "${anim2[@]}"
 	do
 		printf "\r%*s" $[$COLS/2] "$i"
-		sleep 0.1
+		sleep 0.08
 	done
 }
 
