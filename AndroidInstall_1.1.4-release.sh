@@ -12,9 +12,10 @@
 
 #some global variables
 scriptName="AndroidInstall_1.1.4-release"; scriptTitle="*MONKEY INSTALLER*"; author="Nikolas A. Wagner"
-scriptVersion="1.1.4"; scriptVersionType="release"; license="GNU GPLv3"
+scriptVersion="1.1.4"; scriptVersionType="release"; license="GNU GPLv3"; adbVersion=$(adb version)
 
-loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="false"; adbVersion=$(adb version)
+loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="false"
+OBBdone="false"; APKdone="false"
 
 COLS=$(tput cols) # Text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
@@ -64,7 +65,7 @@ function printHead(){
 		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 		MAIN
   	fi
-  	printf "\nMounting device...\n\n"; adb devices
+  	printf "\nMounting device...\n\n"; export deviceID=$(adb devices)
 }
 
 function printTitle(){
@@ -320,7 +321,19 @@ function waiting(){
 function installAgain(){
 	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
 	read -n 1 -s -r -p ''
-	if [ "$REPLY" == "q" ]; then echo; exit; else echo; INSTALL; fi
+	if [ "$REPLY" == "q" ]; then
+		echo; exit
+	else
+		deviceID2=$(adb devices)
+		if [ "$deviceID" == "$deviceID2" ]; then
+			printf "\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
+			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
+			read -n 1 -s -r -p ''
+			if [ "$REPLY" == "y" ]; then INSTALL; else deviceID=$(adb devices); installAgain; fi
+		else
+			INSTALL
+		fi
+	fi
 }
 
 { # try to run the MAIN function
