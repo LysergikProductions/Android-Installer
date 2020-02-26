@@ -37,9 +37,9 @@ function INIT(){
 
 function printHead(){
 	if [ $loopFromError = "false" ]; then
-		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
+		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\nDistributed with the $license license\n\n"
 	elif [ $loopFromError = "true" ]; then
-		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
+		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\nDistributed with the $license license\n\n"
 		printf "$errorMessage\n\n"
 
 		if [ $deviceConnect = "false" ]; then
@@ -106,15 +106,15 @@ function checkADB(){
 	if adb version > /dev/null 2>&1; then
 		wait; clear
 	else #ADB is not installed; attempt to install it with HomeBrew..
-		if [ $netReady == "false" ]; then
-			until [ $netReady == "true" ]
+		if [ "$netReady" = "false" ]; then
+			until [ "$netReady" = "true" ]
 			do
 				clear; ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
 				printf "\nWaiting for an available network ."; sleep 1; printf " ."; sleep 1; printf " ."; sleep 1; wait
 			done
 			echo
 			checkADB
-		elif [ $netReady == "true" ]; then
+		elif [ "$netReady" = "true" ]; then
 			echo
 		else
 			echo "error in netReady"
@@ -187,14 +187,17 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	local cleanPath="${OBBfilePath#*:*}"; export OBBname=$(basename "$cleanPath")
 
-	if [ "$OBBfilePath" == "" ]; then
+	if [ "$OBBfilePath" = "" ]; then
 		export OBBvalid="false"
 		printHead; printTitle
 		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
-	elif [ "$OBBfilePath" == "fire" ]; then
+	elif [ "$OBBfilePath" = "fire" ]; then
 		export OBBvalid="true"
 		printf "OBB Name: Amazon Build"
+	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "0" ]; then
+		export OBBvalid="true"
+		printf "OBB Name: N/A"
 	elif [[ ! "$OBBname" == "com."* ]]; then
 		export OBBvalid="false"
 	else
@@ -203,7 +206,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		export launchCMD="monkey -p $OBBname -v 1"
 	fi
 
-	until [ $OBBvalid == "true" ]; do
+	until [ "$OBBvalid" = "true" ]; do
 		printHead; printTitle
 		printf "\n%*s\n\n" $[$COLS/2] "That is not an OBB!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
@@ -211,7 +214,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 	done
 
 	adbWAIT
-	if [[ $deviceConnect == "true" ]]; then getAPK; else export deviceConnect="false"; printHead; fi
+	if [ "$deviceConnect" = "true" ]; then getAPK; else export deviceConnect="false"; printHead; fi
 }
 
 function getAPK(){
@@ -221,7 +224,7 @@ function getAPK(){
 	local cleanPath="${APKfilePath#*:*}"
 	export APKname=$(basename "$cleanPath")
 
-	if [ "$APKfilePath" == "" ]; then
+	if [ "$APKfilePath" = "" ]; then
 		printHead; printTitle
 		export APKvalid="false"
 		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
@@ -231,10 +234,10 @@ function getAPK(){
 		printf "APK Name: $APKname\n\n"
 
 		adbWAIT
-		if [[ $deviceConnect == "true" ]]; then INSTALL; else export deviceConnect="false"; printHead; fi
+		if [ "$deviceConnect" = "true" ]; then INSTALL; else export deviceConnect="false"; printHead; fi
 	else export APKvalid="false"; fi
 
-	until [ "$APKvalid" == "true" ]; do
+	until [ "$APKvalid" = "true" ]; do
 		printHead; printTitle
 		printf "%*s\n\n" $[$COLS/2] "That is not an APK!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
@@ -281,7 +284,7 @@ function checkVersion(){
 	printf "\n\n\n\n\n%*s\n" $[$COLS/2] "This script: v$scriptVersion"
 	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
 
-	if [ "$scriptVersion" == "$currentVersion" ]; then
+	if [ "$scriptVersion" = "$currentVersion" ]; then
 		printf "\n%*s" $[$COLS/2] "This script is up-to-date!"
 	else printf "\n%*s" $[$COLS/2] "Update required..."; fi
 }; checkVersion; sleep 2
@@ -310,7 +313,7 @@ function waiting(){
 	"ooooooooooooooooooOooooo" "oooooooooooooooooooOoooo" "ooooooooooooooooooooOooo" "oooooooooooooooooooooOoo" "ooooooooooooooooooooooOo" "oooooooooooooooooooooooO"
 	)
 
-	clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\n"
+	clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\nDistributed with the $license license\n\n"
     printf "$errorMessage\n\n\n"
     printf "\n%*s\n" $[$COLS/2] "$waitMessage"
 
@@ -324,15 +327,15 @@ function waiting(){
 function installAgain(){
 	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
 	read -n 1 -s -r -p ''
-	if [ "$REPLY" == "q" ]; then
+	if [ "$REPLY" = "q" ]; then
 		echo; exit
 	else
 		export deviceID2=$(adb devices); wait
-		if [ "$deviceID" == "$deviceID2" ]; then
+		if [ "$deviceID" = "$deviceID2" ]; then
 			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
 			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 			read -n 1 -s -r -p ''
-			if [ "$REPLY" == "y" ]; then INSTALL; else export deviceID=$(adb devices); wait; installAgain; fi
+			if [ "$REPLY" = "y" ]; then INSTALL; else export deviceID=$(adb devices); wait; installAgain; fi
 		else
 			INSTALL
 		fi
