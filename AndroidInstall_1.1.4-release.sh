@@ -250,15 +250,15 @@ function INSTALL(){
 	if {
 		printf "\nUploading OBB..\n"
 		if [ "$OBBdone" = "false" ]; then
-			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then export OBBdone="true"; adbWAIT; fi
+			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then export OBBdone="true"; adbWAIT; else adbWAIT && INSTALL; fi
 		else echo; fi
 
 		printf "\nInstalling APK..\n"
 		if [ "$APKdone" = "false" ]; then
-			if (adb install --no-streaming "$APKfilePath" 2>/dev/null); then
-				wait; export APKdone="true"
-			else adb install "$APKfilePath"; fi
-		else echo; fi
+			if {
+				if (adb install --no-streaming "$APKfilePath" 2>/dev/null); then wait; export APKdone="true"; else adb install "$APKfilePath"; fi
+			}; then wait; export APKdone="true"; else adbWAIT && INSTALL; fi
+		fi
 	}; then
 		printf "\n\nLaunching app."
 		adb shell "$launchCMD" > /dev/null 2>&1; sleep 1; printf " ."; sleep 1; printf " .\n"
@@ -340,7 +340,7 @@ function installAgain(){
 			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
 			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 			read -n 1 -s -r -p ''
-			if [ "$REPLY" = "y" ]; then INSTALL; else export deviceID=$(adb devices); wait; installAgain; fi
+			if [ "$REPLY" = "y" ]; then OBBdone="false"; APKdone="false"; INSTALL; else export deviceID=$(adb devices); wait; installAgain; fi
 		else
 			INSTALL
 		fi
