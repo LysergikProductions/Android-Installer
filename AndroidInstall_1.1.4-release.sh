@@ -250,8 +250,7 @@ function INSTALL(){
 	if {
 		printf "\nUploading OBB..\n"
 		if [ "$OBBdone" = "false" ]; then
-			adb push "$OBBfilePath" /sdcard/Android/OBB
-			wait; export OBBdone="true"; adbWAIT
+			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then export OBBdone="true"; adbWAIT; fi
 		else echo; fi
 
 		printf "\nInstalling APK..\n"
