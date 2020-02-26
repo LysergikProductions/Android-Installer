@@ -31,7 +31,7 @@ function INIT(){
 	else
 		printf "\n\nInstalling missing packages.."
 		echo ""; sleep 2
-		sudo apt install toilet || brew install toilet
+		brew install toilet || sudo apt install toilet
 	fi
 }; INIT
 
@@ -69,9 +69,9 @@ function printHead(){
 }
 
 function printTitle(){
-	toilet -t --gay "Monkey Installer"
-	#printf "\n%*s\n" $[$COLS/2] "$title"
-	#printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
+	#toilet -t --gay "Monkey Installer"
+	printf "\n%*s\n" $[$COLS/2] "$scriptTitle"
+	printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
 }
 
 function MAIN(){
@@ -204,6 +204,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		export OBBvalid="true"
 		printf "OBB Name: $OBBname\n\n"
 		export launchCMD="monkey -p $OBBname -v 1"
+		adb uninstall $OBBname > /dev/null 2>&1; wait
 	fi
 
 	until [ "$OBBvalid" = "true" ]; do
@@ -250,14 +251,24 @@ function INSTALL(){
 	if {
 		printf "\nUploading OBB..\n"
 		if [ "$OBBdone" = "false" ]; then
-			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then export OBBdone="true"; adbWAIT; else adbWAIT && INSTALL; fi
-		else echo; fi
+			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then export OBBdone="true"; adbWAIT
+			else
+				if [ "$OBBfilePath" = "bw" ]; then
+					echo
+				else
+					adbWAIT
+					echo; printf "\nRE1 - Invalid OBB; resetting script in..\n"; sleep 0.5
+					printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
+					MAIN
+				fi
+			fi
+		fi
 
 		printf "\nInstalling APK..\n"
 		if [ "$APKdone" = "false" ]; then
-			if {
-				if (adb install --no-streaming "$APKfilePath" 2>/dev/null); then wait; export APKdone="true"; else adb install "$APKfilePath"; fi
-			}; then wait; export APKdone="true"; else adbWAIT && INSTALL; fi
+			if (
+				if (adb install --no-streaming "$APKfilePath" 2>/dev/null); then wait; export APKdone="true"; else adb install "$APKfilePath"; wait; export APKdone="true"; fi
+			); then wait; export APKdone="true"; fi
 		fi
 	}; then
 		printf "\n\nLaunching app."
