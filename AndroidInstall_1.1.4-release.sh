@@ -15,7 +15,7 @@ scriptName="AndroidInstall_1.1.4-release"; scriptTitle="*MONKEY INSTALLER*"; aut
 scriptVersion="1.1.4"; scriptVersionType="release"; license="GNU GPLv3"; adbVersion=$(adb version)
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="false"
-OBBdone="false"; APKdone="false"
+export OBBdone="false"; export APKdone="false"
 
 COLS=$(tput cols) # Text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
@@ -248,12 +248,18 @@ function getAPK(){
 function INSTALL(){
 	adbWAIT
 	if {
-		printf "\nUploading OBB..\n"; adb push "$OBBfilePath" /sdcard/Android/OBB
-		wait; OBBdone="true"; adbWAIT
+		printf "\nUploading OBB..\n"
+		if [ "$OBBdone" = "false" ]; then
+			adb push "$OBBfilePath" /sdcard/Android/OBB
+			wait; export OBBdone="true"; adbWAIT
+		else echo; fi
+
 		printf "\nInstalling APK..\n"
-		if (adb install --no-streaming "$APKfilePath" 2>/dev/null); then
-			wait; APKdone="true"
-		else adb install "$APKfilePath"; fi
+		if [ "$APKdone" = "false" ]; then
+			if (adb install --no-streaming "$APKfilePath" 2>/dev/null); then
+				wait; export APKdone="true"
+			else adb install "$APKfilePath"; fi
+		else echo; fi
 	}; then
 		printf "\n\nLaunching app."
 		adb shell "$launchCMD" > /dev/null 2>&1; sleep 1; printf " ."; sleep 1; printf " .\n"
