@@ -11,15 +11,15 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 #some global variables
-scriptName="AndroidInstall_1.1.4-release"; scriptTitle="*MONKEY INSTALLER*"; author="Nikolas A. Wagner"
-scriptVersion="1.1.4"; scriptVersionType="release"; license="GNU GPLv3"; adbVersion=$(adb version)
+scriptName="AndroidInstall_1.1.4-release"; scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
+scriptVersion="1.1.4"; scriptVersionType="release"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="false"
-export OBBdone="false"; export APKdone="false"
+export OBBdone="false"; export APKdone="false"; oops=$(figlet -F border -F gay -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # Text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-UItrouble="-- Troubleshooting --"
+UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
 function INIT(){
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
@@ -27,19 +27,19 @@ function INIT(){
 	scriptStartDate=$(date)
 	checkADB > /dev/null 2>&1
 
-	if toilet -h > /dev/null 2>&1; then echo;
-	else
-		printf "\n\nInstalling missing packages.."
-		echo ""; sleep 2
-		brew install toilet || sudo apt install toilet
-	fi
+	#if toilet -h > /dev/null 2>&1; then echo;
+	#else
+	#	printf "\n\nInstalling missing packages.."
+	#	echo ""; sleep 2
+	#	brew install toilet || sudo apt install toilet
+	#fi
 }; INIT
 
 function printHead(){
-	if [ $loopFromError = "false" ]; then
-		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\nDistributed with the $license license\n\n"
-	elif [ $loopFromError = "true" ]; then
-		clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\nDistributed with the $license license\n\n"
+	if [ $loopFromError = "false" ]; then clear;
+		printf "$scriptName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+	elif [ $loopFromError = "true" ]; then clear;
+		printf "$scriptName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
 
 		if [ $deviceConnect = "false" ]; then
@@ -62,20 +62,28 @@ function printHead(){
     		export loopFromError="true"
 
 		printf "\nER1 - Unexpected value in 'loopFromError'; resetting script in..\n"
-		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+		printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 		MAIN
   	fi
-  	printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
 }
 
 function printTitle(){
-	#toilet -t --gay "Monkey Installer"
-	printf "\n%*s\n" $[$COLS/2] "$scriptTitle"
-	printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
+	#toilet -t --gay "$scriptTitle"
+	figlet -F border -F gay -t "$scriptTitle"
+	#printf "\n%*s\n" $[$COLS/2] "$scriptTitle"
+	#printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
 }
 
 function MAIN(){
-	printHead; checkConnect; printTitle
+	printHead
+	if (adb shell settings put global development_settings_enabled 1); then
+		printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
+		printTitle
+	else
+		printf "\n\n%*s\n" $[$COLS/2] "$waitMessage"; adbWAIT
+		printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
+		printTitle
+	fi
 
 	#checking for fatal error while calling the main functions of the script
 	if {
@@ -131,24 +139,24 @@ function checkADB(){
 				if {brew cask install android-platform-tools}; then
 					wait; echo; adbVersion=$(adb version)
 					wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
-					printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+					printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 				else #HomeBrew is not installed; installing HomeBrew..
 					printf "\nHomeBrew needs to be installed for this. Installing HomeBrew..\n"
 					if {ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"}; then
 						wait; sleep 3; printf "\nHomebrew has been successfully installed. Installing ADB next..\n"
 					else
 						printf "\nFE2a - Fatal Error; ADB not installed and there was a problem while trying to install HomeBrew.\nPlease report this error code (FE2a) to Nick.\n"
-						sleep 1; printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 						echo; exit 1
 					fi
 					#now that HomeBrew is installed, install ADB using HomeBrew
 					if {brew cask install android-platform-tools}; then
 						wait; echo; adbVersion=$(adb version)
 						wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
-						printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 					else
 						printf "\nFE2b - Fatal Error; ADB not installed and there was a problem while trying to install platform-tools.\nPlease report this error code (FE2b) to Nick.\n"
-						sleep 1; printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 						echo; exit 1
 					fi
 				fi
@@ -165,23 +173,6 @@ function checkADB(){
 	fi
 }
 
-#Check for device connection; reset script in case of error
-function checkConnect(){
-	if (adb shell settings put global development_settings_enabled 1); then
-		export deviceConnect="true"
-	else
-		loopFromError="true"; deviceConnect="false"
-		export errorMessage="RE0 - No devices found, or found more than one connected.\n\n"
-		export errorMessage+="			    $UItrouble\n"
-		export errorMessage+="Ensure only one device is connected and that is has USB Debugging permissions..\n"
-		export errorMessage+="For more help on this, search 'ADB fixAll' in google drive."
-
-		echo; printf "\nRE0 - Could not connect to just one device; resetting script in..\n"; sleep 0.5
-		printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
-		printHead
-	fi
-}
-
 function getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
 	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here:"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
@@ -190,6 +181,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 	if [ "$OBBfilePath" = "" ]; then
 		export OBBvalid="false"
 		printHead; printTitle
+		printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
@@ -209,6 +201,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 
 	until [ "$OBBvalid" = "true" ]; do
 		printHead; printTitle
+		printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "\n%*s\n\n" $[$COLS/2] "That is not an OBB!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getOBB
@@ -228,6 +221,7 @@ function getAPK(){
 	if [ "$APKfilePath" = "" ]; then
 		printHead; printTitle
 		export APKvalid="false"
+		printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
 		getAPK
 	elif [[ "$APKname" == *".apk" ]]; then
@@ -240,6 +234,7 @@ function getAPK(){
 
 	until [ "$APKvalid" = "true" ]; do
 		printHead; printTitle
+		printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $[$COLS/2] "That is not an APK!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getAPK
@@ -257,8 +252,8 @@ function INSTALL(){
 					echo
 				else
 					adbWAIT
-					echo; printf "\nRE1 - Invalid OBB; resetting script in..\n"; sleep 0.5
-					printf "5.. "; sleep 1; printf "4.. "; sleep 1; printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
+					echo; printf "\nRE1 - Invalid OBB; resetting script in..\n"
+					printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
 					MAIN
 				fi
 			fi
@@ -313,13 +308,11 @@ function adbWAIT(){
 		until (adb shell exit >/dev/null 2>&1); do waiting; done
 		export deviceConnect="true"
 		printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
-		printTitle
 	fi
 }
 
 # show the waiting 'animation'
 function waiting(){
-	waitMessage="-- waiting for device --"
 	local anim1=( "" " ." " . ." " . . ." " . . . ." " . . . . ." )
 	local anim2=(
 	"oooooooooooooooooooooooo"
@@ -328,15 +321,34 @@ function waiting(){
 	"ooooooooooooOooooooooooo" "oooooooooooooOoooooooooo" "ooooooooooooooOooooooooo" "oooooooooooooooOoooooooo" "ooooooooooooooooOooooooo" "oooooooooooooooooOoooooo"
 	"ooooooooooooooooooOooooo" "oooooooooooooooooooOoooo" "ooooooooooooooooooooOooo" "oooooooooooooooooooooOoo" "ooooooooooooooooooooooOo" "oooooooooooooooooooooooO"
 	)
+	local anim3=(
+	"oooooooooooooooooooooooo"
+	"ooooooooooo00ooooooooooo" "oooooooooo0oo0oooooooooo" "ooooooooo0oooo0ooooooooo" "oooooooo0oooooo0oooooooo" "ooooooo0oooooooo0ooooooo" "oooooo0oooooooooo0oooooo"
+	"ooooo0oooooooooooo0ooooo" "oooo0oooooooooooooo0oooo" "ooo0oooooooooooooooo0ooo" "oo0oooooooooooooooooo0oo" "o0oooooooooooooooooooo0o" "0oooooooooooooooooooooo0"
+	"oooooooooooooooooooooooo" "0oooooooooooooooooooooo0" "o0oooooooooooooooooooo0o" "oo0oooooooooooooooooo0oo" "ooo0oooooooooooooooo0ooo" "ooo0oooooooooooooooo0ooo"
+	"oooo0oooooooooooooo0oooo" "ooooo0oooooooooooo0ooooo" "oooooo0oooooooooo0oooooo" "ooooooo0oooooooo0ooooooo" "oooooooo0oooooo0oooooooo" "ooooooooo0oooo0ooooooooo"
+	"oooooooooo0oo0oooooooooo" "ooooooooooo00ooooooooooo" "oooooooooooooooooooooooo"
+	)
+	local anim4=(
+	"110010110110101100010100" "010010110111001001011110" "100110100011000110111011" "100110010010001100110110" "100110010111001101101101" "101101101101011101010101"
+	"100011011101001110011001" "011010110001101101110110" "101010010101110100100011" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
+	"101011011101001110011001" "011010110001101101110110" "101010010101110100100011" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
+	"110010110110101100010100" "010010110111001001011110" "100110100011000110111011" "100110010010001100110110" "100110010111001101101101" "101101101101011101010101"
+	"101011011101001110011001" "010111010101110110101001" "101010010101110100100011" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
+	"110010110110101100010100" "010010110111001001011110" "100110100011000110111011" "100110010010001100110110" "100110010111001101101101" "101101101101011101010101"
+	"110010110110101100010100" "010010110111001001011110" "100110100011000110111011" "100110010010001100110110" "100110010111001101101101" "101101101101011101010101"
+	"101011011101001110011001" "010111010101110110101001" "101010010101110100100011" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
+	)
 
-	clear; printf "$scriptName\nby $author\n\n$adbVersion\nBash version ${BASH_VERSION}\n$UIsep_head\n\nDistributed with the $license license\n\n"
-    printf "$errorMessage\n\n\n"
-    printf "\n%*s\n" $[$COLS/2] "$waitMessage"
+	#printf "$scriptName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+    #printf "$errorMessage\n\n\n"
+    printf "\r%*s" $(($COLS/2)) "$waitMessage"
 
-	for i in "${anim2[@]}"
+	for i in "${anim4[@]}"
 	do
-		printf "\r%*s" $[$COLS/2] "$i"
-		sleep 0.08
+		printf "\r%*s" $(($COLS/2)) "$i"
+		sleep 0.05
+		#sleep 0.08
 	done
 }
 
