@@ -15,91 +15,20 @@ scriptName="AndroidInstall_1.1.4-release"; scriptTitle=" MONKEY INSTALLER "; aut
 scriptVersion="1.1.4"; scriptVersionType="release"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"
-export OBBdone="false"; export APKdone="false"; oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
+export OBBdone="false"; export APKdone="false" #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # Text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
-# checks if the user has ADB installed, and if not then it install it on Mac OSX using HomeBrew
-function checkADB(){
-	local instruct="Would you like to install ADB now?"
-	local options=("OK" "Cancel and Exit")
-
-	#check if a network is available and update netReady boolean
-	ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
-
-	if adb version > /dev/null 2>&1; then
-		wait; clear
-	else #ADB is not installed; attempt to install it with HomeBrew..
-		if [ "$netReady" = "false" ]; then
-			until [ "$netReady" = "true" ]
-			do
-				clear; ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
-				printf "\nWaiting for an available network ."; sleep 1; printf " ."; sleep 1; printf " ."; sleep 1; wait
-			done
-			echo
-			checkADB
-		elif [ "$netReady" = "true" ]; then
-			echo
-		else
-			echo "error in netReady"
-		fi
-
-		echo "Connected to network!"
-		printf "\nADB is not installed on this computer.. ADB is required to run this script.\n\n"; sleep 1
-		echo "$instruct" #here the user is asked if they want to install ADB on their machine
-		select opt in "${options[@]}"
-		do
-			case $opt in
-	        "OK")
-				echo
-				if {brew cask install android-platform-tools}; then
-					wait; echo; adbVersion=$(adb version)
-					wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
-					printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-				else #HomeBrew is not installed; installing HomeBrew..
-					printf "\nHomeBrew needs to be installed for this. Installing HomeBrew..\n"
-					ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"
-					if {ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"}; then
-						wait; sleep 3; printf "\nHomebrew has been successfully installed. Installing ADB next..\n"
-					else
-						printf "\nFE2a - Fatal Error; ADB not installed and there was a problem while trying to install HomeBrew.\nPlease report this error code (FE2a) to Nick.\n"
-						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-						echo; exit 1
-					fi
-					#now that HomeBrew is installed, install ADB using HomeBrew
-					if {brew cask install android-platform-tools}; then
-						wait; echo; adbVersion=$(adb version)
-						wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
-						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-					else
-						printf "\nFE2b - Fatal Error; ADB not installed and there was a problem while trying to install platform-tools.\nPlease report this error code (FE2b) to Nick.\n"
-						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-						echo; exit 1
-					fi
-				fi
-				break
-					;;
-			"Cancel and Exit")
-				printf "\nGoodbye!\n"; sleep 1
-				exit
-				break
-					;;
-			*) printf "\nSorry, $REPLY is not an option!\n";;
-			esac
-		done
-	fi
-}
-
 function checkVersion(){
 	#clone repo or update with git pull
-	export terminalPath=$(pwd)
-	(cd ~/ > /dev/null 2>&1; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/Android-Installer > /dev/null 2>&1; git pull > /dev/null 2>&1)
-	cd "$terminalPath"
+	export terminalPath=$(pwd > /dev/null 2>&1)
+	(cd ~/; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/Android-Installer; git pull > /dev/null 2>&1)
+	wait; cd "$terminalPath"
 
 	# determine value of most up-to-date version and show the user
-	currentVersion=$(grep -n "_version " properties.txt); export currentVersion="${currentVersion##* }"
+	currentVersion=$(grep -n "_version " ~/Android-Installer/properties.txt) > /dev/null 2>&1; export currentVersion="${currentVersion##* }" > /dev/null 2>&1
 	printf "\n\n\n\n\n%*s\n" $[$COLS/2] "This script: v$scriptVersion"
 	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
 
@@ -112,15 +41,7 @@ function INIT(){
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
 	clear; echo "Initializing.."; sleep 0.8
 	scriptStartDate=$(date)
-	checkADB #> /dev/null 2>&1
 	checkVersion; sleep 2
-
-	#if toilet -h > /dev/null 2>&1; then echo;
-	#else
-	#	printf "\n\nInstalling missing packages.."
-	#	echo ""; sleep 2
-	#	brew install toilet || sudo apt install toilet
-	#fi
 }; INIT
 
 function printHead(){
@@ -157,9 +78,9 @@ function printHead(){
 
 function printTitle(){
 	#toilet -t --gay "$scriptTitle"
-	figlet -F border -F gay -t "$scriptTitle"
-	#printf "\n%*s\n" $[$COLS/2] "$scriptTitle"
-	#printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
+	#figlet -F border -F gay -t "$scriptTitle"
+	printf "\n%*s\n" $[$COLS/2] "$scriptTitle"
+	printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
 }
 
 function MAIN(){
@@ -203,10 +124,10 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
-		export OBBvalid="true"
+		export OBBvalid="true"; OBBdone="true"
 		printf "OBB Name: Amazon Build"
 	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "0" ]; then
-		export OBBvalid="true"
+		export OBBvalid="true"; OBBdone="true"
 		printf "OBB Name: N/A"
 	elif [[ "$OBBname" == "com."* ]]; then
 		export OBBvalid="true"
@@ -357,7 +278,7 @@ function waiting(){
 	for i in "${anim4[@]}"
 	do
 		printf "\r%*s" $(($COLS/2)) "$i"
-		sleep 0.04
+		sleep 0.01
 		#sleep 0.08
 	done
 }
