@@ -21,11 +21,99 @@ COLS=$(tput cols) # Text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
+# checks if the user has ADB installed, and if not then it install it on Mac OSX using HomeBrew
+function checkADB(){
+	local instruct="Would you like to install ADB now?"
+	local options=("OK" "Cancel and Exit")
+
+	#check if a network is available and update netReady boolean
+	ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
+
+	if adb version > /dev/null 2>&1; then
+		wait; clear
+	else #ADB is not installed; attempt to install it with HomeBrew..
+		if [ "$netReady" = "false" ]; then
+			until [ "$netReady" = "true" ]
+			do
+				clear; ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
+				printf "\nWaiting for an available network ."; sleep 1; printf " ."; sleep 1; printf " ."; sleep 1; wait
+			done
+			echo
+			checkADB
+		elif [ "$netReady" = "true" ]; then
+			echo
+		else
+			echo "error in netReady"
+		fi
+
+		echo "Connected to network!"
+		printf "\nADB is not installed on this computer.. ADB is required to run this script.\n\n"; sleep 1
+		echo "$instruct" #here the user is asked if they want to install ADB on their machine
+		select opt in "${options[@]}"
+		do
+			case $opt in
+	        "OK")
+				echo
+				if {brew cask install android-platform-tools}; then
+					wait; echo; adbVersion=$(adb version)
+					wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
+					printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+				else #HomeBrew is not installed; installing HomeBrew..
+					printf "\nHomeBrew needs to be installed for this. Installing HomeBrew..\n"
+					ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"
+					if {ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"}; then
+						wait; sleep 3; printf "\nHomebrew has been successfully installed. Installing ADB next..\n"
+					else
+						printf "\nFE2a - Fatal Error; ADB not installed and there was a problem while trying to install HomeBrew.\nPlease report this error code (FE2a) to Nick.\n"
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						echo; exit 1
+					fi
+					#now that HomeBrew is installed, install ADB using HomeBrew
+					if {brew cask install android-platform-tools}; then
+						wait; echo; adbVersion=$(adb version)
+						wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+					else
+						printf "\nFE2b - Fatal Error; ADB not installed and there was a problem while trying to install platform-tools.\nPlease report this error code (FE2b) to Nick.\n"
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						echo; exit 1
+					fi
+				fi
+				break
+					;;
+			"Cancel and Exit")
+				printf "\nGoodbye!\n"; sleep 1
+				exit
+				break
+					;;
+			*) printf "\nSorry, $REPLY is not an option!\n";;
+			esac
+		done
+	fi
+}
+
+function checkVersion(){
+	#clone repo or update with git pull
+	export terminalPath=$(pwd)
+	(cd ~/ > /dev/null 2>&1; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/Android-Installer > /dev/null 2>&1; git pull > /dev/null 2>&1)
+	cd "$terminalPath"
+
+	# determine value of most up-to-date version and show the user
+	currentVersion=$(grep -n "_version " properties.txt); export currentVersion="${currentVersion##* }"
+	printf "\n\n\n\n\n%*s\n" $[$COLS/2] "This script: v$scriptVersion"
+	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
+
+	if [ "$scriptVersion" = "$currentVersion" ]; then
+		printf "\n%*s" $[$COLS/2] "This script is up-to-date!"
+	else printf "\n%*s" $[$COLS/2] "Update required..."; fi
+}
+
 function INIT(){
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
 	clear; echo "Initializing.."; sleep 0.8
 	scriptStartDate=$(date)
-	checkADB > /dev/null 2>&1
+	checkADB #> /dev/null 2>&1
+	checkVersion; sleep 2
 
 	#if toilet -h > /dev/null 2>&1; then echo;
 	#else
@@ -100,76 +188,6 @@ function MAIN(){
 		rm /tmp/variables.before /tmp/variables.after
 
 		sleep 1; echo "Please report this error code (FE0) to Nick."; exit 1
-	fi
-}
-
-#check if the user has ADB installed, and if not then it install it on Mac OSX using HomeBrew
-function checkADB(){
-	local instruct="Would you like to install ADB now?"
-	local options=("OK" "Cancel and Exit")
-
-	#check if a network is available and update netReady boolean
-	ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
-
-	if adb version > /dev/null 2>&1; then
-		wait; clear
-	else #ADB is not installed; attempt to install it with HomeBrew..
-		if [ "$netReady" = "false" ]; then
-			until [ "$netReady" = "true" ]
-			do
-				clear; ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` > /dev/null && export netReady="true" || export netReady="false"
-				printf "\nWaiting for an available network ."; sleep 1; printf " ."; sleep 1; printf " ."; sleep 1; wait
-			done
-			echo
-			checkADB
-		elif [ "$netReady" = "true" ]; then
-			echo
-		else
-			echo "error in netReady"
-		fi
-
-		echo "Connected to network!"
-		printf "\nADB is not installed on this computer.. ADB is required to run this script.\n\n"; sleep 1
-		echo "$instruct" #here the user is asked if they want to install ADB on their machine
-		select opt in "${options[@]}"
-		do
-			case $opt in
-	        "OK")
-				echo
-				if {brew cask install android-platform-tools}; then
-					wait; echo; adbVersion=$(adb version)
-					wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
-					printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-				else #HomeBrew is not installed; installing HomeBrew..
-					printf "\nHomeBrew needs to be installed for this. Installing HomeBrew..\n"
-					if {ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"}; then
-						wait; sleep 3; printf "\nHomebrew has been successfully installed. Installing ADB next..\n"
-					else
-						printf "\nFE2a - Fatal Error; ADB not installed and there was a problem while trying to install HomeBrew.\nPlease report this error code (FE2a) to Nick.\n"
-						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-						echo; exit 1
-					fi
-					#now that HomeBrew is installed, install ADB using HomeBrew
-					if {brew cask install android-platform-tools}; then
-						wait; echo; adbVersion=$(adb version)
-						wait; sleep 3; printf "\nAndroid Debug Bridge (ADB) has been successfully installed. Launching MONKEY STRESS in..\n"
-						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-					else
-						printf "\nFE2b - Fatal Error; ADB not installed and there was a problem while trying to install platform-tools.\nPlease report this error code (FE2b) to Nick.\n"
-						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-						echo; exit 1
-					fi
-				fi
-				break
-					;;
-			"Cancel and Exit")
-				printf "\nGoodbye!\n"; sleep 1
-				exit
-				break
-					;;
-			*) printf "\nSorry, $REPLY is not an option!\n";;
-			esac
-		done
 	fi
 }
 
@@ -290,22 +308,6 @@ function INSTALL(){
 		sleep 1; echo "Please report this error code (FE1) to Nick."; exit 1
 	fi
 }
-
-function checkVersion(){
-	clear
-	{ #clone repo; if error then update with git pull
-		pushd ~ > /dev/null 2>&1; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1; popd > /dev/null 2>&1 ||
-		pushd ~/Android-Installer > /dev/null 2>&1; git pull > /dev/null 2>&1; popd > /dev/null 2>&1
-	}
-	currentVersion=$(grep -n "_version " properties.txt); export currentVersion="${currentVersion##* }"
-
-	printf "\n\n\n\n\n%*s\n" $[$COLS/2] "This script: v$scriptVersion"
-	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
-
-	if [ "$scriptVersion" = "$currentVersion" ]; then
-		printf "\n%*s" $[$COLS/2] "This script is up-to-date!"
-	else printf "\n%*s" $[$COLS/2] "Update required..."; fi
-}; checkVersion; sleep 2
 
 # update the script on status of adb connection and wait until it is ready
 function adbWAIT(){
