@@ -357,7 +357,7 @@ function waiting(){
 	for i in "${anim4[@]}"
 	do
 		printf "\r%*s" $(($COLS/2)) "$i"
-		sleep 0.05
+		sleep 0.04
 		#sleep 0.08
 	done
 }
@@ -376,6 +376,7 @@ function installAgain(){
 			if [ "$REPLY" = "y" ]; then OBBdone="false"; APKdone="false"; export launchCMD="monkey -p $OBBname -v 1"; INSTALL
 			else export deviceID=$(adb devices); wait; installAgain; fi
 		else
+			OBBdone="false"; APKdone="false"
 			INSTALL
 		fi
 	fi
