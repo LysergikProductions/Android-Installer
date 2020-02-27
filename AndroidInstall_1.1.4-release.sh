@@ -15,7 +15,7 @@ scriptName="AndroidInstall_1.1.4-release"; scriptTitle=" MONKEY INSTALLER "; aut
 scriptVersion="1.1.4"; scriptVersionType="release"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="false"
-export OBBdone="false"; export APKdone="false"; oops=$(figlet -F border -F gay -t "Oops!"); export oops="$oops"
+export OBBdone="false"; export APKdone="false"; oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # Text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
@@ -246,15 +246,26 @@ function INSTALL(){
 	if {
 		printf "\nUploading OBB..\n"
 		if [ "$OBBdone" = "false" ]; then
-			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then export OBBdone="true"; adbWAIT
+			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then
+				export OBBdone="true"
+				adbWAIT
 			else
-				if [ "$OBBfilePath" = "bw" ]; then
-					echo
-				else
+				if [ "$OBBname" = "bw" ]; then
 					adbWAIT
 					echo; printf "\nRE1 - Invalid OBB; resetting script in..\n"
 					printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
 					MAIN
+				else
+					export errorMessage="FE1 - Fatal Error; install was unsuccesful for unknown reasons."
+					scriptEndDate=$(date)
+					printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"; sleep 1
+
+					mkdir ~/logs/ > /dev/null 2>&1;
+					( set -o posix ; set ) >/tmp/variables.after
+					diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
+					rm /tmp/variables.before /tmp/variables.after
+
+					sleep 1; echo "Please report this error code (FE1) to Nick."; exit 1
 				fi
 			fi
 		fi
