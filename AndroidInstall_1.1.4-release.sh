@@ -14,7 +14,7 @@
 scriptName="AndroidInstall_1.1.4-release"; scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptVersion="1.1.4"; scriptVersionType="release"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
 
-loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="false"
+loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"
 export OBBdone="false"; export APKdone="false"; oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # Text-UI elements and related variables
@@ -80,14 +80,14 @@ function MAIN(){
 		printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
 		printTitle
 	else
-		printf "\n\n%*s\n" $[$COLS/2] "$waitMessage"; adbWAIT
+		adbWAIT
 		printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
 		printTitle
 	fi
 
 	#checking for fatal error while calling the main functions of the script
 	if {
-		getOBB; getAPK; adbWAIT; INSTALL
+		getOBB; getAPK; INSTALL
 	}; then printf "\nGoodbye!\n"; echo; exit
 	else
 		export errorMessage="FE0 - Fatal Error; problem calling main functions."
@@ -190,13 +190,12 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "0" ]; then
 		export OBBvalid="true"
 		printf "OBB Name: N/A"
-	elif [[ ! "$OBBname" == "com."* ]]; then
-		export OBBvalid="false"
-	else
+	elif [[ "$OBBname" == "com."* ]]; then
 		export OBBvalid="true"
 		printf "OBB Name: $OBBname\n\n"
 		export launchCMD="monkey -p $OBBname -v 1"
-		adb uninstall $OBBname > /dev/null 2>&1; wait
+	else
+		export OBBvalid="false"
 	fi
 
 	until [ "$OBBvalid" = "true" ]; do
@@ -207,7 +206,6 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 		getOBB
 	done
 
-	adbWAIT
 	if [ "$deviceConnect" = "true" ]; then getAPK; else export deviceConnect="false"; printHead; fi
 }
 
@@ -227,8 +225,6 @@ function getAPK(){
 	elif [[ "$APKname" == *".apk" ]]; then
 		export APKvalid="true"
 		printf "APK Name: $APKname\n\n"
-
-		adbWAIT
 		if [ "$deviceConnect" = "true" ]; then INSTALL; else export deviceConnect="false"; printHead; fi
 	else export APKvalid="false"; fi
 
@@ -242,7 +238,7 @@ function getAPK(){
 }
 
 function INSTALL(){
-	adbWAIT
+	adbWAIT; adb uninstall "$OBBname" > /dev/null 2>&1; wait
 	if {
 		printf "\nUploading OBB..\n"
 		if [ "$OBBdone" = "false" ]; then
@@ -316,6 +312,7 @@ function adbWAIT(){
 	if (adb shell exit >/dev/null 2>&1); then
 		export deviceConnect="true"
 	else
+		printf "\n\n%*s\n" $[$COLS/2] "$waitMessage"
 		until (adb shell exit >/dev/null 2>&1); do waiting; done
 		export deviceConnect="true"
 		printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
@@ -353,7 +350,7 @@ function waiting(){
 
 	#printf "$scriptName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
     #printf "$errorMessage\n\n\n"
-    printf "\r%*s" $(($COLS/2)) "$waitMessage"
+    #printf "\r%*s" $(($COLS/2)) "$waitMessage"
 
 	for i in "${anim4[@]}"
 	do
@@ -374,7 +371,8 @@ function installAgain(){
 			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
 			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 			read -n 1 -s -r -p ''
-			if [ "$REPLY" = "y" ]; then OBBdone="false"; APKdone="false"; INSTALL; else export deviceID=$(adb devices); wait; installAgain; fi
+			if [ "$REPLY" = "y" ]; then OBBdone="false"; APKdone="false"; export launchCMD="monkey -p $OBBname -v 1"; INSTALL
+			else export deviceID=$(adb devices); wait; installAgain; fi
 		else
 			INSTALL
 		fi
