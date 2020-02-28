@@ -5,24 +5,25 @@
 
 #                                          -- Description --
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
+#                                          --  -  ---  -  --
 
 # make a temp file that includes all variables in the system to later compare to after this script is run..
 # this allows the script to print out the value of every variable in this script into a log file on fatal exit
 ( set -o posix ; set ) >/tmp/variables.before
 
-#some global variables
+# some global variables
 scriptName="AndroidInstall_1.1.4-release"; scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptVersion="1.1.4"; scriptVersionType="release"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"
 export OBBdone="false"; export APKdone="false" #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
-COLS=$(tput cols) # Text-UI elements and related variables
+COLS=$(tput cols) # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
 checkVersion(){
-	#clone repo or update with git pull
+	# clone repo or update with git pull
 	export terminalPath=$(pwd > /dev/null 2>&1)
 	(cd ~/; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/Android-Installer; git pull > /dev/null 2>&1)
 	wait; cd "$terminalPath"
@@ -98,7 +99,7 @@ MAIN(){
 		printTitle
 	fi
 
-	#checking for fatal error while calling the main functions of the script
+	# check for fatal error while calling the main functions of the script
 	if {
 		getOBB; getAPK; INSTALL
 	}; then printf "\nGoodbye!\n"; echo; exit
@@ -116,7 +117,7 @@ MAIN(){
 	fi
 }
 
-getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
+getOBB(){ # get the OBB name needed to isolate the monkey events to the app being tested
 	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here:"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	local cleanPath="${OBBfilePath#*:*}"; export OBBname=$(basename "$cleanPath")
@@ -252,6 +253,7 @@ INSTALL(){
 
 installAgain(){
 	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
+	adbWAIT
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
 		echo; exit
@@ -265,7 +267,8 @@ installAgain(){
 			if [ "$REPLY" = "y" ]; then
 				export launchCMD="monkey -p $OBBname -v 1"; INSTALL
 			else
-				export deviceID=$(adb devices); wait; installAgain
+				adbWAIT; export deviceID=$(adb devices); wait
+				installAgain
 			fi
 		else
 			INSTALL
@@ -329,5 +332,5 @@ waiting(){
     printf "\nDebug: MAIN is caught having an error!\n"
 }
 
-#Say goodbye when done everything, regardless of an exit
+# say goodbye when done everything, regardless of an exit
 printf "\nGoodbye!\n"; exit
