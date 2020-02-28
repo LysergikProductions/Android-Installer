@@ -100,9 +100,9 @@ MAIN(){
 	fi
 
 	# check for fatal error while calling the main functions of the script
-	if {
+	if (
 		getOBB; getAPK; INSTALL
-	}; then printf "\nGoodbye!\n"; echo; exit
+	); then printf "\nGoodbye!\n"; echo; exit
 	else
 		export errorMessage="FE0 - Fatal Error; problem calling main functions."
 		scriptEndDate=$(date)
@@ -125,7 +125,7 @@ getOBB(){ # get the OBB name needed to isolate the monkey events to the app bein
 	if [ "$OBBfilePath" = "" ]; then
 		export OBBvalid="false"
 		printHead; printTitle
-		printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
+		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
@@ -144,7 +144,7 @@ getOBB(){ # get the OBB name needed to isolate the monkey events to the app bein
 
 	until [ "$OBBvalid" = "true" ]; do
 		printHead; printTitle
-		printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
+		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "\n%*s\n\n" $[$COLS/2] "That is not an OBB!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getOBB
@@ -163,7 +163,7 @@ getAPK(){
 	if [ "$APKfilePath" = "" ]; then
 		printHead; printTitle
 		export APKvalid="false"
-		printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
+		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
 		getAPK
 	elif [[ "$APKname" == *".apk" ]]; then
@@ -174,7 +174,7 @@ getAPK(){
 
 	until [ "$APKvalid" = "true" ]; do
 		printHead; printTitle
-		printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
+		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $[$COLS/2] "That is not an APK!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
 		getAPK
