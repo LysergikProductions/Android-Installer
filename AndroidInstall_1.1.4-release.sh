@@ -320,7 +320,7 @@ waiting(){
 	for i in "${anim4[@]}"
 	do
 		printf "\r%*s" $(($COLS/2)) "$i"
-		sleep 0.01
+		sleep 0.03
 		#sleep 0.08
 	done
 }
