@@ -21,7 +21,7 @@ COLS=$(tput cols) # Text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
-function checkVersion(){
+checkVersion(){
 	#clone repo or update with git pull
 	export terminalPath=$(pwd > /dev/null 2>&1)
 	(cd ~/; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/Android-Installer; git pull > /dev/null 2>&1)
@@ -37,14 +37,18 @@ function checkVersion(){
 	else printf "\n%*s" $[$COLS/2] "Update required..."; fi
 }
 
-function INIT(){
-	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
-	clear; echo "Initializing.."; sleep 0.8
-	scriptStartDate=$(date)
-	checkVersion; sleep 2
+INIT(){
+        osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
+        clear; echo "Initializing.."; sleep 0.8
+
+        scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+        scriptFileName=`basename "$0"`
+        scriptStartDate=$(date)
+
+        checkVersion; wait
 }; INIT
 
-function printHead(){
+printHead(){
 	if [ $loopFromError = "false" ]; then clear;
 		printf "$scriptName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then clear;
@@ -76,14 +80,14 @@ function printHead(){
   	fi
 }
 
-function printTitle(){
+printTitle(){
 	#toilet -t --gay "$scriptTitle"
 	#figlet -F border -F gay -t "$scriptTitle"
 	printf "\n%*s\n" $[$COLS/2] "$scriptTitle"
 	printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
 }
 
-function MAIN(){
+MAIN(){
 	printHead
 	if (adb shell settings put global development_settings_enabled 1); then
 		printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
@@ -112,7 +116,7 @@ function MAIN(){
 	fi
 }
 
-function getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
+getOBB(){ #this function gets the OBB name needed to isolate the monkey events to the app being tested
 	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here:"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	local cleanPath="${OBBfilePath#*:*}"; export OBBname=$(basename "$cleanPath")
@@ -148,7 +152,7 @@ function getOBB(){ #this function gets the OBB name needed to isolate the monkey
 	if [ "$deviceConnect" = "true" ]; then getAPK; else export deviceConnect="false"; printHead; fi
 }
 
-function getAPK(){
+getAPK(){
 	APKvalid="true"
 	printf "\n%*s\n" $[$COLS/2] "Drag APK anywhere here:"
 	read -p '' APKfilePath
@@ -176,11 +180,13 @@ function getAPK(){
 	done
 }
 
-function INSTALL(){
+INSTALL(){
 	adbWAIT; adb uninstall "$OBBname" > /dev/null 2>&1; wait
-	if {
-		printf "\nUploading OBB..\n"
+	# if this if statement fails a task, it exits its () subshell resulting in its else being called
+	if (
+		# install the OBB if it hasn't been installed already
 		if [ "$OBBdone" = "false" ]; then
+			printf "\nUploading OBB..\n"
 			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then
 				export OBBdone="true"
 				adbWAIT
@@ -205,17 +211,30 @@ function INSTALL(){
 			fi
 		fi
 
-		printf "\nInstalling APK..\n"
+		# install the APK if it hasn't been installed already
 		if [ "$APKdone" = "false" ]; then
+			printf "\nInstalling APK..\n"
 			if (
-				if (adb install --no-streaming "$APKfilePath" 2>/dev/null); then wait; export APKdone="true"; else adb install "$APKfilePath"; wait; export APKdone="true"; fi
-			); then wait; export APKdone="true"; fi
+				if (adb install --no-streaming "$APKfilePath"); then
+					wait; export APKdone="true"
+				else
+					if (adb install "$APKfilePath"); then
+						wait; export APKdone="true"
+					else
+						exit
+					fi
+				fi
+			); then
+				export APKdone="true"
+			else exit; fi
 		fi
-	}; then
-		printf "\n\nLaunching app."
-		adb shell "$launchCMD" > /dev/null 2>&1; sleep 1; printf " ."; sleep 1; printf " .\n"
-
-		installAgain
+	); then # subshell did not exit unexpectedly, so launch the app if possible, otherwise skip launching and just call installAgain
+		if (adb shell "$launchCMD" > /dev/null 2>&1); then
+			printf "\n\nLaunching app."; sleep 0.5; printf " ."; sleep 0.5; printf " ."; sleep 0.5; printf " ."; sleep 0.5; printf " .\n"
+			installAgain
+		else
+			installAgain
+		fi
 	else
 		export errorMessage="FE1 - Fatal Error; install was unsuccesful for unknown reasons."
 		scriptEndDate=$(date)
@@ -230,8 +249,28 @@ function INSTALL(){
 	fi
 }
 
+installAgain(){
+	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
+	read -n 1 -s -r -p ''
+	if [ "$REPLY" = "q" ]; then
+		echo; exit
+	else
+		export deviceID2=$(adb devices); wait
+		if [ "$deviceID" = "$deviceID2" ]; then
+			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
+			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
+			read -n 1 -s -r -p ''
+			if [ "$REPLY" = "y" ]; then OBBdone="false"; APKdone="false"; export launchCMD="monkey -p $OBBname -v 1"; INSTALL
+			else export deviceID=$(adb devices); wait; installAgain; fi
+		else
+			OBBdone="false"; APKdone="false"
+			INSTALL
+		fi
+	fi
+}
+
 # update the script on status of adb connection and wait until it is ready
-function adbWAIT(){
+adbWAIT(){
 	if (adb shell exit >/dev/null 2>&1); then
 		export deviceConnect="true"
 	else
@@ -243,7 +282,7 @@ function adbWAIT(){
 }
 
 # show the waiting 'animation'
-function waiting(){
+waiting(){
 	local anim1=( "" " ." " . ." " . . ." " . . . ." " . . . . ." )
 	local anim2=(
 	"oooooooooooooooooooooooo"
@@ -271,36 +310,12 @@ function waiting(){
 	"101011011101001110011001" "010111010101110110101001" "101010010101110100100011" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
 	)
 
-	#printf "$scriptName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
-    #printf "$errorMessage\n\n\n"
-    #printf "\r%*s" $(($COLS/2)) "$waitMessage"
-
 	for i in "${anim4[@]}"
 	do
 		printf "\r%*s" $(($COLS/2)) "$i"
 		sleep 0.01
 		#sleep 0.08
 	done
-}
-
-function installAgain(){
-	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
-	read -n 1 -s -r -p ''
-	if [ "$REPLY" = "q" ]; then
-		echo; exit
-	else
-		export deviceID2=$(adb devices); wait
-		if [ "$deviceID" = "$deviceID2" ]; then
-			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
-			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
-			read -n 1 -s -r -p ''
-			if [ "$REPLY" = "y" ]; then OBBdone="false"; APKdone="false"; export launchCMD="monkey -p $OBBname -v 1"; INSTALL
-			else export deviceID=$(adb devices); wait; installAgain; fi
-		else
-			OBBdone="false"; APKdone="false"
-			INSTALL
-		fi
-	fi
 }
 
 { # try to run the MAIN function
