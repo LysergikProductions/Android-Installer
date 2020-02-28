@@ -130,7 +130,7 @@ getOBB(){ #this function gets the OBB name needed to isolate the monkey events t
 	elif [ "$OBBfilePath" = "fire" ]; then
 		export OBBvalid="true"; OBBdone="true"
 		printf "OBB Name: Amazon Build"
-	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "0" ]; then
+	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "none" ] || [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
 		export OBBvalid="true"; OBBdone="true"
 		printf "OBB Name: N/A"
 	elif [[ "$OBBname" == "com."* ]]; then
@@ -218,6 +218,7 @@ INSTALL(){
 				if (adb install --no-streaming "$APKfilePath"); then
 					wait; export APKdone="true"
 				else
+					echo
 					if (adb install "$APKfilePath"); then
 						wait; export APKdone="true"
 					else
@@ -255,15 +256,18 @@ installAgain(){
 	if [ "$REPLY" = "q" ]; then
 		echo; exit
 	else
+		export OBBdone="false"; export APKdone="false"
 		export deviceID2=$(adb devices); wait
 		if [ "$deviceID" = "$deviceID2" ]; then
 			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
 			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 			read -n 1 -s -r -p ''
-			if [ "$REPLY" = "y" ]; then OBBdone="false"; APKdone="false"; export launchCMD="monkey -p $OBBname -v 1"; INSTALL
-			else export deviceID=$(adb devices); wait; installAgain; fi
+			if [ "$REPLY" = "y" ]; then
+				export launchCMD="monkey -p $OBBname -v 1"; INSTALL
+			else
+				export deviceID=$(adb devices); wait; installAgain
+			fi
 		else
-			OBBdone="false"; APKdone="false"
 			INSTALL
 		fi
 	fi
