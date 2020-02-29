@@ -337,17 +337,13 @@ waiting(){
 	for i in "${anim4[@]}"
 	do
 		printf "\r%*s" $(($COLS/2)) "$i"
-		sleep 0.03
+		sleep 0.04
 		#sleep 0.08
 	done
 }
 
-{ # try to run the MAIN function
-    MAIN &&
-    printf "\nDebug: MAIN completed without errors!\n"
-} || {
-    printf "\nDebug: MAIN is caught having an error!\n"
-}
+# Try, catch, finally
+(MAIN) && (echo "This is the rest of the try statement") || printf "\nDebug: This is the catch statement!\n"
 
-# say goodbye when done everything, regardless of an exit
+# this is the 'finally' statement
 printf "\nGoodbye!\n"; exit
