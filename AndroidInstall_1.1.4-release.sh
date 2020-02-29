@@ -24,7 +24,7 @@ UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
 checkVersion(){
 	# clone repo or update it with git pull if it exists already
-	export terminalPath=$(pwd > /dev/null 2>&1)
+	export terminalPath=$(pwd)
 	mkdir ~/upt > /dev/null 2>&1
 	(cd ~/upt; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/upt/Android-Installer; git pull > /dev/null 2>&1)
 	wait; cd "$terminalPath"
@@ -122,16 +122,15 @@ MAIN(){
 		getOBB; getAPK; INSTALL
 	); then printf "\nGoodbye!\n"; echo; exit
 	else
-		export errorMessage="FE0 - Fatal Error; problem calling main functions."
+		export errorMessage+="\nFE0 - Fatal Error; problem calling main functions."
 		scriptEndDate=$(date)
-		printf "\nFE0 - Fatal Error; problem calling main functions.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"; sleep 1
+		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"; sleep 1
 
-		mkdir ~/logs/ > /dev/null 2>&1;
-		( set -o posix ; set ) >/tmp/variables.after
-		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
-		rm /tmp/variables.before /tmp/variables.after
-
-		sleep 1; echo "Please report this error code (FE0) to Nick."; exit 1
+		#mkdir ~/logs/ > /dev/null 2>&1;
+		#( set -o posix ; set ) >/tmp/variables.after
+		#diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
+		#rm /tmp/variables.before /tmp/variables.after
+		exit 1
 	fi
 }
 
@@ -216,16 +215,16 @@ INSTALL(){
 					printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
 					MAIN
 				else
-					export errorMessage="FE1 - Fatal Error; install was unsuccesful for unknown reasons."
+					export errorMessage="FE1a - OBB could not be installed."
 					scriptEndDate=$(date)
-					printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"; sleep 1
+					printf "\n\nFE1a - OBB could not be installed.\n\n"; sleep 1
 
 					mkdir ~/logs/ > /dev/null 2>&1;
 					( set -o posix ; set ) >/tmp/variables.after
 					diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 					rm /tmp/variables.before /tmp/variables.after
 
-					sleep 1; echo "Please report this error code (FE1) to Nick."; exit 1
+					sleep 1; echo "Please report this error code (FE1a) to Nick."; exit 1
 				fi
 			fi
 		fi
@@ -256,16 +255,16 @@ INSTALL(){
 			installAgain
 		fi
 	else
-		export errorMessage="FE1 - Fatal Error; install was unsuccesful for unknown reasons."
+		export errorMessage="FE1b - APK could not be installed."
 		scriptEndDate=$(date)
-		printf "\n\nFE1 - Fatal Error; install was unsuccesful for unknown reasons.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"; sleep 1
+		printf "\n\nFE1b - APK could not be installed.\n\n"; sleep 1
 
 		mkdir ~/logs/ > /dev/null 2>&1;
 		( set -o posix ; set ) >/tmp/variables.after
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 		rm /tmp/variables.before /tmp/variables.after
 
-		sleep 1; echo "Please report this error code (FE1) to Nick."; exit 1
+		sleep 1; echo "Please report this error code (FE1b) to Nick."; exit 1
 	fi
 }
 
