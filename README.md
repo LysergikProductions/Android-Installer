@@ -9,7 +9,7 @@ If the app you are installing is already present on the device, it will be unins
 
 Instructions:
 
-Input one of the following when asked to drag in the OBB file, to skip installing OBB:
+If you do not want to install an OBB file, or if there is not one to install in the first place, then input one of the following when asked to drag in the OBB file:
 
 - "na"
 - "no"
@@ -17,4 +17,5 @@ Input one of the following when asked to drag in the OBB file, to skip installin
 - "0"
 - "."
 
-Or, enter "fire" to tell the script you are installing a build on an Amazon device.
+Enter "fire" to tell the script you are installing a build on an Amazon device.
+Otherwise, drag in the OBB to the terminal window and press enter to continue the installation process.
