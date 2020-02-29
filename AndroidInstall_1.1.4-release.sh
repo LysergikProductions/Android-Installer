@@ -53,17 +53,18 @@ update(){
 	rm -f "$scriptDIR/$scriptFileName"; wait
 	rm -rf "~/upt"; wait
 
+	echo "Launching updated version of the script!"; sleep 1
 	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
 }
 
 INIT(){
-        osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
-        clear; echo "Initializing.."; sleep 0.8
+	clear; echo "Initializing.."; sleep 0.8
+	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
 
-        scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-        scriptStartDate=$(date)
+	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+	scriptStartDate=$(date)
 
-        checkVersion; wait
+	checkVersion; wait
 }; INIT
 
 printHead(){
