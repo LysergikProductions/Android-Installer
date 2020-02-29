@@ -12,30 +12,48 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-scriptName="AndroidInstall_1.1.4-release"; scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
-scriptVersion="1.1.4"; scriptVersionType="release"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
+scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
+scriptFileName=`basename "$0"`; scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
-loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"
-export OBBdone="false"; export APKdone="false" #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
+loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
+export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
 checkVersion(){
-	# clone repo or update with git pull
+	# clone repo or update it with git pull if it exists already
 	export terminalPath=$(pwd > /dev/null 2>&1)
-	(cd ~/; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/Android-Installer; git pull > /dev/null 2>&1)
+	mkdir ~/upt > /dev/null 2>&1
+	(cd ~/upt; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/upt/Android-Installer; git pull > /dev/null 2>&1)
 	wait; cd "$terminalPath"
 
 	# determine value of most up-to-date version and show the user
-	currentVersion=$(grep -n "_version " ~/Android-Installer/properties.txt) > /dev/null 2>&1; export currentVersion="${currentVersion##* }" > /dev/null 2>&1
+	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt) > /dev/null 2>&1; export currentVersion="${currentVersion##* }" > /dev/null 2>&1
 	printf "\n\n\n\n\n%*s\n" $[$COLS/2] "This script: v$scriptVersion"
 	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
 
 	if [ "$scriptVersion" = "$currentVersion" ]; then
-		printf "\n%*s" $[$COLS/2] "This script is up-to-date!"
-	else printf "\n%*s" $[$COLS/2] "Update required..."; fi
+		upToDate="true"
+		printf "\n%*s" $[$COLS/2] "This script is up-to-date!"; sleep 1.1
+	else
+		upToDate="false"
+		printf "\n%*s" $[$COLS/2] "Update required..."; sleep 1.6
+		#update
+	fi
+}
+
+update(){
+	clear; printf "\n%*s\n\n" $[$COLS/2] "Updating Script:"
+
+	cpSource="~/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
+	cp "$cpSource" "$scriptDIR"; wait; upToDate="true"
+
+	rm -f "$scriptDIR/$scriptFileName"; wait
+	rm -rf "~/upt"; wait
+
+	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
 }
 
 INIT(){
@@ -43,7 +61,6 @@ INIT(){
         clear; echo "Initializing.."; sleep 0.8
 
         scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-        scriptFileName=`basename "$0"`
         scriptStartDate=$(date)
 
         checkVersion; wait
@@ -51,9 +68,9 @@ INIT(){
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear;
-		printf "$scriptName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then clear;
-		printf "$scriptName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
 
 		if [ $deviceConnect = "false" ]; then
@@ -219,7 +236,7 @@ INSTALL(){
 				if (adb install --no-streaming "$APKfilePath"); then
 					wait; export APKdone="true"
 				else
-					echo
+					printf "\n\n--no-streaming option unavailable, attempting default install type..\n\n"
 					if (adb install "$APKfilePath"); then
 						wait; export APKdone="true"
 					else

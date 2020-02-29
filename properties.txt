@@ -1,4 +1,4 @@
-_version 1.1.4
+_version 1.1.4-release
 _versionDateDDMMYY 220220
 _versionDateEng February 22nd, 2020
 _
