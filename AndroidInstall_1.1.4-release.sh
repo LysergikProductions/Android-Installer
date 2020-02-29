@@ -1,7 +1,7 @@
 #!/bin/bash
-#AndroidInstall_1.1.4-release.sh
-#Nikolas A. Wagner © 2020
-#License: GNU GPLv3
+# AndroidInstall_1.1.4-release.sh
+# 2020 © Nikolas A. Wagner
+# License: GNU GPLv3
 
 #                                          -- Description --
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
@@ -124,17 +124,12 @@ MAIN(){
 	else
 		export errorMessage+="\nFE0 - Fatal Error; problem calling main functions."
 		scriptEndDate=$(date)
-		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"; sleep 1
-
-		#mkdir ~/logs/ > /dev/null 2>&1;
-		#( set -o posix ; set ) >/tmp/variables.after
-		#diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
-		#rm /tmp/variables.before /tmp/variables.after
-		exit 1
+		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
+		sleep 1; exit 1
 	fi
 }
 
-getOBB(){ # get the OBB name needed to isolate the monkey events to the app being tested
+getOBB(){
 	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here:"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	local cleanPath="${OBBfilePath#*:*}"; export OBBname=$(basename "$cleanPath")
@@ -200,7 +195,6 @@ getAPK(){
 
 INSTALL(){
 	adbWAIT; adb uninstall "$OBBname" > /dev/null 2>&1; wait
-	# if this if statement fails a task, it exits its () subshell resulting in its else being called
 	if (
 		# install the OBB if it hasn't been installed already
 		if [ "$OBBdone" = "false" ]; then
@@ -293,7 +287,7 @@ installAgain(){
 	fi
 }
 
-# update the script on status of adb connection and wait until it is ready
+# update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
 	if (adb shell exit >/dev/null 2>&1); then
 		export deviceConnect="true"
@@ -343,7 +337,7 @@ waiting(){
 }
 
 # Try, catch, finally
-(MAIN) && (echo "This is the rest of the try statement") || printf "\nDebug: This is the catch statement!\n"
+(MAIN) && (printf "\nDebug: This is the rest of the try statement\n") || printf "\nDebug: This is the catch statement!\n"
 
 # this is the 'finally' statement
 printf "\nGoodbye!\n"; exit
