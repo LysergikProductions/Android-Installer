@@ -58,12 +58,12 @@ update(){
 }
 
 INIT(){
-	clear; echo "Initializing.."; sleep 0.8
-	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1 # set font size on Mac OSX Terminal
-
-	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+	clear; echo "Initializing.."; sleep 0.5
 	scriptStartDate=$(date)
+	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+	mkdir ~/logs/ > /dev/null 2>&1
 
+	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 	checkVersion; wait
 }; INIT
 
@@ -122,7 +122,6 @@ MAIN(){
 		getOBB; getAPK; INSTALL
 	); then printf "\nGoodbye!\n"; echo; exit
 	else
-		export errorMessage+="\nFE0 - Fatal Error; problem calling main functions."
 		scriptEndDate=$(date)
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 		sleep 1; exit 1
@@ -210,13 +209,11 @@ INSTALL(){
 					MAIN
 				else
 					export errorMessage="FE1a - OBB could not be installed."
-					scriptEndDate=$(date)
 					printf "\n\nFE1a - OBB could not be installed.\n\n"; sleep 1
 
-					mkdir ~/logs/ > /dev/null 2>&1;
+					scriptEndDate=$(date)
 					( set -o posix ; set ) >/tmp/variables.after
 					diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
-					rm /tmp/variables.before /tmp/variables.after
 
 					sleep 1; echo "Please report this error code (FE1a) to Nick."; exit 1
 				fi
@@ -250,18 +247,17 @@ INSTALL(){
 		fi
 	else
 		export errorMessage="FE1b - APK could not be installed."
-		scriptEndDate=$(date)
 		printf "\n\nFE1b - APK could not be installed.\n\n"; sleep 1
 
-		mkdir ~/logs/ > /dev/null 2>&1;
+		scriptEndDate=$(date)
 		( set -o posix ; set ) >/tmp/variables.after
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
-		rm /tmp/variables.before /tmp/variables.after
 
 		sleep 1; echo "Please report this error code (FE1b) to Nick."; exit 1
 	fi
 }
 
+# check if user wants to install again on another device, or the same device if they choose to
 installAgain(){
 	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
 	adbWAIT
@@ -332,12 +328,12 @@ waiting(){
 	do
 		printf "\r%*s" $(($COLS/2)) "$i"
 		sleep 0.04
-		#sleep 0.08
 	done
 }
 
-# Try, catch, finally
-(MAIN) && (printf "\nDebug: This is the rest of the try statement\n") || printf "\nDebug: This is the catch statement!\n"
+# try, catch, finally
+(MAIN) && (printf "\nDebug: There were no critical errors!\n") || printf "\nDebug: This is the catch statement!\n"
 
-# this is the 'finally' statement
+# this is the finally statement
+rm /tmp/variables.before /tmp/variables.after >/dev/null 2>&1
 printf "\nGoodbye!\n"; exit
