@@ -3,12 +3,33 @@
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
 
+	#This program is free software: you can redistribute it and/or modify
+    #it under the terms of the GNU General Public License as published by
+    #the Free Software Foundation, either version 3 of the License, or
+    #(at your option) any later version.
+
+    #This program is distributed in the hope that it will be useful,
+    #but WITHOUT ANY WARRANTY; without even the implied warranty of
+    #MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    #GNU General Public License for more details.
+
+    #You should have received a copy of the GNU General Public License
+    #along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #                                          -- Description --
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 #                                          --  -  ---  -  --
 
-# allow user to see copyright and not run the script
-if [ "$1" = "show-c" ]; then echo "2020 © Nikolas A. Wagner"; exit; fi
+# allow user to see copyright or license without running the script
+if [ "$1" = "show-c" ] || [ "$1" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
+elif [ "$1" = "show-l" ] || [ "$1" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit; fi
+
+# help option '--help' or '-h'
+help(){
+	printf "\noptions\n  show-c      show the copyright information\n  show-l      show the license information\n"
+	printf "\nskip OBB step using one of the following\n  'na', 'no', 'none', '0', '.'      OBB not applicable\n  'fire'                            Amazon build\n"
+}
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then help; exit; fi
 
 # make a temp file that includes all variables in the system to later compare to after this script is run; for error logging
 ( set -o posix ; set ) >/tmp/variables.before
@@ -290,9 +311,10 @@ adbWAIT(){
 	if (adb shell exit >/dev/null 2>&1); then
 		export deviceConnect="true"
 	else
+		tput civis
 		printf "\n\n%*s\n" $[$COLS/2] "$waitMessage"
 		until (adb shell exit >/dev/null 2>&1); do waiting; done
-		export deviceConnect="true"
+		export deviceConnect="true"; tput cnorm
 		printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
 	fi
 }
