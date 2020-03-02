@@ -363,9 +363,9 @@ waiting(){
 }
 
 # try, catch
-(MAIN) && (printf "\nDebug: There were no critical errors!\n") || printf "\nDebug: This is the catch statement!\n\n"
+(MAIN) && (printf "\nDebug: There were no critical errors!\n\n") || printf "\nDebug: This is the catch statement!\n\n"
 
 # finally
-rm /tmp/variables.before /tmp/variables.after >/dev/null 2>&1
+rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1
 tput cnorm
 printf "\nGoodbye!\n"; exit
