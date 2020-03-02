@@ -81,6 +81,7 @@ update(){
 }
 
 INIT(){
+	tput civis
 	clear; echo "Initializing.."; sleep 0.5
 	scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -92,9 +93,9 @@ INIT(){
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear;
-		printf "$scriptFileName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName\nby $author\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n2020 © $author\n\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then clear;
-		printf "$scriptFileName\nby $author\n\n$adbVersion\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName\nby $author\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
 
 		if [ $deviceConnect = "false" ]; then
@@ -130,7 +131,7 @@ printTitle(){
 }
 
 MAIN(){
-	printHead
+	printHead; tput cnorm
 	if (adb shell settings put global development_settings_enabled 1); then
 		printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
 		printTitle
@@ -158,7 +159,7 @@ getOBB(){
 
 	if [ "$OBBfilePath" = "" ]; then
 		export OBBvalid="false"
-		printHead; printTitle
+		printHead; adbWAIT; adb devices; printTitle
 		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
 		getOBB
@@ -177,7 +178,7 @@ getOBB(){
 	fi
 
 	until [ "$OBBvalid" = "true" ]; do
-		printHead; printTitle
+		printHead; adbWAIT; adb devices; printTitle
 		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "\n%*s\n\n" $[$COLS/2] "That is not an OBB!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
@@ -195,7 +196,7 @@ getAPK(){
 	export APKname=$(basename "$cleanPath")
 
 	if [ "$APKfilePath" = "" ]; then
-		printHead; printTitle
+		printHead; adbWAIT; adb devices; printTitle
 		export APKvalid="false"
 		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
@@ -207,7 +208,7 @@ getAPK(){
 	else export APKvalid="false"; fi
 
 	until [ "$APKvalid" = "true" ]; do
-		printHead; printTitle
+		printHead; adbWAIT; adb devices; printTitle
 		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $[$COLS/2] "That is not an APK!"
 		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
@@ -232,13 +233,13 @@ INSTALL(){
 					MAIN
 				else
 					export errorMessage="FE1a - OBB could not be installed."
-					printf "\n\nFE1a - OBB could not be installed.\n\n"; sleep 1
+					printf "\n\nFE1a - OBB could not be installed.\n"
 
 					scriptEndDate=$(date)
 					( set -o posix ; set ) >/tmp/variables.after
 					diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 
-					sleep 1; echo "Please report this error code (FE1a) to Nick."; exit 1
+					echo "Please report this error code (FE1a) to Nick."; exit 1
 				fi
 			fi
 		fi
@@ -250,7 +251,7 @@ INSTALL(){
 				if (adb install --no-streaming "$APKfilePath"); then
 					wait; export APKdone="true"
 				else
-					printf "\n\n--no-streaming option unavailable, attempting default install type..\n\n"
+					printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
 					if (adb install "$APKfilePath"); then
 						wait; export APKdone="true"
 					else
@@ -270,13 +271,13 @@ INSTALL(){
 		fi
 	else
 		export errorMessage="FE1b - APK could not be installed."
-		printf "\n\nFE1b - APK could not be installed.\n\n"; sleep 1
+		printf "\n\nFE1b - APK could not be installed.\n"
 
 		scriptEndDate=$(date)
 		( set -o posix ; set ) >/tmp/variables.after
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 
-		sleep 1; echo "Please report this error code (FE1b) to Nick."; exit 1
+		echo "Please report this error code (FE1b) to Nick."; exit 1
 	fi
 }
 
@@ -356,7 +357,7 @@ waiting(){
 }
 
 # try, catch, finally
-(MAIN) && (printf "\nDebug: There were no critical errors!\n") || printf "\nDebug: This is the catch statement!\n"
+(MAIN) && (printf "\nDebug: There were no critical errors!\n") || printf "\nDebug: This is the catch statement!\n\n"
 
 # this is the finally statement
 rm /tmp/variables.before /tmp/variables.after >/dev/null 2>&1
