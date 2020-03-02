@@ -29,7 +29,7 @@ scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; bashVersion=${BAS
 scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
-export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; export errAPK="false"
+export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; export UNINSTALL="true"
 #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # text-UI elements and related variables
@@ -234,9 +234,9 @@ INSTALL(){
 
 	printHead; adb devices; printTitle
 	
-	if [ "$errAPK" = "false" ]; then
+	if [ "$UNINSTALL" = "true" ]; then
 		adb uninstall "$OBBname" > /dev/null 2>&1; wait
-		errAPK="false"
+		UNINSTALL="true"
 	fi
 
 	if (
@@ -280,7 +280,7 @@ INSTALL(){
 						( set -o posix ; set ) >/tmp/variables.after
 						echo "Please report this error code (FE1b) to Nick."; exit 1
 					fi
-					errAPK="true"; INSTALL
+					UNINSTALL="false"; INSTALL
 				}
 				trap - SIGINT
 			fi
