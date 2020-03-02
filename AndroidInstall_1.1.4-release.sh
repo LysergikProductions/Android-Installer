@@ -83,9 +83,7 @@ INIT(){
 	mkdir ~/logs/ >/dev/null 2>&1
 
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
-	trap "" SIGINT
-	checkVersion; wait
-	trap - SIGINT
+	trap "" SIGINT; checkVersion; wait; trap - SIGINT
 }
 
 # allow user to see copyright, license, or help page, without running the script
@@ -101,24 +99,26 @@ printHead(){
 		printf "$scriptFileName\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
 
-		if [ $deviceConnect = "false" ]; then
-			until adb shell exit >/dev/null 2>&1; do
-				export deviceConnect="false"
-				waiting
-			done
+		if [ $deviceConnect = "false" ]; then until adb shell exit >/dev/null 2>&1; do
+			export deviceConnect="false"
+			waiting; done
+			export deviceConnect="true"
 			printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
-		elif [ $deviceConnect = "true" ]; then
-			echo
+		elif [ $deviceConnect = "true" ]; then echo
 		else
 			echo "Unexpected value for deviceConnect: $deviceConnect"
 			export deviceConnect="true"
-			exit status 1
+			export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
+    		export errorMessage+="ER1 - Script restarted; 'deviceConnect' had an unexpected value."
+    		
+    		printf "\nER1 - Unexpected value in 'deviceConnect'; resetting script in..\n"
+			printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+			MAIN
 		fi
-		export deviceConnect="true"
   	else
-    		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
-    		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
-    		export loopFromError="true"
+    	export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
+    	export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
+    	export loopFromError="true"
 
 		printf "\nER1 - Unexpected value in 'loopFromError'; resetting script in..\n"
 		printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
@@ -156,7 +156,8 @@ MAIN(){
 }
 
 getOBB(){
-	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here:"
+	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here and press enter:"
+	printf "\nTo skip, use: 'na', '0', or '.'\n"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	local cleanPath="${OBBfilePath#*:*}"; export OBBname=$(basename "$cleanPath")
 
