@@ -1,4 +1,4 @@
-o#!/bin/bash
+#!/bin/bash
 # AndroidInstall_1.1.4-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
@@ -29,7 +29,7 @@ scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; bashVersion=${BAS
 scriptFileName=`basename "$0"`; scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
-export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; OBBname=""; OBBfilePath=""; APKname=""; APKfilePath=""
+export OBBdone="false"; export APKdone="false"; upToDate="error checking version"
 #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # text-UI elements and related variables
@@ -39,19 +39,22 @@ UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 # help option that's displayed with the '--help' or '-h' option
 help(){
 	printf "\noptions\n  show-c      show the copyright information\n  show-l      show the license information\n"
-	printf "\nskip OBB step using one of the following\n  'na', 'no', 'none', '0', '.'      OBB not applicable\n  'fire'                            Amazon build\n"
+	printf "\nskip OBB step using one of the following\n  'na', 'no', 'none', '0', '.'      OBB not applicable\n"
+	printf "  'fire'                            Amazon build\n"
 }
 
 checkVersion(){
-	# clone repo or update it with git pull if it exists already
 	trap "" SIGINT
 	export terminalPath=$(pwd)
 	mkdir ~/upt > /dev/null 2>&1
+
+	# clone repo or update it with git pull if it exists already
 	(cd ~/upt; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/upt/Android-Installer; git pull > /dev/null 2>&1)
 	wait; cd "$terminalPath"
 
 	# determine value of most up-to-date version and show the user
 	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt) > /dev/null 2>&1; export currentVersion="${currentVersion##* }" > /dev/null 2>&1
+
 	printf "\n\n\n\n\n%*s\n" $[$COLS/2] "This script: v$scriptVersion"
 	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
 
@@ -61,7 +64,7 @@ checkVersion(){
 	else
 		export upToDate="false"
 		printf "\n%*s" $[$COLS/2] "Update required..."; sleep 1.6
-		#update
+		update
 	fi
 	trap - SIGINT
 }
@@ -142,8 +145,8 @@ MAIN(){
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(adb shell settings put global development_settings_enabled 1) || adbWAIT
 	printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
-	printTitle
 
+	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
 
 	# try running main functions, catch with running exit 1
@@ -160,6 +163,7 @@ getOBB(){
 	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here and press enter:"
 	printf "\nTo skip, use: 'na', '0', or '.'\n"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
+
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
 
 	if [ "$OBBfilePath" = "" ]; then
@@ -197,8 +201,8 @@ getAPK(){
 	APKvalid="true"
 	printf "\n%*s\n" $[$COLS/2] "Drag APK anywhere here:"
 	read -p '' APKfilePath
-	local cleanPath="${APKfilePath#*:*}"
-	export APKname=$(basename "$cleanPath")
+
+	local cleanPath="${APKfilePath#*:*}"; APKname=$(basename "$cleanPath")
 
 	if [ "$APKfilePath" = "" ]; then
 		printHead; adbWAIT; adb devices; printTitle
@@ -222,8 +226,9 @@ getAPK(){
 }
 
 INSTALL(){
-	tput civis; adbWAIT
-	trap "" SIGINT
+	# hide cursor, wait for device, then disable ctrl-C
+	tput civis; adbWAIT; trap "" SIGINT
+
 	adb uninstall "$OBBname" > /dev/null 2>&1; wait
 
 	if (
@@ -290,21 +295,25 @@ INSTALL(){
 installAgain(){
 	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
 	adbWAIT
+
 	tput civis; read -n 1 -s -r -p ''; tput cnorm
+
 	if [ "$REPLY" = "q" ]; then
 		echo; exit
 	else
 		export OBBdone="false"; export APKdone="false"
 		export deviceID2=$(adb devices); wait
+
 		if [ "$deviceID" = "$deviceID2" ]; then
 			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
 			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
+
 			tput civis; read -n 1 -s -r -p ''; tput cnorm
+
 			if [ "$REPLY" = "y" ]; then
 				export launchCMD="monkey -p $OBBname -v 1"; INSTALL
 			else
-				adbWAIT; export deviceID=$(adb devices); wait
-				installAgain
+				adbWAIT; export deviceID=$(adb devices); wait; installAgain
 			fi
 		else
 			INSTALL
@@ -320,6 +329,7 @@ adbWAIT(){
 		tput civis
 		printf "\n\n%*s\n" $[$COLS/2] "$waitMessage"
 		until (adb shell exit >/dev/null 2>&1); do waiting; done
+
 		export deviceConnect="true"; tput cnorm
 		printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
 	fi
