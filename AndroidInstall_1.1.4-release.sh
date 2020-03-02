@@ -1,4 +1,4 @@
-#!/bin/bash
+o#!/bin/bash
 # AndroidInstall_1.1.4-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
@@ -29,7 +29,8 @@ scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; bashVersion=${BAS
 scriptFileName=`basename "$0"`; scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
-export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
+export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; OBBname=""; OBBfilePath=""; APKname=""; APKfilePath=""
+#oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
@@ -43,6 +44,7 @@ help(){
 
 checkVersion(){
 	# clone repo or update it with git pull if it exists already
+	trap "" SIGINT
 	export terminalPath=$(pwd)
 	mkdir ~/upt > /dev/null 2>&1
 	(cd ~/upt; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/upt/Android-Installer; git pull > /dev/null 2>&1)
@@ -61,6 +63,7 @@ checkVersion(){
 		printf "\n%*s" $[$COLS/2] "Update required..."; sleep 1.6
 		#update
 	fi
+	trap - SIGINT
 }
 
 update(){
@@ -83,7 +86,7 @@ INIT(){
 	mkdir ~/logs/ >/dev/null 2>&1
 
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
-	trap "" SIGINT; checkVersion; wait; trap - SIGINT
+	checkVersion; wait
 }
 
 # allow user to see copyright, license, or help page, without running the script
@@ -134,32 +137,30 @@ printTitle(){
 }
 
 MAIN(){
-	printHead; tput cnorm
-	if (adb shell settings put global development_settings_enabled 1); then
-		printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
-		printTitle
-	else
-		adbWAIT
-		printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
-		printTitle
-	fi
+	printHead
 
-	# check for fatal error while calling the main functions of the script
-	if (
-		getOBB; getAPK; trap "" SIGINT; INSTALL; trap - SIGINT
-	); then printf "\nGoodbye!\n"; echo; exit
-	else
-		scriptEndDate=$(date)
+	# try communicating with device, catch with adbWAIT, finally mount device
+	(adb shell settings put global development_settings_enabled 1) || adbWAIT
+	printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
+	printTitle
+
+	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
+
+	# try running main functions, catch with running exit 1
+	(getOBB && getAPK && INSTALL) || {
+		export scriptEndDate=$(date)
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
+
+		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 		sleep 1; exit 1
-	fi
+	}
 }
 
 getOBB(){
 	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here and press enter:"
 	printf "\nTo skip, use: 'na', '0', or '.'\n"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
-	local cleanPath="${OBBfilePath#*:*}"; export OBBname=$(basename "$cleanPath")
+	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
 
 	if [ "$OBBfilePath" = "" ]; then
 		export OBBvalid="false"
@@ -222,7 +223,9 @@ getAPK(){
 
 INSTALL(){
 	tput civis; adbWAIT
+	trap "" SIGINT
 	adb uninstall "$OBBname" > /dev/null 2>&1; wait
+
 	if (
 		# install the OBB if it hasn't been installed already
 		if [ "$OBBdone" = "false" ]; then
@@ -240,9 +243,7 @@ INSTALL(){
 					export errorMessage="FE1a - OBB could not be installed."
 					printf "\n\nFE1a - OBB could not be installed.\n"
 
-					scriptEndDate=$(date)
 					( set -o posix ; set ) >/tmp/variables.after
-					diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 
 					echo "Please report this error code (FE1a) to Nick."; exit 1
 				fi
@@ -278,13 +279,11 @@ INSTALL(){
 		export errorMessage="FE1b - APK could not be installed."
 		printf "\n\nFE1b - APK could not be installed.\n"
 
-		scriptEndDate=$(date)
 		( set -o posix ; set ) >/tmp/variables.after
-		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 
 		echo "Please report this error code (FE1b) to Nick."; exit 1
 	fi
-	tput cnorm
+	tput cnorm; trap - SIGINT
 }
 
 # check if user wants to install again on another device, or the same device if they choose to
@@ -363,7 +362,7 @@ waiting(){
 }
 
 # try, catch
-(MAIN) && (printf "\nDebug: There were no critical errors!\n\n") || printf "\nDebug: This is the catch statement!\n\n"
+(MAIN) && (printf "\nDebug: There were no critical errors!\n\n") || printf "\nDebug: This is the last catch statement!\n\n"
 
 # finally
 rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1
