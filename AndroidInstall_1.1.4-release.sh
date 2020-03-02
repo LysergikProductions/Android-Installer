@@ -286,7 +286,7 @@ INSTALL(){
 
 		echo "Please report this error code (FE1b) to Nick."; exit 1
 	fi
-	tput cnorm; trap - SIGINT
+	tput cnorm; trap - SIGINT; deviceID=$(adb devices)
 }
 
 # check if user wants to install again on another device, or the same device if they choose to
@@ -298,9 +298,8 @@ installAgain(){
 	if [ "$REPLY" = "q" ]; then
 		echo; exit
 	else
-		export deviceID2=""
+		export deviceID2=""; adbWAIT
 		export OBBdone="false"; export APKdone="false"
-		adbWAIT
 		deviceID2=$(adb devices); wait
 
 		if [ "$deviceID" = "$deviceID2" ]; then
@@ -313,7 +312,7 @@ installAgain(){
 				export launchCMD="monkey -p $OBBname -v 1"; INSTALL
 			else
 				export deviceID=""
-				adbWAIT; deviceID=$(adb devices); wait; installAgain; exit
+				adbWAIT; deviceID2=$(adb devices); wait; installAgain; exit
 			fi
 		else
 			INSTALL
