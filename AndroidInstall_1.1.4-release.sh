@@ -29,7 +29,7 @@ scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; bashVersion=${BAS
 scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
-export OBBdone="false"; export APKdone="false"; upToDate="error checking version"
+export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; export errAPK="false"
 #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 COLS=$(tput cols) # text-UI elements and related variables
@@ -229,11 +229,15 @@ getAPK(){
 }
 
 INSTALL(){
-	# hide cursor, wait for device, then disable ctrl-C
-	tput civis; adbWAIT; trap "" SIGINT
+	# hide cursor and wait for device
+	tput civis; adbWAIT
 
 	printHead; adb devices; printTitle
-	adb uninstall "$OBBname" > /dev/null 2>&1; wait
+	
+	if [ "$errAPK" = "false" ]; then
+		adb uninstall "$OBBname" > /dev/null 2>&1; wait
+		errAPK="false"
+	fi
 
 	if (
 		# install the OBB if it hasn't been installed already
@@ -241,6 +245,7 @@ INSTALL(){
 			printf "\nUploading OBB..\n"
 
 			if [[ "$OBBname" == "com."* ]]; then
+				trap "" SIGINT
 				(adb push "$OBBfilePath" /sdcard/Android/OBB) || {
 					(adb shell exit) || deviceConnect="false"
 					if [ "$deviceConnect" = "true" ]; then
@@ -252,6 +257,7 @@ INSTALL(){
 					fi
 					INSTALL
 				}
+				trap - SIGINT
 			fi
 			export OBBdone="true"
 		fi
@@ -259,25 +265,32 @@ INSTALL(){
 		# install the APK if it hasn't been installed already
 		if [ "$APKdone" = "false" ]; then
 			printf "\nInstalling APK..\n"
-			if (
-				if (adb install --no-streaming "$APKfilePath"); then
-					wait; export APKdone="true"
-				else
+			
+			if [[ "$APKname" == *".apk" ]]; then
+				trap "" SIGINT
+				((adb install --no-streaming "$APKfilePath") || {
 					printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-					if (adb install "$APKfilePath"); then
-						wait; export APKdone="true"; else exit; fi
-				fi
-			); then
-				export APKdone="true"
-			else exit; fi
+					adb install "$APKfilePath"
+				}) || {
+					(adb shell exit) || deviceConnect="false"
+					if [ "$deviceConnect" = "true" ]; then
+						export errorMessage="FE1b - APK could not be installed."
+						printf "\n\nFE1b - APK could not be installed.\n"
+
+						( set -o posix ; set ) >/tmp/variables.after
+						echo "Please report this error code (FE1b) to Nick."; exit 1
+					fi
+					errAPK="true"; INSTALL
+				}
+				trap - SIGINT
+			fi
+			export APKdone="true"
 		fi
 	); then # subshell did not throw error, so, launch the app if possible and otherwise skip launching and just call installAgain
-		if (adb shell "$launchCMD" >/dev/null 2>&1); then
-			printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
-			tput cnorm; installAgain; exit 1
-		else
-			tput cnorm; installAgain; exit 1
-		fi
+		adb shell "$launchCMD" >/dev/null 2>&1 && {
+			printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
+		}
+		tput cnorm; wait; installAgainPrompt; installAgain; exit 1
 	else
 		export errorMessage="FE1b - APK could not be installed."
 		printf "\n\nFE1b - APK could not be installed.\n"
@@ -290,8 +303,7 @@ INSTALL(){
 }
 
 # check if user wants to install again on another device, or the same device if they choose to
-installAgain(){
-	trap - SIGINT
+installAgainPrompt(){
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, or press any other key to install this build on another device.."
 
 	read -n 1 -s -r -p ''
@@ -301,22 +313,25 @@ installAgain(){
 		export deviceID2=""; adbWAIT
 		export OBBdone="false"; export APKdone="false"
 		deviceID2=$(adb devices); wait
+	fi
+}
 
-		if [ "$deviceID" = "$deviceID2" ]; then
-			printHead; adb devices; printTitle
-			printf "\n\n%*s\n" $((COLS/2)) "This is same device! Are you sure you want to install the build on this device again?"
-			printf "\n%*s\n" $((COLS/2)) "Press 'y' to install on the same device, or any other key when you have plugged in another device."
+installAgain(){
+	trap - SIGINT
+	if [ "$deviceID" = "$deviceID2" ]; then
+		printHead; adb devices; printTitle
+		printf "\n\n%*s\n" $((COLS/2)) "This is same device! Are you sure you want to install the build on this device again?"
+		printf "\n%*s\n" $((COLS/2)) "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 
-			read -n 1 -s -r -p ''
-			if [ "$REPLY" = "y" ]; then
-				export launchCMD="monkey -p $OBBname -v 1"; INSTALL
-			else
-				export deviceID=""
-				adbWAIT; deviceID2=$(adb devices); wait; installAgain; exit
-			fi
+		read -n 1 -s -r -p ''
+		if [ "$REPLY" = "y" ]; then
+			export launchCMD="monkey -p $OBBname -v 1"; INSTALL
 		else
-			INSTALL
+			export deviceID=""
+			adbWAIT; deviceID2=$(adb devices); wait; installAgain; exit
 		fi
+	else
+		INSTALL
 	fi
 	tput cnorm
 }
