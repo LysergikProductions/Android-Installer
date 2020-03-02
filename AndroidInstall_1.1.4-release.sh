@@ -44,7 +44,6 @@ help(){
 }
 
 checkVersion(){
-	trap "" SIGINT
 	export terminalPath=""; terminalPath=$(pwd)
 	mkdir ~/upt > /dev/null 2>&1
 
@@ -66,10 +65,10 @@ checkVersion(){
 		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.6
 		update
 	fi
-	trap - SIGINT
 }
 
 update(){
+	trap "" SIGINT
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
 	cpSource="$HOME/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
@@ -80,6 +79,7 @@ update(){
 
 	echo "Launching updated version of the script!"; sleep 1
 	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
+	trap - SIGINT
 }
 
 INIT(){
@@ -152,7 +152,7 @@ MAIN(){
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
 
 	# try running main functions, catch with running exit 1
-	(adbWAIT && getOBB && getAPK && INSTALL) || {
+	(adbWAIT && getOBB && getAPK) || {
 		export scriptEndDate=""; scriptEndDate=$(date)
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
@@ -235,7 +235,7 @@ INSTALL(){
 	printf "\nMounting device...\n\n"; adb devices
 	
 	if [ "$UNINSTALL" = "true" ]; then
-		adb uninstall "$OBBname" > /dev/null 2>&1; wait
+		wait | adb uninstall "$OBBname" >/dev/null 2>&1
 		UNINSTALL="true"
 	fi
 
@@ -268,9 +268,9 @@ INSTALL(){
 			
 			if [[ "$APKname" == *".apk" ]]; then
 				trap "" SIGINT
-				((adb install --no-streaming "$APKfilePath" || (trap - SIGINT; exit 1)) || {
+				((adb install -r --no-streaming "$APKfilePath" || (trap - SIGINT; exit 1)) || {
 					printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-					adb install "$APKfilePath"
+					adb install -r "$APKfilePath"
 				}) || {
 					(adb shell exit) || deviceConnect="false"
 					if [ "$deviceConnect" = "true" ]; then
@@ -289,10 +289,11 @@ INSTALL(){
 	); then # subshell did not throw error, so, launch the app if possible and otherwise skip launching and just call installAgain
 		if [ "$OBBfilePath" = "fire" ] || [ "$OBBfilePath" = "." ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "na" ]; then
 			trap - SIGINT; adbWAIT; deviceID=$(adb devices)
-			tput cnorm; installAgainPrompt && installAgain; exit 1
+			tput cnorm; installAgainPrompt; exit 1
 		else
 			adb shell "$launchCMD" >/dev/null 2>&1
 				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
+				tput cnorm; installAgainPrompt; exit 1
 		fi
 	else
 		export errorMessage="FE1b - APK could not be installed."
@@ -314,6 +315,7 @@ installAgainPrompt(){
 	else
 		export OBBdone="false"; export APKdone="false"
 	fi
+	installAgain
 }
 
 installAgain(){
@@ -323,15 +325,14 @@ installAgain(){
 	
 	if [ "$deviceID" = "$deviceID2" ]; then
 		printHead; adb devices; printTitle
-		printf "\n\n%*s\n" $((COLS/2)) "This is same device! Are you sure you want to install the build on this device again?"
+		printf "\n\n%*s\n" $((COLS/2)) "This is the same device! Are you sure you want to install the build on this device again?"
 		printf "\n%*s\n" $((COLS/2)) "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 
 		read -n 1 -s -r -p ''
 		if [ "$REPLY" = "y" ]; then
-			export launchCMD="monkey -p $OBBname -v 1"; INSTALL
+			UNINSTALL="true"; INSTALL
 		else
-			export deviceID=""
-			adbWAIT; deviceID2=$(adb devices); wait; installAgain; exit
+			adbWAIT; deviceID2=$(adb devices); wait; installAgainPrompt; exit 1
 		fi
 	else
 		INSTALL
