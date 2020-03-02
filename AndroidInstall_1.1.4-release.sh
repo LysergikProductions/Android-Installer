@@ -54,10 +54,10 @@ checkVersion(){
 	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
 
 	if [ "$scriptVersion" = "$currentVersion" ]; then
-		upToDate="true"
+		export upToDate="true"
 		printf "\n%*s" $[$COLS/2] "This script is up-to-date!"; sleep 1.1
 	else
-		upToDate="false"
+		export upToDate="false"
 		printf "\n%*s" $[$COLS/2] "Update required..."; sleep 1.6
 		#update
 	fi
@@ -67,7 +67,7 @@ update(){
 	clear; printf "\n%*s\n\n" $[$COLS/2] "Updating Script:"
 
 	cpSource="~/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
-	cp "$cpSource" "$scriptDIR"; wait; upToDate="true"
+	cp "$cpSource" "$scriptDIR"; wait; export upToDate="true"
 
 	rm -f "$scriptDIR/$scriptFileName"; wait
 	rm -rf "~/upt"; wait
@@ -96,9 +96,9 @@ else clear; echo "Initializing.."; INIT; fi
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear;
-		printf "$scriptFileName\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then clear;
-		printf "$scriptFileName\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
 
 		if [ $deviceConnect = "false" ]; then
