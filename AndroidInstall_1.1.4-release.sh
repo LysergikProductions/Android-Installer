@@ -83,7 +83,9 @@ INIT(){
 	mkdir ~/logs/ >/dev/null 2>&1
 
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
+	trap "" SIGINT
 	checkVersion; wait
+	trap - SIGINT
 }
 
 # allow user to see copyright, license, or help page, without running the script
@@ -94,9 +96,9 @@ else clear; echo "Initializing.."; INIT; fi
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear;
-		printf "$scriptFileName\nby $author\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n2020 © $author\n\n$UIsep_head\n\n"
+		printf "$scriptFileName\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then clear;
-		printf "$scriptFileName\nby $author\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
 
 		if [ $deviceConnect = "false" ]; then
@@ -144,7 +146,7 @@ MAIN(){
 
 	# check for fatal error while calling the main functions of the script
 	if (
-		getOBB; getAPK; INSTALL
+		getOBB; getAPK; trap "" SIGINT; INSTALL; trap - SIGINT
 	); then printf "\nGoodbye!\n"; echo; exit
 	else
 		scriptEndDate=$(date)
