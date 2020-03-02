@@ -291,7 +291,7 @@ INSTALL(){
 installAgain(){
 	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
 	adbWAIT
-	read -n 1 -s -r -p ''
+	tput civis; read -n 1 -s -r -p ''; tput cnorm
 	if [ "$REPLY" = "q" ]; then
 		echo; exit
 	else
@@ -300,7 +300,7 @@ installAgain(){
 		if [ "$deviceID" = "$deviceID2" ]; then
 			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
 			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
-			read -n 1 -s -r -p ''
+			tput civis; read -n 1 -s -r -p ''; tput cnorm
 			if [ "$REPLY" = "y" ]; then
 				export launchCMD="monkey -p $OBBname -v 1"; INSTALL
 			else
