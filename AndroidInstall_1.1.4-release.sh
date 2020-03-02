@@ -4,17 +4,18 @@
 # License: GNU GPLv3
 
 	#This program is free software: you can redistribute it and/or modify
-    #it under the terms of the GNU General Public License as published by
-    #the Free Software Foundation, either version 3 of the License, or
-    #(at your option) any later version.
+	#it under the terms of the GNU General Public License as published by
+	#the Free Software Foundation, either version 3 of the License, or
+	#(at your option) any later version.
 
-    #This program is distributed in the hope that it will be useful,
-    #but WITHOUT ANY WARRANTY; without even the implied warranty of
-    #MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    #GNU General Public License for more details.
+	#This program is distributed in the hope that it will be useful,
+	#but WITHOUT ANY WARRANTY; without even the implied warranty of
+	#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	#GNU General Public License for more details.
 
-    #You should have received a copy of the GNU General Public License
-    #along with this program.  If not, see <https://www.gnu.org/licenses/>.
+	#You should have received a copy of the GNU General Public License
+	#along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 
 #                                          -- Description --
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
@@ -356,9 +357,9 @@ waiting(){
 	done
 }
 
-# try, catch, finally
+# try, catch
 (MAIN) && (printf "\nDebug: There were no critical errors!\n") || printf "\nDebug: This is the catch statement!\n\n"
 
-# this is the finally statement
+# finally
 rm /tmp/variables.before /tmp/variables.after >/dev/null 2>&1
 printf "\nGoodbye!\n"; exit
