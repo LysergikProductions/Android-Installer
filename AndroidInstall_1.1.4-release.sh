@@ -20,18 +20,7 @@
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 #                                          --  -  ---  -  --
 
-# allow user to see copyright or license without running the script
-if [ "$1" = "show-c" ] || [ "$1" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
-elif [ "$1" = "show-l" ] || [ "$1" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit; fi
-
-# help option '--help' or '-h'
-help(){
-	printf "\noptions\n  show-c      show the copyright information\n  show-l      show the license information\n"
-	printf "\nskip OBB step using one of the following\n  'na', 'no', 'none', '0', '.'      OBB not applicable\n  'fire'                            Amazon build\n"
-}
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then help; exit; fi
-
-# make a temp file that includes all variables in the system to later compare to after this script is run; for error logging
+# temp file that includes all system variables on script execution
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
@@ -44,6 +33,12 @@ export OBBdone="false"; export APKdone="false"; upToDate="error checking version
 COLS=$(tput cols) # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
+
+# help option that's displayed with the '--help' or '-h' option
+help(){
+	printf "\noptions\n  show-c      show the copyright information\n  show-l      show the license information\n"
+	printf "\nskip OBB step using one of the following\n  'na', 'no', 'none', '0', '.'      OBB not applicable\n  'fire'                            Amazon build\n"
+}
 
 checkVersion(){
 	# clone repo or update it with git pull if it exists already
@@ -81,15 +76,20 @@ update(){
 }
 
 INIT(){
-	tput civis
-	clear; echo "Initializing.."; sleep 0.5
+	tput civis # hide cursor
 	scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-	mkdir ~/logs/ > /dev/null 2>&1
+	mkdir ~/logs/ >/dev/null 2>&1
 
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 	checkVersion; wait
-}; INIT
+}
+
+# allow user to see copyright, license, or help page, without running the script
+if [ "$1" = "show-c" ] || [ "$1" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
+elif [ "$1" = "show-l" ] || [ "$1" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
+elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then help; exit
+else clear; echo "Initializing.."; INIT; fi
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear;
