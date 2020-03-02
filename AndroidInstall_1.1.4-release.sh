@@ -26,7 +26,7 @@
 
 # some global variables
 scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
-scriptFileName=`basename "$0"`; scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
+scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
 export OBBdone="false"; export APKdone="false"; upToDate="error checking version"
@@ -34,7 +34,7 @@ export OBBdone="false"; export APKdone="false"; upToDate="error checking version
 
 COLS=$(tput cols) # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
+export UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
 # help option that's displayed with the '--help' or '-h' option
 help(){
@@ -45,38 +45,38 @@ help(){
 
 checkVersion(){
 	trap "" SIGINT
-	export terminalPath=$(pwd)
+	export terminalPath=""; terminalPath=$(pwd)
 	mkdir ~/upt > /dev/null 2>&1
 
 	# clone repo or update it with git pull if it exists already
-	(cd ~/upt; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || (cd ~/upt/Android-Installer; git pull > /dev/null 2>&1)
+	(cd ~/upt; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || cd ~/upt/Android-Installer; git pull > /dev/null 2>&1
 	wait; cd "$terminalPath"
 
 	# determine value of most up-to-date version and show the user
 	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt) > /dev/null 2>&1; export currentVersion="${currentVersion##* }" > /dev/null 2>&1
 
-	printf "\n\n\n\n\n%*s\n" $[$COLS/2] "This script: v$scriptVersion"
-	printf "%*s\n" $[$COLS/2] "Latest version: v$currentVersion"
+	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
+	printf "%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
 
 	if [ "$scriptVersion" = "$currentVersion" ]; then
 		export upToDate="true"
-		printf "\n%*s" $[$COLS/2] "This script is up-to-date!"; sleep 1.1
+		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1.1
 	else
 		export upToDate="false"
-		printf "\n%*s" $[$COLS/2] "Update required..."; sleep 1.6
+		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.6
 		update
 	fi
 	trap - SIGINT
 }
 
 update(){
-	clear; printf "\n%*s\n\n" $[$COLS/2] "Updating Script:"
+	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
-	cpSource="~/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
+	cpSource="$HOME/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
 	cp "$cpSource" "$scriptDIR"; wait; export upToDate="true"
 
 	rm -f "$scriptDIR/$scriptFileName"; wait
-	rm -rf "~/upt"; wait
+	rm -rf ~/upt; wait
 
 	echo "Launching updated version of the script!"; sleep 1
 	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
@@ -84,6 +84,7 @@ update(){
 
 INIT(){
 	tput civis # hide cursor
+	export scriptStartDate=""
 	scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	mkdir ~/logs/ >/dev/null 2>&1
@@ -109,7 +110,7 @@ printHead(){
 			export deviceConnect="false"
 			waiting; done
 			export deviceConnect="true"
-			printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
+			printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
 		elif [ $deviceConnect = "true" ]; then echo
 		else
 			echo "Unexpected value for deviceConnect: $deviceConnect"
@@ -135,32 +136,34 @@ printHead(){
 printTitle(){
 	#toilet -t --gay "$scriptTitle"
 	#figlet -F border -F gay -t "$scriptTitle"
-	printf "\n%*s\n" $[$COLS/2] "$scriptTitle"
-	printf "%*s\n\n\n" $[$COLS/2] "$UIsep_title"
+	printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
+	printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
 }
 
 MAIN(){
+	export deviceID=""; export deviceID2=""
 	printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(adb shell settings put global development_settings_enabled 1) || adbWAIT
-	printf "\nMounting device...\n\n"; adb devices; export deviceID=$(adb devices)
+	printf "\nMounting device...\n\n"; adb devices; deviceID=$(adb devices)
 
 	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
 
 	# try running main functions, catch with running exit 1
 	(getOBB && getAPK && INSTALL) || {
-		export scriptEndDate=$(date)
+		export scriptEndDate=""; scriptEndDate=$(date)
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
 		sleep 1; exit 1
 	}
+	exit
 }
 
 getOBB(){
-	printf "\n%*s\n" $[$COLS/2] "Drag OBB anywhere here and press enter:"
+	printf "\n%*s\n" $((COLS/2)) "Drag OBB anywhere here and press enter:"
 	printf "\nTo skip, use: 'na', '0', or '.'\n"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 
@@ -169,8 +172,8 @@ getOBB(){
 	if [ "$OBBfilePath" = "" ]; then
 		export OBBvalid="false"
 		printHead; adbWAIT; adb devices; printTitle
-		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
-		printf "%*s\n" $[$COLS/2] "You forgot to drag the OBB!"
+		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
 		export OBBvalid="true"; OBBdone="true"
@@ -188,9 +191,9 @@ getOBB(){
 
 	until [ "$OBBvalid" = "true" ]; do
 		printHead; adbWAIT; adb devices; printTitle
-		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
-		printf "\n%*s\n\n" $[$COLS/2] "That is not an OBB!"
-		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
+		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "\n%*s\n\n" $((COLS/2)) "That is not an OBB!"
+		printf "%*s\n\n" $((COLS/2)) "I may be a monkey but I am no fool!"
 		getOBB
 	done
 
@@ -199,7 +202,7 @@ getOBB(){
 
 getAPK(){
 	APKvalid="true"
-	printf "\n%*s\n" $[$COLS/2] "Drag APK anywhere here:"
+	printf "\n%*s\n" $((COLS/2)) "Drag APK anywhere here:"
 	read -p '' APKfilePath
 
 	local cleanPath="${APKfilePath#*:*}"; APKname=$(basename "$cleanPath")
@@ -207,8 +210,8 @@ getAPK(){
 	if [ "$APKfilePath" = "" ]; then
 		printHead; adbWAIT; adb devices; printTitle
 		export APKvalid="false"
-		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
-		printf "%*s\n\n" $[$COLS/2] "You forgot to drag the APK!"
+		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
 	elif [[ "$APKname" == *".apk" ]]; then
 		export APKvalid="true"
@@ -218,9 +221,9 @@ getAPK(){
 
 	until [ "$APKvalid" = "true" ]; do
 		printHead; adbWAIT; adb devices; printTitle
-		#printf "%*s\n" $(($COLS/2)) "$oops"; sleep 0.05
-		printf "%*s\n\n" $[$COLS/2] "That is not an APK!"
-		printf "%*s\n\n" $[$COLS/2] "I may be a monkey but I am no fool!"
+		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n\n" $((COLS/2)) "That is not an APK!"
+		printf "%*s\n\n" $((COLS/2)) "I may be a monkey but I am no fool!"
 		getAPK
 	done
 }
@@ -229,30 +232,28 @@ INSTALL(){
 	# hide cursor, wait for device, then disable ctrl-C
 	tput civis; adbWAIT; trap "" SIGINT
 
+	printHead; adb devices; printTitle
 	adb uninstall "$OBBname" > /dev/null 2>&1; wait
 
 	if (
 		# install the OBB if it hasn't been installed already
 		if [ "$OBBdone" = "false" ]; then
 			printf "\nUploading OBB..\n"
-			if (adb push "$OBBfilePath" /sdcard/Android/OBB); then
-				export OBBdone="true"
-				adbWAIT
-			else
-				if [ "$OBBname" = "bw" ]; then
-					adbWAIT
-					echo; printf "\nRE1 - Invalid OBB; resetting script in..\n"
-					printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 0.5
-					MAIN
-				else
-					export errorMessage="FE1a - OBB could not be installed."
-					printf "\n\nFE1a - OBB could not be installed.\n"
 
-					( set -o posix ; set ) >/tmp/variables.after
+			if [[ "$OBBname" == "com."* ]]; then
+				(adb push "$OBBfilePath" /sdcard/Android/OBB) || {
+					(adb shell exit) || deviceConnect="false"
+					if [ "$deviceConnect" = "true" ]; then
+						export errorMessage="FE1a - OBB could not be installed."
+						printf "\n\nFE1a - OBB could not be installed.\n"
 
-					echo "Please report this error code (FE1a) to Nick."; exit 1
-				fi
+						( set -o posix ; set ) >/tmp/variables.after
+						echo "Please report this error code (FE1a) to Nick."; exit 1
+					fi
+					INSTALL
+				}
 			fi
+			export OBBdone="true"
 		fi
 
 		# install the APK if it hasn't been installed already
@@ -264,21 +265,18 @@ INSTALL(){
 				else
 					printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
 					if (adb install "$APKfilePath"); then
-						wait; export APKdone="true"
-					else
-						exit
-					fi
+						wait; export APKdone="true"; else exit; fi
 				fi
 			); then
 				export APKdone="true"
 			else exit; fi
 		fi
-	); then # subshell did not exit unexpectedly, so launch the app if possible, otherwise skip launching and just call installAgain
-		if (adb shell "$launchCMD" > /dev/null 2>&1); then
-			printf "\n\nLaunching app."; sleep 0.5; printf " ."; sleep 0.5; printf " ."; sleep 0.5; printf " ."; sleep 0.5; printf " .\n"
-			installAgain
+	); then # subshell did not throw error, so, launch the app if possible and otherwise skip launching and just call installAgain
+		if (adb shell "$launchCMD" >/dev/null 2>&1); then
+			printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
+			tput cnorm; installAgain; exit 1
 		else
-			installAgain
+			tput cnorm; installAgain; exit 1
 		fi
 	else
 		export errorMessage="FE1b - APK could not be installed."
@@ -293,32 +291,35 @@ INSTALL(){
 
 # check if user wants to install again on another device, or the same device if they choose to
 installAgain(){
-	printf "\n%*s\n" $[$COLS/2] "Press 'q' to quit, or press any other key to install this build on another device.."
-	adbWAIT
+	trap - SIGINT
+	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, or press any other key to install this build on another device.."
 
-	tput civis; read -n 1 -s -r -p ''; tput cnorm
-
+	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
 		echo; exit
 	else
+		export deviceID2=""
 		export OBBdone="false"; export APKdone="false"
-		export deviceID2=$(adb devices); wait
+		adbWAIT
+		deviceID2=$(adb devices); wait
 
 		if [ "$deviceID" = "$deviceID2" ]; then
-			printf "\n\n%*s\n" $[$COLS/2] "This is same device! Are you sure you want to install the build on this device again?"
-			printf "\n%*s\n" $[$COLS/2] "Press 'y' to install on the same device, or any other key when you have plugged in another device."
+			printHead; adb devices; printTitle
+			printf "\n\n%*s\n" $((COLS/2)) "This is same device! Are you sure you want to install the build on this device again?"
+			printf "\n%*s\n" $((COLS/2)) "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 
-			tput civis; read -n 1 -s -r -p ''; tput cnorm
-
+			read -n 1 -s -r -p ''
 			if [ "$REPLY" = "y" ]; then
 				export launchCMD="monkey -p $OBBname -v 1"; INSTALL
 			else
-				adbWAIT; export deviceID=$(adb devices); wait; installAgain
+				export deviceID=""
+				adbWAIT; deviceID=$(adb devices); wait; installAgain; exit
 			fi
 		else
 			INSTALL
 		fi
 	fi
+	tput cnorm
 }
 
 # update the script on status of adb connection and call waiting function until it is ready
@@ -327,11 +328,11 @@ adbWAIT(){
 		export deviceConnect="true"
 	else
 		tput civis
-		printf "\n\n%*s\n" $[$COLS/2] "$waitMessage"
+		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
 		until (adb shell exit >/dev/null 2>&1); do waiting; done
 
 		export deviceConnect="true"; tput cnorm
-		printf "\r%*s\n\n" $[$COLS/2] "!Device Connected!   "
+		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
 	fi
 }
 
@@ -366,7 +367,7 @@ waiting(){
 
 	for i in "${anim4[@]}"
 	do
-		printf "\r%*s" $(($COLS/2)) "$i"
+		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.04
 	done
 }
