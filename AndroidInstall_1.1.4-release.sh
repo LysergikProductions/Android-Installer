@@ -221,7 +221,8 @@ getAPK(){
 }
 
 INSTALL(){
-	adbWAIT; adb uninstall "$OBBname" > /dev/null 2>&1; wait
+	tput civis; adbWAIT
+	adb uninstall "$OBBname" > /dev/null 2>&1; wait
 	if (
 		# install the OBB if it hasn't been installed already
 		if [ "$OBBdone" = "false" ]; then
@@ -283,6 +284,7 @@ INSTALL(){
 
 		echo "Please report this error code (FE1b) to Nick."; exit 1
 	fi
+	tput cnorm
 }
 
 # check if user wants to install again on another device, or the same device if they choose to
@@ -365,4 +367,5 @@ waiting(){
 
 # finally
 rm /tmp/variables.before /tmp/variables.after >/dev/null 2>&1
+tput cnorm
 printf "\nGoodbye!\n"; exit
