@@ -32,7 +32,7 @@ loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect
 export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; export UNINSTALL="true"
 #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
-COLS=$(tput cols) # text-UI elements and related variables
+# text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 export UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
@@ -90,6 +90,7 @@ INIT(){
 	mkdir ~/logs/ >/dev/null 2>&1
 
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
+	COLS=$(tput cols)
 	checkVersion; wait
 }
 
@@ -107,8 +108,7 @@ printHead(){
 		printf "$errorMessage\n\n"
 
 		if [ $deviceConnect = "false" ]; then until adb shell exit >/dev/null 2>&1; do
-			export deviceConnect="false"
-			waiting; done
+			adbWAIT; done
 			export deviceConnect="true"
 			printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
 		elif [ $deviceConnect = "true" ]; then echo
@@ -142,21 +142,21 @@ printTitle(){
 
 MAIN(){
 	export deviceID=""; export deviceID2=""
-	printHead
+	echo; adb reconnect deivce; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
-	(adb shell settings put global development_settings_enabled 1) || adbWAIT
-	printf "\nMounting device...\n\n"; adb devices; deviceID=$(adb devices)
+	(adb start-server && wait) || adbWAIT
+	adb shell settings put global development_settings_enabled 1
 
 	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
 
 	# try running main functions, catch with running exit 1
-	(getOBB && getAPK && INSTALL) || {
+	(adbWAIT && getOBB && getAPK && INSTALL) || {
 		export scriptEndDate=""; scriptEndDate=$(date)
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
-		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt
+		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
 		sleep 1; exit 1
 	}
 	exit
@@ -171,7 +171,7 @@ getOBB(){
 
 	if [ "$OBBfilePath" = "" ]; then
 		export OBBvalid="false"
-		printHead; adbWAIT; adb devices; printTitle
+		printHead; printTitle
 		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
@@ -208,7 +208,7 @@ getAPK(){
 	local cleanPath="${APKfilePath#*:*}"; APKname=$(basename "$cleanPath")
 
 	if [ "$APKfilePath" = "" ]; then
-		printHead; adbWAIT; adb devices; printTitle
+		printHead; printTitle
 		export APKvalid="false"
 		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
@@ -229,10 +229,10 @@ getAPK(){
 }
 
 INSTALL(){
-	# hide cursor and wait for device
-	tput civis; adbWAIT
-
-	printHead; adb devices; printTitle
+	printHead; adbWAIT; printTitle
+	
+	export deviceID=""; deviceID=$(adb devices)
+	printf "\nMounting device...\n\n"; adb devices
 	
 	if [ "$UNINSTALL" = "true" ]; then
 		adb uninstall "$OBBname" > /dev/null 2>&1; wait
@@ -255,7 +255,7 @@ INSTALL(){
 						( set -o posix ; set ) >/tmp/variables.after
 						echo "Please report this error code (FE1a) to Nick."; exit 1
 					fi
-					INSTALL
+					trap - SIGINT; INSTALL
 				}
 				trap - SIGINT
 			fi
@@ -268,7 +268,7 @@ INSTALL(){
 			
 			if [[ "$APKname" == *".apk" ]]; then
 				trap "" SIGINT
-				((adb install --no-streaming "$APKfilePath") || {
+				((adb install --no-streaming "$APKfilePath" || (trap - SIGINT; exit 1)) || {
 					printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
 					adb install "$APKfilePath"
 				}) || {
@@ -280,17 +280,20 @@ INSTALL(){
 						( set -o posix ; set ) >/tmp/variables.after
 						echo "Please report this error code (FE1b) to Nick."; exit 1
 					fi
-					UNINSTALL="false"; INSTALL
+					UNINSTALL="false"; APKdone="false"; trap - SIGINT; INSTALL
 				}
 				trap - SIGINT
 			fi
 			export APKdone="true"
 		fi
 	); then # subshell did not throw error, so, launch the app if possible and otherwise skip launching and just call installAgain
-		adb shell "$launchCMD" >/dev/null 2>&1 && {
-			printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
-		}
-		tput cnorm; wait; installAgainPrompt; installAgain; exit 1
+		if [ "$OBBfilePath" = "fire" ] || [ "$OBBfilePath" = "." ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "na" ]; then
+			trap - SIGINT; adbWAIT; deviceID=$(adb devices)
+			tput cnorm; installAgainPrompt && installAgain; exit 1
+		else
+			adb shell "$launchCMD" >/dev/null 2>&1
+				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
+		fi
 	else
 		export errorMessage="FE1b - APK could not be installed."
 		printf "\n\nFE1b - APK could not be installed.\n"
@@ -299,7 +302,6 @@ INSTALL(){
 
 		echo "Please report this error code (FE1b) to Nick."; exit 1
 	fi
-	tput cnorm; trap - SIGINT; deviceID=$(adb devices)
 }
 
 # check if user wants to install again on another device, or the same device if they choose to
@@ -310,14 +312,15 @@ installAgainPrompt(){
 	if [ "$REPLY" = "q" ]; then
 		echo; exit
 	else
-		export deviceID2=""; adbWAIT
 		export OBBdone="false"; export APKdone="false"
-		deviceID2=$(adb devices); wait
 	fi
 }
 
 installAgain(){
 	trap - SIGINT
+	export deviceID2=""; adbWAIT
+	deviceID2=$(adb devices); wait
+	
 	if [ "$deviceID" = "$deviceID2" ]; then
 		printHead; adb devices; printTitle
 		printf "\n\n%*s\n" $((COLS/2)) "This is same device! Are you sure you want to install the build on this device again?"
@@ -387,9 +390,8 @@ waiting(){
 }
 
 # try, catch
-(MAIN) && (printf "\nDebug: There were no critical errors!\n\n") || printf "\nDebug: This is the last catch statement!\n\n"
+(MAIN && printf "\nDebug: There were no critical errors!\n\n") || printf "\nDebug: This is the last catch statement!\n\n"
 
 # finally
 rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1
-tput cnorm
-printf "\nGoodbye!\n"; exit
+reset; printf "\nGoodbye!\n"; exit
