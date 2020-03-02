@@ -3,7 +3,7 @@ Android Installer
 
 This script simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge.
 
-use "bash [this script] show-c" to show copyright without running the script.
+Use "bash [this script] -h" to show help page without running the script.
 
 In order to use this script, you must have Android Debug Bridge platform-tools installed on your machine.
 
