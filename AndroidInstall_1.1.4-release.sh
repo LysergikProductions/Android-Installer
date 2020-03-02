@@ -109,16 +109,16 @@ printHead(){
 			echo "Unexpected value for deviceConnect: $deviceConnect"
 			export deviceConnect="true"
 			export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
-    		export errorMessage+="ER1 - Script restarted; 'deviceConnect' had an unexpected value."
-    		
-    		printf "\nER1 - Unexpected value in 'deviceConnect'; resetting script in..\n"
+			export errorMessage+="ER1 - Script restarted; 'deviceConnect' had an unexpected value."
+
+			printf "\nER1 - Unexpected value in 'deviceConnect'; resetting script in..\n"
 			printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 			MAIN
 		fi
   	else
-    	export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
-    	export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
-    	export loopFromError="true"
+		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
+		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
+		export loopFromError="true"
 
 		printf "\nER1 - Unexpected value in 'loopFromError'; resetting script in..\n"
 		printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
