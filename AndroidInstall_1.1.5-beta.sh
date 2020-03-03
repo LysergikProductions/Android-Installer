@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.5-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0136
+# Build_0137
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0136"
+build="0137"
 scriptVersion="1.1.5-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -103,9 +103,9 @@ else clear; verbose=0; echo "Initializing.."; INIT; fi
 
 # set debug commands
 if [ $verbose = 2 ]; then
-	CMD_uninstall(){ adb uninstall "$OBBname"; }
-	CMD_launch(){ adb shell "$launchCMD"; }
-	CMD_communicate(){ adb shell exit; }
+	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; }
+	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb shell "$launchCMD"; }
+	CMD_communicate(){ echo "Checking device connection status..";adb shell exit; }
 else
 	CMD_uninstall(){ adb uninstall "$OBBname" >/dev/null 2>&1; }
 	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
@@ -191,7 +191,9 @@ getOBB(){
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
 		export OBBvalid="true"; OBBdone="true"
-		printf "OBB Name: Amazon Build"
+		printf "OBB Name: Amazon Build.. Select your app from this list:"
+		#case esac
+		OBBname="com.budgestudios.amazon.$select"
 	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "none" ] || [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
 		export OBBvalid="true"; OBBdone="true"
 		printf "OBB Name: N/A"
