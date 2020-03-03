@@ -1,8 +1,8 @@
 #!/bin/bash
 # AndroidInstall_1.1.5-beta.sh
-# 2020 © Nikolas A. Wagner
+# 2020 Â© Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0135
+# Build_0136
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0135"
+build="0136"
 scriptVersion="1.1.5-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -42,7 +42,7 @@ export UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 help(){
 	printf "\noptions\n  show-c      show the copyright information\n  show-l      show the license information\n"
 	printf "\nskip OBB step using one of the following\n  'na', 'no', 'none', '0', '.'      OBB not applicable\n"
-	printf "  'fire'                            Amazon build\n"
+	printf "  'fire'                            Amazon build\n\n"
 }
 
 checkVersion(){
@@ -94,23 +94,34 @@ INIT(){
 	checkVersion; wait
 }
 
-# allow user to see copyright, license, or help page, without running the script
-if [ "$1" = "show-c" ] || [ "$1" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
-elif [ "$1" = "show-l" ] || [ "$1" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
-elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then help; exit
-elif [ "$1" = "-d" ] || [ "$1" = "--debug" ]; then clear; echo "Initializing.."; INIT
-else clear; echo "Initializing.."; INIT; fi
+# allow user to see copyright, license, help page, without running the script, or to run in verbose/debug mode
+if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 Â© Nikolas A. Wagner"; exit
+elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
+elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
+elif [ "$*" = "-d" ] || [ "$*" = "--debug" ]; then clear; verbose=2; echo "Initializing.."; INIT
+else clear; verbose=0; echo "Initializing.."; INIT; fi
+
+# set debug commands
+if [ $verbose = 2 ]; then
+	CMD_uninstall(){ adb uninstall "$OBBname"; }
+	CMD_launch(){ adb shell "$launchCMD"; }
+	CMD_communicate(){ adb shell exit; }
+else
+	CMD_uninstall(){ adb uninstall "$OBBname" >/dev/null 2>&1; }
+	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
+	CMD_communicate(){ adb shell exit >/dev/null 2>&1; }
+fi
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear;
-		printf "$scriptFileName | Build $build\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
+		printf "$scriptFileName | Build $build\n2020 Â© $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then clear;
-		printf "$scriptFileName | Build $build\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
+		printf "$scriptFileName | Build $build\n2020 Â© $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
 
-		if [ $deviceConnect = "false" ]; then until adb shell exit >/dev/null 2>&1; do
+		if [ $deviceConnect = "false" ]; then until CMD_communicate; do
 			adbWAIT; done
 			export deviceConnect="true"
 			printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
@@ -147,7 +158,7 @@ MAIN(){
 	echo; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
-	(adb shell exit && wait) || adb start-server; adbWAIT
+	(CMD_communicate && wait) || adb start-server; adbWAIT
 	adb shell settings put global development_settings_enabled 1
 
 	printTitle
@@ -167,7 +178,7 @@ MAIN(){
 
 getOBB(){
 	printf "\n%*s\n" $((COLS/2)) "Drag OBB anywhere here and press enter:"
-	printf "\nTo skip, use: 'na', '0', or '.',\nor enter 'fire' if you are installing an Amazon build\n"
+	printf "\nTo skip, use: 'na', '0', or '.',\nor enter 'fire' if you are installing an Amazon build\n\n"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
@@ -238,7 +249,7 @@ INSTALL(){
 	printf "\nMounting device...\n\n"; adb devices
 
 	if [ "$UNINSTALL" = "true" ]; then
-		wait | adb uninstall "$OBBname" >/dev/null 2>&1
+		wait | CMD_uninstall
 		UNINSTALL="true"
 	fi
 
@@ -250,7 +261,7 @@ INSTALL(){
 			if [[ "$OBBname" == "com."* ]]; then
 				trap "" SIGINT
 				(adb push "$OBBfilePath" /sdcard/Android/OBB) || {
-					(adb shell exit) || deviceConnect="false"
+					(CMD_communicate) || deviceConnect="false"
 					if [ "$deviceConnect" = "true" ]; then
 						export errorMessage="FE1a - OBB could not be installed."
 						printf "\n\nFE1a - OBB could not be installed.\n"
@@ -275,7 +286,7 @@ INSTALL(){
 					printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
 					adb install -r "$APKfilePath"
 				}) || {
-					(adb shell exit) || deviceConnect="false"
+					(CMD_communicate) || deviceConnect="false"
 					if [ "$deviceConnect" = "true" ]; then
 						export errorMessage="FE1b - APK could not be installed."
 						printf "\n\nFE1b - APK could not be installed.\n"
@@ -294,9 +305,9 @@ INSTALL(){
 			trap - SIGINT; adbWAIT; deviceID=$(adb devices)
 			tput cnorm; installAgainPrompt; exit 1
 		else
-			adb shell "$launchCMD" >/dev/null 2>&1
-				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
-				tput cnorm; installAgainPrompt; exit 1
+			CMD_launch
+			printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
+			tput cnorm; installAgainPrompt; exit 1
 		fi
 	else
 		export errorMessage="FE1b - APK could not be installed."
@@ -345,12 +356,12 @@ installAgain(){
 
 # update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
-	if (adb shell exit >/dev/null 2>&1); then
+	if (CMD_communicate); then
 		export deviceConnect="true"
 	else
 		tput civis
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
-		until (adb shell exit >/dev/null 2>&1); do waiting; done
+		until (CMD_communicate); do waiting; done
 
 		export deviceConnect="true"; tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
