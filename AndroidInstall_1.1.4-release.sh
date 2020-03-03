@@ -230,10 +230,10 @@ getAPK(){
 
 INSTALL(){
 	printHead; adbWAIT; printTitle
-	
+
 	export deviceID=""; deviceID=$(adb devices)
 	printf "\nMounting device...\n\n"; adb devices
-	
+
 	if [ "$UNINSTALL" = "true" ]; then
 		wait | adb uninstall "$OBBname" >/dev/null 2>&1
 		UNINSTALL="true"
@@ -265,7 +265,7 @@ INSTALL(){
 		# install the APK if it hasn't been installed already
 		if [ "$APKdone" = "false" ]; then
 			printf "\nInstalling APK..\n"
-			
+
 			if [[ "$APKname" == *".apk" ]]; then
 				trap "" SIGINT
 				((adb install -r --no-streaming "$APKfilePath" || (trap - SIGINT; exit 1)) || {
@@ -322,7 +322,7 @@ installAgain(){
 	trap - SIGINT
 	export deviceID2=""; adbWAIT
 	deviceID2=$(adb devices); wait
-	
+
 	if [ "$deviceID" = "$deviceID2" ]; then
 		printHead; adb devices; printTitle
 		printf "\n\n%*s\n" $((COLS/2)) "This is the same device! Are you sure you want to install the build on this device again?"
