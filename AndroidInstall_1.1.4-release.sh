@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.4-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0130
+# Build_0131
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-export build="0130"
+export build="0131"
 scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -146,7 +146,7 @@ MAIN(){
 	echo; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
-	(adb start-server && wait) || adbWAIT
+	(adb shell exit && wait) || adb start-server; adbWAIT
 	adb shell settings put global development_settings_enabled 1
 
 	printTitle
@@ -166,7 +166,7 @@ MAIN(){
 
 getOBB(){
 	printf "\n%*s\n" $((COLS/2)) "Drag OBB anywhere here and press enter:"
-	printf "\nTo skip, use: 'na', '0', or '.'\n"
+	printf "\nTo skip, use: 'na', '0', or '.',\nor enter 'fire' if you are installing an Amazon build\n"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
