@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.4-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0129
+# Build_0130
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-export build="0129"
+export build="0130"
 scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -85,9 +85,7 @@ update(){
 }
 
 INIT(){
-	tput civis # hide cursor
-	export scriptStartDate=""
-	scriptStartDate=$(date)
+	export scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	mkdir ~/logs/ >/dev/null 2>&1
 
@@ -126,7 +124,7 @@ printHead(){
 			printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 			MAIN
 		fi
-  	else
+  	else # if code sets loopFromError to not "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
 		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
 		export loopFromError="true"
@@ -138,7 +136,6 @@ printHead(){
 }
 
 printTitle(){
-	#toilet -t --gay "$scriptTitle"
 	#figlet -F border -F gay -t "$scriptTitle"
 	printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
 	printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
@@ -146,7 +143,7 @@ printTitle(){
 
 MAIN(){
 	export deviceID=""; export deviceID2=""
-	echo; adb reconnect deivce; printHead
+	echo; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(adb start-server && wait) || adbWAIT
@@ -157,6 +154,7 @@ MAIN(){
 
 	# try running main functions, catch with running exit 1
 	(adbWAIT && getOBB && getAPK) || {
+		reset
 		export scriptEndDate=""; scriptEndDate=$(date)
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
@@ -399,4 +397,4 @@ waiting(){
 
 # finally
 rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1
-reset; printf "\nGoodbye!\n"; exit
+printf "\nGoodbye!\n"; exit
