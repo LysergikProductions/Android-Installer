@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.4-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0131
+# Build_0133
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-export build="0131"
+export build="0133"
 scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -98,6 +98,7 @@ INIT(){
 if [ "$1" = "show-c" ] || [ "$1" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$1" = "show-l" ] || [ "$1" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$1" = "--help" ] || [ "$1" = "-h" ]; then help; exit
+elif [ "$1" = "-d" ] || [ "$1" = "--debug" ]; then clear; echo "Initializing.."; INIT
 else clear; echo "Initializing.."; INIT; fi
 
 printHead(){
