@@ -14,8 +14,6 @@ Instructions:
 If you do not want to install an OBB file, or if there is not one to install in the first place, then input one of the following when asked to drag in the OBB file:
 
 - "na"
-- "no"
-- "none"
 - "0"
 - "."
 
