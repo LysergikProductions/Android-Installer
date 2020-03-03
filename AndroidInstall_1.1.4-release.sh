@@ -2,6 +2,7 @@
 # AndroidInstall_1.1.4-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
+# Build_0129
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -25,8 +26,9 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; bashVersion=${BASH_VERSION}; adbVersion=$(adb version)
-scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "; author="Nikolas A. Wagner"; license="GNU GPLv3"
+export build="0129"
+scriptVersion="1.1.4-release"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
+adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
 export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; export UNINSTALL="true"
@@ -102,9 +104,11 @@ else clear; echo "Initializing.."; INIT; fi
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear;
-		printf "$scriptFileName\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName | Build $build\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
+		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 	elif [ $loopFromError = "true" ]; then clear;
-		printf "$scriptFileName\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName | Build $build\n2020 © $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
+		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
 
 		if [ $deviceConnect = "false" ]; then until adb shell exit >/dev/null 2>&1; do
