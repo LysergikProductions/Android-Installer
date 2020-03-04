@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.5-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0138
+# Build_0139
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0138"
+build="0139"
 scriptVersion="1.1.5-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -38,11 +38,19 @@ export OBBdone="false"; export APKdone="false"; upToDate="error checking version
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 export UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
-# help option that's displayed with the '--help' or '-h' option
-help(){
-	printf "\noptions\n  show-c      show the copyright information\n  show-l      show the license information\n"
-	printf "\nskip OBB step using one of the following\n  'na', 'no', 'none', '0', '.'      OBB not applicable\n"
-	printf "  'fire'                            Amazon build\n\n"
+update(){
+	trap "" SIGINT
+	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
+
+	cpSource="$HOME/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
+	cp "$cpSource" "$scriptDIR"; wait; export upToDate="true"
+
+	rm -f "$scriptDIR/$scriptFileName"; wait
+	rm -rf ~/upt; wait
+
+	echo "Launching updated version of the script!"; sleep 1
+	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
+	trap - SIGINT
 }
 
 checkVersion(){
@@ -65,26 +73,11 @@ checkVersion(){
 	else
 		export upToDate="false"
 		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.6
-		#update
+		#update # calling update only if necessary
 	fi
 }
 
-update(){
-	trap "" SIGINT
-	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
-
-	cpSource="$HOME/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
-	cp "$cpSource" "$scriptDIR"; wait; export upToDate="true"
-
-	rm -f "$scriptDIR/$scriptFileName"; wait
-	rm -rf ~/upt; wait
-
-	echo "Launching updated version of the script!"; sleep 1
-	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
-	trap - SIGINT
-}
-
-INIT(){
+INIT(){ # initializing, then calling checkVersion
 	export scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	mkdir ~/logs/ >/dev/null 2>&1
@@ -94,30 +87,43 @@ INIT(){
 	checkVersion; wait
 }
 
-# allow user to see copyright, license, help page, without running the script, or to run in verbose/debug mode
+help(){
+	printf "\noptions\n  show-c      show the copyright information\n  show-l      show the license information\n"
+	printf "  --debug     run the script in debug (verbose) mode\n  --help      show this information\n"
+	printf "\nskip OBB step using one of the following\n  'na', '0', '.'      OBB not applicable\n"
+	printf "  'fire'                    Amazon build\n\n"
+}
+
+# allow user to see the copyright, license, or the help page without running the script, or to run script in verbose/debug mode
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [ "$*" = "-d" ] || [ "$*" = "--debug" ]; then clear; verbose=2; echo "Initializing.."; INIT
+elif [ "$*" = "-d" ] || [ "$*" = "--debug" ]; then clear; verbose=1; echo "Initializing.."; INIT
 else clear; verbose=0; echo "Initializing.."; INIT; fi
 
-# set debug commands
-if [ $verbose = 2 ]; then
-	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; }
+# set debug variant of core commands
+if [ $verbose = 1 ]; then
 	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb shell "$launchCMD"; }
-	CMD_communicate(){ echo "Checking device connection status..";adb shell exit; }
+	CMD_communicate(){ echo "Checking device connection status.."; adb shell exit; }
+
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB; }
 	CMD_installAPK-ns(){ adb install -r --no-streaming "$APKfilePath"; }
 	CMD_installAPK-def(){ adb install -r "$APKfilePath"; }
-	CMD_reset(){ reset; echo "Terminal was reset to prevent errors causing issues with SIGINT or tput modifications"; }
-else
-	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname" 2>/dev/null; }
+	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; }
+
+	CMD_reset(){ reset; echo "Terminal was reset to prevent errors that could cause issues with SIGINT or tput"; }
+	lastCatch(){ printf "\nDebug: This is the last catch statement!\n\n"; }
+else # set default variant of core commands
 	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
 	CMD_communicate(){ adb shell exit >/dev/null 2>&1; }
+
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
 	CMD_installAPK-ns(){ adb install -r --no-streaming "$APKfilePath" 2>/dev/null; }
 	CMD_installAPK-def(){ adb install -r "$APKfilePath" 2>/dev/null; }
+	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname" 2>/dev/null; }
+
 	CMD_reset(){ reset; }
+	lastCatch(){ echo; }
 fi
 
 printHead(){
@@ -203,14 +209,14 @@ getOBB(){
 		#printf "OBB Name: Amazon Build.. Select your app from this list:"
 		#case esac
 		#export OBBname="com.budgestudios.amazon.$select"
-		export launchCMD="monkey -p $OBBname -v 1 -c android.intent.category.LAUNCHER 1"
+		export launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
 	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "none" ] || [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
 		export OBBvalid="true"; OBBdone="true"
 		printf "OBB Name: N/A"
 	elif [[ "$OBBname" == "com."* ]]; then
 		export OBBvalid="true"
 		printf "OBB Name: $OBBname\n\n"
-		export launchCMD="monkey -p $OBBname -v 1 -c android.intent.category.LAUNCHER 1"
+		export launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
 	else
 		export OBBvalid="false"
 	fi
@@ -417,7 +423,7 @@ waiting(){
 }
 
 # try, catch
-(MAIN && printf "\nDebug: There were no critical errors!\n\n") || printf "\nDebug: This is the last catch statement!\n\n"
+(MAIN && printf "\nDebug: There were no critical errors!\n\n") || lastCatch
 
 # finally
 rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1
