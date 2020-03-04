@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.5-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0141
+# Build_0142
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0141"
+build="0142"
 scriptVersion="1.1.5-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -186,8 +186,8 @@ MAIN(){
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
 
 	# try running main functions, catch with running exit 1
-	adbWAIT &&
-	( getOBB && getAPK ) || {
+	adbWAIT && getOBB
+	( getAPK ) && exit || {
 		CMD_reset
 		export scriptEndDate=""; scriptEndDate=$(date)
 		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
@@ -196,7 +196,6 @@ MAIN(){
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
 		exit 1
 	}
-	exit
 }
 
 getOBB(){
