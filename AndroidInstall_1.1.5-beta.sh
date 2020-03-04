@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.5-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0140
+# Build_0141
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0140"
+build="0141"
 scriptVersion="1.1.5-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -88,9 +88,9 @@ INIT(){ # initializing, then calling checkVersion
 }
 
 help(){
-	printf "\noptions\n  show-c      show the copyright information\n  show-l      show the license information\n"
-	printf "  --debug     run the script in debug (verbose) mode\n  --help      show this information\n"
-	printf "\nskip OBB step using one of the following\n  'na', '0', '.'      OBB not applicable\n"
+	printf "\noptions\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
+	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n  -h      also [--help]; show this information\n"
+	printf "\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
 	printf "  'fire'                    Amazon build\n\n"
 }
 
@@ -124,7 +124,7 @@ else # set default variant of core commands
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
 	CMD_installAPK-ns(){ adb install -r --no-streaming "$APKfilePath" 2>/dev/null; }
 	CMD_installAPK-def(){ adb install -r "$APKfilePath" 2>/dev/null; }
-	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" 2>/dev/null; echo "Done!"; }
+	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" >/dev/null 2>&1; echo "Done!"; }
 
 	CMD_reset(){ reset; }
 	lastCatch(){
@@ -187,17 +187,7 @@ MAIN(){
 
 	# try running main functions, catch with running exit 1
 	adbWAIT &&
-	( getOBB ) || {
-		CMD_reset
-		export scriptEndDate=""; scriptEndDate=$(date)
-		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
-		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
-
-		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
-		exit 1
-	}
-
-	( getAPK ) || {
+	( getOBB && getAPK ) || {
 		CMD_reset
 		export scriptEndDate=""; scriptEndDate=$(date)
 		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
