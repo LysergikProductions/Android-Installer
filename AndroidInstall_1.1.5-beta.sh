@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.5-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0137
+# Build_0138
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0137"
+build="0138"
 scriptVersion="1.1.5-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -106,10 +106,18 @@ if [ $verbose = 2 ]; then
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; }
 	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb shell "$launchCMD"; }
 	CMD_communicate(){ echo "Checking device connection status..";adb shell exit; }
+	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB; }
+	CMD_installAPK-ns(){ adb install -r --no-streaming "$APKfilePath"; }
+	CMD_installAPK-def(){ adb install -r "$APKfilePath"; }
+	CMD_reset(){ reset; echo "Terminal was reset to prevent errors causing issues with SIGINT or tput modifications"; }
 else
-	CMD_uninstall(){ adb uninstall "$OBBname" >/dev/null 2>&1; }
+	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname" 2>/dev/null; }
 	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
 	CMD_communicate(){ adb shell exit >/dev/null 2>&1; }
+	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
+	CMD_installAPK-ns(){ adb install -r --no-streaming "$APKfilePath" 2>/dev/null; }
+	CMD_installAPK-def(){ adb install -r "$APKfilePath" 2>/dev/null; }
+	CMD_reset(){ reset; }
 fi
 
 printHead(){
@@ -166,12 +174,12 @@ MAIN(){
 
 	# try running main functions, catch with running exit 1
 	(adbWAIT && getOBB && getAPK) || {
-		reset
+		CMD_reset
 		export scriptEndDate=""; scriptEndDate=$(date)
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
-		sleep 1; exit 1
+		sleep 0.5; exit 1
 	}
 	exit
 }
@@ -191,16 +199,18 @@ getOBB(){
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
 		export OBBvalid="true"; OBBdone="true"
-		printf "OBB Name: Amazon Build.. Select your app from this list:"
+		printf "OBB Name: Amazon Build"
+		#printf "OBB Name: Amazon Build.. Select your app from this list:"
 		#case esac
-		OBBname="com.budgestudios.amazon.$select"
+		#export OBBname="com.budgestudios.amazon.$select"
+		export launchCMD="monkey -p $OBBname -v 1 -c android.intent.category.LAUNCHER 1"
 	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "none" ] || [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
 		export OBBvalid="true"; OBBdone="true"
 		printf "OBB Name: N/A"
 	elif [[ "$OBBname" == "com."* ]]; then
 		export OBBvalid="true"
 		printf "OBB Name: $OBBname\n\n"
-		export launchCMD="monkey -p $OBBname -v 1"
+		export launchCMD="monkey -p $OBBname -v 1 -c android.intent.category.LAUNCHER 1"
 	else
 		export OBBvalid="false"
 	fi
@@ -262,7 +272,7 @@ INSTALL(){
 
 			if [[ "$OBBname" == "com."* ]]; then
 				trap "" SIGINT
-				(adb push "$OBBfilePath" /sdcard/Android/OBB) || {
+				(CMD_pushOBB) || {
 					(CMD_communicate) || deviceConnect="false"
 					if [ "$deviceConnect" = "true" ]; then
 						export errorMessage="FE1a - OBB could not be installed."
@@ -284,9 +294,9 @@ INSTALL(){
 
 			if [[ "$APKname" == *".apk" ]]; then
 				trap "" SIGINT
-				((adb install -r --no-streaming "$APKfilePath" || (trap - SIGINT; exit 1)) || {
+				((CMD_installAPK-ns || (trap - SIGINT; exit 1)) || {
 					printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-					adb install -r "$APKfilePath"
+					CMD_installAPK-def
 				}) || {
 					(CMD_communicate) || deviceConnect="false"
 					if [ "$deviceConnect" = "true" ]; then
