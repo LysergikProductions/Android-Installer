@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.5-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0139
+# Build_0140
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0139"
+build="0140"
 scriptVersion="1.1.5-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -98,7 +98,7 @@ help(){
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [ "$*" = "-d" ] || [ "$*" = "--debug" ]; then clear; verbose=1; echo "Initializing.."; INIT
+elif [ "$*" = "--debug" ] || [ "$*" = "-d" ]; then clear; verbose=1; echo "Initializing.."; INIT
 else clear; verbose=0; echo "Initializing.."; INIT; fi
 
 # set debug variant of core commands
@@ -112,7 +112,11 @@ if [ $verbose = 1 ]; then
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; }
 
 	CMD_reset(){ reset; echo "Terminal was reset to prevent errors that could cause issues with SIGINT or tput"; }
-	lastCatch(){ printf "\nDebug: This is the last catch statement!\n\n"; }
+	lastCatch(){
+		scriptEndDate=$(date)
+		printf "\nDebug: This is the last catch statement!\nI make a logfile with ALL system variables called ~/logs/FULL_$scriptEndDate.txt\n\n"
+		( set ) > ~/logs/"FULL_$scriptEndDate".txt 2>&1
+	}
 else # set default variant of core commands
 	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
 	CMD_communicate(){ adb shell exit >/dev/null 2>&1; }
@@ -120,10 +124,13 @@ else # set default variant of core commands
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
 	CMD_installAPK-ns(){ adb install -r --no-streaming "$APKfilePath" 2>/dev/null; }
 	CMD_installAPK-def(){ adb install -r "$APKfilePath" 2>/dev/null; }
-	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname" 2>/dev/null; }
+	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" 2>/dev/null; echo "Done!"; }
 
 	CMD_reset(){ reset; }
-	lastCatch(){ echo; }
+	lastCatch(){
+		scriptEndDate=$(date)
+		( set ) > ~/logs/"FULL_$scriptEndDate".txt 2>&1
+	}
 fi
 
 printHead(){
@@ -179,13 +186,25 @@ MAIN(){
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
 
 	# try running main functions, catch with running exit 1
-	(adbWAIT && getOBB && getAPK) || {
+	adbWAIT &&
+	( getOBB ) || {
 		CMD_reset
 		export scriptEndDate=""; scriptEndDate=$(date)
+		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
-		sleep 0.5; exit 1
+		exit 1
+	}
+
+	( getAPK ) || {
+		CMD_reset
+		export scriptEndDate=""; scriptEndDate=$(date)
+		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
+		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
+
+		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
+		exit 1
 	}
 	exit
 }
@@ -210,7 +229,7 @@ getOBB(){
 		#case esac
 		#export OBBname="com.budgestudios.amazon.$select"
 		export launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
-	elif [ "$OBBfilePath" = "no" ] || [ "$OBBfilePath" = "none" ] || [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
+	elif [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
 		export OBBvalid="true"; OBBdone="true"
 		printf "OBB Name: N/A"
 	elif [[ "$OBBname" == "com."* ]]; then
@@ -423,7 +442,7 @@ waiting(){
 }
 
 # try, catch
-(MAIN && printf "\nDebug: There were no critical errors!\n\n") || lastCatch
+( MAIN && printf "\nDebug: There were no critical errors!\n\n" ) || lastCatch
 
 # finally
 rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1
