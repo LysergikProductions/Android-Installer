@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0158
+# Build_0159
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0158"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0159"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="error while getting properties.txt"
 
@@ -428,7 +428,7 @@ installAgainPrompt(){
 		OBBdone="false"; APKdone="false"
 		installAgain
 	else
-		(exit)
+		echo && (exit)
 	fi
 }
 
@@ -456,12 +456,12 @@ installAgain(){
 
 # update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
+	tput civis
 	if (CMD_communicate); then
 		export deviceConnect="true"
 	else
-		tput civis
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
-		until (CMD_communicate); do waiting; done
+		{ sleep 2; printf "       ensure only one device is connected"; sleep 2; } & until (CMD_communicate); do waiting; done
 
 		export deviceConnect="true"; tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
