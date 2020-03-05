@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.6-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0147
+# Build_0148
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,24 +26,24 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0147"
+build="0148"
 scriptVersion="1.1.6-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
 loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
-export OBBdone="false"; export APKdone="false"; upToDate="error checking version"; export UNINSTALL="true"
+OBBdone="false"; APKdone="false"; upToDate="error checking version"; UNINSTALL="true"
 #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-export UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
+UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
 
 update(){
 	trap "" SIGINT
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
 	cpSource="$HOME/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
-	cp "$cpSource" "$scriptDIR"; wait; export upToDate="true"
+	cp "$cpSource" "$scriptDIR"; wait; upToDate="true"
 
 	rm -f "$scriptDIR/$scriptFileName"; wait
 	rm -rf ~/upt; wait
@@ -54,7 +54,7 @@ update(){
 }
 
 checkVersion(){
-	export terminalPath=""; terminalPath=$(pwd)
+	terminalPath=""; terminalPath=$(pwd)
 	mkdir ~/upt > /dev/null 2>&1
 
 	# clone repo or update it with git pull if it exists already
@@ -62,23 +62,23 @@ checkVersion(){
 	wait; cd "$terminalPath"
 
 	# determine value of most up-to-date version and show the user
-	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt) > /dev/null 2>&1; export currentVersion="${currentVersion##* }" > /dev/null 2>&1
+	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt) > /dev/null 2>&1; currentVersion="${currentVersion##* }" > /dev/null 2>&1
 
 	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
 	printf "%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
 
 	if [ "$scriptVersion" = "$currentVersion" ]; then
-		export upToDate="true"
-		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1.1
+		upToDate="true"
+		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1
 	else
-		export upToDate="false"
-		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.6
+		upToDate="false"
+		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.5
 		#update # calling update only if necessary
 	fi
 }
 
 INIT(){ # initializing, then calling checkVersion
-	export scriptStartDate=""; scriptStartDate=$(date)
+	scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	mkdir ~/logs/ >/dev/null 2>&1
 
@@ -88,9 +88,11 @@ INIT(){ # initializing, then calling checkVersion
 }
 
 help(){
-	printf "\noptions\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
-	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n  -h      also [--help]; show this information\n"
-	printf "\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
+	clear; printf "$scriptTitle help page:\n\n"
+	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
+	printf "  -h      also [--update]; run the script in update mode\n\n"
+	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n  -h      also [--help]; show this information\n\n"
+	printf " - INSTRUCTIONS -\n\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
 	printf "  'fire'                    Amazon build\n\n"
 }
 
@@ -99,6 +101,7 @@ if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner";
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
 elif [ "$*" = "--debug" ] || [ "$*" = "-d" ]; then clear; verbose=1; echo "Initializing.."; INIT
+elif [ "$*" = "--update" ] || [ "$*" = "-u" ]; then clear; echo "Initializing.."; INIT
 else clear; verbose=0; echo "Initializing.."; INIT; fi
 
 # set debug variant of core commands
@@ -109,8 +112,9 @@ if [ $verbose = 1 ]; then
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB; }
 
 	CMD_installAPK(){ (trap "" SIGINT; adb install -r --no-streaming "$APKfilePath" && exit) || (
-			printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-			adb install -r "$APKfilePath"; trap - SIGINT
+		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
+		trap - SIGINT
+		adb install -r "$APKfilePath"
 	) }
 
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; sleep 0.5; }
@@ -129,9 +133,9 @@ else # set default variant of core commands
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
 
 	CMD_installAPK(){ (trap "" SIGINT; adb install -r --no-streaming "$APKfilePath" 2>/dev/null && exit) || (
-			printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-			trap - SIGINT
-			adb install -r "$APKfilePath" 2>/dev/null && exit
+		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
+		trap - SIGINT
+		adb install -r "$APKfilePath" 2>/dev/null && exit
 	) }
 
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5; echo "Done!"; }
@@ -186,7 +190,7 @@ printTitle(){
 }
 
 MAINd(){
-	export deviceID=""; export deviceID2=""
+	deviceID=""; deviceID2=""
 	printf "\nvarLogSaveBefore.txt\n\n"
 
 	printHead
@@ -262,15 +266,15 @@ getAPK(){
 
 	if [ "$APKfilePath" = "" ]; then
 		printHead; adbWAIT; adb devices; printTitle
-		export APKvalid="false"
+		APKvalid="false"
 		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
 	elif [[ "$APKname" == *".apk" ]]; then
-		export APKvalid="true"
+		APKvalid="true"
 		printf "APK Name: $APKname\n\n"
 	else
-		export APKvalid="false"
+		APKvalid="false"
 	fi
 
 	until [ "$APKvalid" = "true" ]; do
