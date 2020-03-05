@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.6-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0146
+# Build_0147
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0146"
+build="0147"
 scriptVersion="1.1.6-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -351,9 +351,9 @@ installAgainPrompt(){
 	if [ "$REPLY" = "q" ]; then
 		echo; exit
 	else
-		export OBBdone="false"; export APKdone="false"
+		OBBdone="false"; APKdone="false"
+		installAgain
 	fi
-	installAgain
 }
 
 installAgain(){
