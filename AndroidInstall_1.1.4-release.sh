@@ -65,7 +65,7 @@ checkVersion(){
 	else
 		export upToDate="false"
 		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.6
-		update
+		#update
 	fi
 }
 
@@ -73,6 +73,7 @@ update(){
 	trap "" SIGINT
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
+	mkdir ~/upt/
 	cpSource="$HOME/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
 	cp "$cpSource" "$scriptDIR"; wait; export upToDate="true"
 
@@ -91,7 +92,7 @@ INIT(){
 
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 	COLS=$(tput cols)
-	checkVersion; wait
+	#checkVersion; wait
 }
 
 # allow user to see copyright, license, or help page, without running the script
