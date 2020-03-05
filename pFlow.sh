@@ -1,34 +1,33 @@
 #!/bin/bash
 getOBB(){
-  echo "getOBB completes successfully"; echo
-  sleep 1
+	printf "\ngetOBB completes successfully\n"
 }
 
 getAPK(){
-  echo "getAPK completes successfully"; echo
-  sleep 1; INSTALL
+	printf "\ngetAPK completes successfully\n"
 }
 
 INSTALL(){
-  (echo "adb uninstall"); sleep 1
-  
-  (
-    printf "\nUploading OBB..\n"
-    (echo "pushOBB succeeds") && exit || echo "catch error in INSTALL"; echo; exit 1
-  )
+	(printf "\n\nadb uninstall\n"; exit)
+	sleep 0.8
+	
+	printf "\nUploading OBB..\n"
+	echo "varLogSaveAfter.txt"
+	(echo "pushOBB"; sleep 0.5; exit 1) || (echo "exit 1"; exit 1)
+	
+	printf "\nInstalling APK..\n"
+	echo "varLogSaveAfter.txt"
 
-  sleep 1
-
-  (
-    printf "\nInstalling APK..\n"
-    (echo "install APK fails"; exit) && exit 1 || echo "catch error in INSTALL"; echo; exit 1
-  )
+	if (echo "install APK"; sleep 0.5; exit) || (echo "exit 1"; exit 1); then
+		printf "\nlaunch app\n"
+	else (exit 1); fi
 }
 
 MAIN(){
-  getOBB
-  (getAPK) && exit || sleep 1; printf "\nMAIN: catch error in MAIN\n"; exit 1
+	clear; printf "\nvarLogSaveBefore.txt\n\n"; sleep 0.5
+	getOBB; getAPK
+	INSTALL && echo || printf "\nMAIN: caught error in MAIN\nSave varLog now\n" || (echo "catch fails"; exit 1)
 }
 
-(MAIN) || printf "FINAL: catch error in error handling\n"
-printf "\nGoodbye!\n"; exit
+MAIN && echo || printf "\nFINAL: caught error in error handling\n"
+printf "Goodbye!\n"; exit
