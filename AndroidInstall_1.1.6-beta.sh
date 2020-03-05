@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.6-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0153
+# Build_0154
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0153"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0154"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.6-beta"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="error while getting properties.txt"
 
@@ -193,7 +193,8 @@ printTitle(){
 
 MAINd(){
 	deviceID=""; deviceID2=""
-	printf '\e[8;50;150t'; printHead
+	printf '\e[8;50;150t'; printf '\e[3;290;50t'
+	printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server; adbWAIT
@@ -220,7 +221,8 @@ MAINd(){
 
 MAINu(){
 	deviceID=""; deviceID2=""
-	printf '\e[8;50;150t'; printHead
+	printf '\e[8;50;150t'; printf '\e[3;290;50t'
+	printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server; adbWAIT
