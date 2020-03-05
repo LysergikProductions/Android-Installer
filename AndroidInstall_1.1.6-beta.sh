@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.6-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0149
+# Build_0150
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ update(){
 	trap "" SIGINT
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
-	cpSource="$HOME/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
+	cpSource=~/upt/Android-Installer/$scriptPrefix$currentVersion.sh
 	cp "$cpSource" "$scriptDIR"; wait; upToDate="true"
 
 	rm -f "$scriptDIR/$scriptFileName"; wait
@@ -96,15 +96,15 @@ help(){
 	printf "  'fire'                    Amazon build\n\n"
 }
 
-# allow user to run the script in debug and/or update mode
-if [ "$*" = "--debug" ] || [ "$*" = "-d" ]; then verbose=1
-elif [ "$*" = "--update" ] || [ "$*" = "-u" ]; then clear; echo "Initializing.."; INIT; fi
+# allow user to run the script in update mode
+if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "you chose to update only!"; sleep 1; fi
 
 # allow user to see the copyright, license, or the help page without running the script
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-else clear; verbose=0; echo "Initializing.."; INIT
+elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; clear; echo "Initializing.."; INIT
+else clear; verbose=0; echo "Initializing.."; INIT; fi
 
 # set debug variant of core commands
 if [ $verbose = 1 ]; then
@@ -193,6 +193,33 @@ printTitle(){
 
 MAINd(){
 	deviceID=""; deviceID2=""
+	printHead
+
+	# try communicating with device, catch with adbWAIT, finally mount device
+	(CMD_communicate && wait) || adb start-server; adbWAIT
+	adb shell settings put global development_settings_enabled 1
+
+	printf "\nMounting device...\n\n"
+	adb devices
+
+	printTitle
+	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
+
+	getOBB; getAPK
+	INSTALL && echo ||  {
+		CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
+
+		export scriptEndDate=""; scriptEndDate=$(date)
+		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
+		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
+
+		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
+		trap - SIGINT
+	} || (echo "catch fails"; trap - SIGINT; exit 1)
+}
+
+MAINu(){
+	deviceID=""; deviceID2=""
 	printf "\nvarLogSaveBefore.txt\n\n"
 
 	printHead
@@ -206,6 +233,8 @@ MAINd(){
 
 	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
+
+	echo "OBB will not actually be replaced on your device, but it is still required.."
 
 	getOBB; getAPK
 	INSTALL && echo ||  {
