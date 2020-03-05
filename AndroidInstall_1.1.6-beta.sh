@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.6-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0150
+# Build_0151
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,17 +26,17 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0149"
-scriptVersion="1.1.6-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
-adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0151"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
+scriptVersion="1.1.6-beta"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="error while getting properties.txt"
 
-loopFromError="false"; errorMessage=" ..no error is saved here.. " deviceConnect="true"; currentVersion="error while getting properties.txt"
-OBBdone="false"; APKdone="false"; upToDate="error checking version"; UNINSTALL="true"
+loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
+deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"
 #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-UItrouble="-- Troubleshooting --"; waitMessage="-- waiting for device --"
+waitMessage="-- waiting for device --"
 
 update(){
 	trap "" SIGINT
@@ -55,11 +55,11 @@ update(){
 
 checkVersion(){
 	terminalPath=""; terminalPath=$(pwd)
-	mkdir ~/upt > /dev/null 2>&1
+	mkdir ~/upt 2>/dev/null
 
 	# clone repo or update it with git pull if it exists already
 	(cd ~/upt; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || cd ~/upt/Android-Installer; git pull > /dev/null 2>&1
-	wait; cd "$terminalPath"
+	wait; cd "$terminalPath" || return
 
 	# determine value of most up-to-date version and show the user
 	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt) > /dev/null 2>&1; currentVersion="${currentVersion##* }" > /dev/null 2>&1
@@ -237,7 +237,7 @@ MAINu(){
 	echo "OBB will not actually be replaced on your device, but it is still required.."
 
 	getOBB; getAPK
-	INSTALL && echo ||  {
+	UPSTALL && echo ||  {
 		CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
 
 		export scriptEndDate=""; scriptEndDate=$(date)
@@ -378,6 +378,48 @@ INSTALL(){
 	fi
 }
 
+UPSTALL(){
+	printHead; adbWAIT; UNINSTALL="false"
+	printf "\nMounting device...\n"
+	adb devices; printTitle
+
+	# uninstall app, unless APK step wants to continue from where it left off
+	if [ "$UNINSTALL" = "true" ]; then
+		wait | CMD_uninstall
+		UNINSTALL="true"
+	fi
+
+	deviceID=$(adb devices)
+
+	# install APK, only if APKdone=false
+	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk" ]]; then
+		printf "\nInstalling APK..\n"
+
+		if CMD_installAPK || (
+			(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
+			if [ "$deviceConnect" = "true" ]; then
+				export errorMessage="FE1b - APK could not be installed."
+				printf "\n\nFE1b - APK could not be installed.\n"
+
+				( set -o posix ; set ) >/tmp/variables.after
+				echo "Please report this error code (FE1b) to Nick."; exit 1
+			else APKdone="false"; UNINSTALL="false"; INSTALL; fi
+		); then
+			printf "\ncheck for proper connect, and define deviceID(1)\nLaunch App\n"
+			APKdone="true"
+			adbWAIT; deviceConnect="true"; deviceID=$(adb devices)
+
+			if [ "$LAUNCH" = "true" ]; then
+				CMD_launch
+				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
+				tput cnorm; installAgainPrompt
+			else
+				tput cnorm; installAgainPrompt
+			fi
+		else (trap - SIGINT; exit 1); fi
+	fi
+}
+
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, or press any other key to install this build on another device.."
@@ -463,7 +505,11 @@ waiting(){
 	done
 }
 
-MAINd && echo || lastCatch
+if [ "$*" = "-u" ] || [ "$*" = "--update" ]; then
+	MAINu && echo || lastCatch
+else
+	MAINd && echo || lastCatch
+fi
 
 # finally
 CMD_rmALL
