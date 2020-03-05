@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.6-beta.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0148
+# Build_0149
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0148"
+build="0149"
 scriptVersion="1.1.6-beta"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0"); scriptTitle=" MONKEY INSTALLER "
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; author="Nikolas A. Wagner"; license="GNU GPLv3"
 
@@ -90,19 +90,21 @@ INIT(){ # initializing, then calling checkVersion
 help(){
 	clear; printf "$scriptTitle help page:\n\n"
 	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
-	printf "  -h      also [--update]; run the script in update mode\n\n"
+	printf "  -u      also [--update]; run the script in update mode\n\n"
 	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n  -h      also [--help]; show this information\n\n"
 	printf " - INSTRUCTIONS -\n\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
 	printf "  'fire'                    Amazon build\n\n"
 }
 
-# allow user to see the copyright, license, or the help page without running the script, or to run script in verbose/debug mode
+# allow user to run the script in debug and/or update mode
+if [ "$*" = "--debug" ] || [ "$*" = "-d" ]; then verbose=1
+elif [ "$*" = "--update" ] || [ "$*" = "-u" ]; then clear; echo "Initializing.."; INIT; fi
+
+# allow user to see the copyright, license, or the help page without running the script
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [ "$*" = "--debug" ] || [ "$*" = "-d" ]; then clear; verbose=1; echo "Initializing.."; INIT
-elif [ "$*" = "--update" ] || [ "$*" = "-u" ]; then clear; echo "Initializing.."; INIT
-else clear; verbose=0; echo "Initializing.."; INIT; fi
+else clear; verbose=0; echo "Initializing.."; INIT
 
 # set debug variant of core commands
 if [ $verbose = 1 ]; then
@@ -123,7 +125,7 @@ if [ $verbose = 1 ]; then
 	CMD_reset(){ reset; echo "Terminal was reset to prevent errors that could cause issues with SIGINT or tput"; }
 	lastCatch(){
 		scriptEndDate=$(date)
-		printf "\nFINAL: caught error in MAIN's error handling\nI make a logfile with ALL system variables called ~/logs/FULL_$scriptEndDate.txt\n\n"
+		printf "\nFINAL: caught error in MAINd's error handling\nI make a logfile with ALL system variables called ~/logs/FULL_$scriptEndDate.txt\n\n"
 		( set ) > ~/logs/"FULL_$scriptEndDate".txt 2>&1
 	}
 else # set default variant of core commands
@@ -170,7 +172,7 @@ printHead(){
 
 			printf "\nER1 - Unexpected value in 'deviceConnect'; resetting script in..\n"
 			printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-			MAIN
+			MAINd
 		fi
   	else # if code sets loopFromError to not "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
@@ -179,7 +181,7 @@ printHead(){
 
 		printf "\nER1 - Unexpected value in 'loopFromError'; resetting script in..\n"
 		printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-		MAIN
+		MAINd
   	fi
 }
 
@@ -198,7 +200,7 @@ MAINd(){
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server; adbWAIT
 	adb shell settings put global development_settings_enabled 1
-	
+
 	printf "\nMounting device...\n\n"
 	adb devices
 
@@ -207,7 +209,7 @@ MAINd(){
 
 	getOBB; getAPK
 	INSTALL && echo ||  {
-		CMD_reset; printf "\nMAIN: caught fatal error in INSTALL\nSave varLog now\n"
+		CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
 
 		export scriptEndDate=""; scriptEndDate=$(date)
 		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
@@ -321,7 +323,7 @@ INSTALL(){
 	# install APK, only if APKdone=false
 	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk" ]]; then
 		printf "\nInstalling APK..\n"
-		
+
 		if CMD_installAPK || (
 			(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
 			if [ "$deviceConnect" = "true" ]; then
@@ -335,7 +337,7 @@ INSTALL(){
 			printf "\ncheck for proper connect, and define deviceID(1)\nLaunch App\n"
 			APKdone="true"
 			adbWAIT; deviceConnect="true"; deviceID=$(adb devices)
-			
+
 			if [ "$LAUNCH" = "true" ]; then
 				CMD_launch
 				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
