@@ -1,5 +1,5 @@
 #!/bin/bash
-# AndroidInstall_1.1.7-release.sh
+# AndroidInstall_1.1.7.fig-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
 # Build_0167f
