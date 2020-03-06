@@ -1,3 +1,3 @@
 _version 1.1.7-release
-_lastVersion 1.1.6-beta
-_build 0171
+_newVersion 1.1.7-release
+_build 0172
