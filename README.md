@@ -20,7 +20,7 @@ If you do not want to install an OBB file, or if there is not one to install in 
 Enter "fire" to tell the script you are installing a build on an Amazon device.
 Otherwise, drag in the OBB to the terminal window and press enter to continue the installation process.
 
-Use the version of the script with its version number ending in 'fig' if you have figlet installed in your shell
+Use the version of the script with its version number ending in 'fig-release' if you have figlet already installed in your shell
 
 The in-script help page accesible with the -h or --help option:
 
