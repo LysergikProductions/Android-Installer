@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0166
+# Build_0167
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0166"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0167"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -64,10 +64,10 @@ if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; 
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then echo "verbose=1"; sleep 2; verbose=1
-else verbose=0; echo "verbose=0"; sleep 2; fi
+elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1
+else verbose=0; fi
 
-echo "Initializing.."; INIT
+clear; echo "Initializing.."; INIT
 
 # set debug variant of core commands
 if [ $verbose = 1 ]; then
@@ -90,7 +90,7 @@ if [ $verbose = 1 ]; then
 	}
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt; echo "rm -rf /tmp/variables.before /tmp/variables.after ~/upt"; }
-	CMD_reset(){ reset; echo "Terminal was reset to prevent errors that could cause issues with SIGINT or tput"; }
+	CMD_reset(){ printf "\n\nTerminal was NOT reset like would occur in default mode; there could be issues in the terminal.\n"; }
 
 	lastCatch(){
 		scriptEndDate=$(date)
@@ -512,10 +512,9 @@ waiting(){
 }
 
 # allow user to run the script in update mode or default mode
-if {{ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
+if [[ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
 	MAINu && echo || lastCatch
 else
-	echo HEY; sleep 1
 	MAINd && echo || lastCatch
 fi
 
