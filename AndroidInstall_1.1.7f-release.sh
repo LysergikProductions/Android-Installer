@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0161f
+# Build_0162f
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,65 +26,27 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0161f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0162f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
 loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
 deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"
-oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-waitMessage="-- waiting for device --"
-
-update(){
-	trap "" SIGINT
-	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
-
-	cpSource="~/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
-	cp "$cpSource" "$scriptDIR"; wait; upToDate="true"
-
-	rm -f "$scriptDIR/$scriptFileName"; wait
-	rm -rf ~/upt; wait
-
-	echo "Launching updated version of the script!"; sleep 1
-	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
-	trap - SIGINT
-}
-
-checkVersion(){
-	terminalPath=""; terminalPath=$(pwd)
-	mkdir ~/upt 2>/dev/null
-
-	# clone repo or update it with git pull if it exists already
-	(cd ~/upt; git clone https://github.com/LysergikProductions/Android-Installer.git > /dev/null 2>&1) || cd ~/upt/Android-Installer; git pull > /dev/null 2>&1
-	wait; cd "$terminalPath" || return
-
-	# determine value of most up-to-date version and show the user
-	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt); currentVersion="${currentVersion##* }"
-
-	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
-	printf "%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
-
-	if [ "$scriptVersion" = "$currentVersion" ]; then
-		upToDate="true"
-		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1
-	else
-		upToDate="false"
-		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.5
-		#update # calling update only if necessary
-	fi
-}
+waitMessage="-- waiting for device --"; oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 INIT(){ # initializing, then calling checkVersion
 	scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+	
+	# make logs directory, but do not overwrite if already present
 	mkdir ~/logs/ >/dev/null 2>&1
 
+	# mac osx only; set font size to 15p
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 	COLS=$(tput cols)
-	checkVersion; wait
 }
 
 help(){
@@ -95,9 +57,6 @@ help(){
 	printf " - INSTRUCTIONS -\n\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
 	printf "  'fire'                    Amazon build\n\n"
 }
-
-# allow user to run the script in update mode
-if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "you chose to update only!"; sleep 1; fi
 
 # allow user to see the copyright, license, or the help page without running the script
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
@@ -121,8 +80,14 @@ if [ $verbose = 1 ]; then
 
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; sleep 0.5; }
 
+	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git && {
+			printf "\nGIT CLONED\n\n"; sleep 2
+		} || { git pull printf "\nGIT PULLED\n\n"; sleep 2; }
+	}
+
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt; echo "rm -rf /tmp/variables.before /tmp/variables.after ~/upt"; }
 	CMD_reset(){ reset; echo "Terminal was reset to prevent errors that could cause issues with SIGINT or tput"; }
+
 	lastCatch(){
 		scriptEndDate=$(date)
 		printf "\nFINAL: caught error in MAINd's error handling\nI make a logfile with ALL system variables called ~/logs/FULL_$scriptEndDate.txt\n\n"
@@ -142,13 +107,58 @@ else # set default variant of core commands
 
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5; echo "Done!"; }
 
+	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git >/dev/null 2>&1 || {
+			git pull >/dev/null 2>&1
+		}
+	}
+
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1; }
 	CMD_reset(){ reset; }
+
 	lastCatch(){
 		scriptEndDate=$(date)
 		( set ) > ~/logs/"FULL_$scriptEndDate".txt 2>&1
 	}
 fi
+
+update(){
+	trap "" SIGINT
+	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
+
+	cpSource="~/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
+	cp "$cpSource" "$scriptDIR"; wait; upToDate="true"
+
+	rm -f "$scriptDIR/$scriptFileName"; wait
+	rm -rf ~/upt; wait
+
+	echo "Launching updated version of the script!"; sleep 1
+	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
+	trap - SIGINT
+}
+
+checkVersion(){
+	terminalPath=""; terminalPath=$(pwd)
+	rm -rf ~/upt; mkdir ~/upt; cd ~/upt || return
+
+	# clone repo or update it with git pull if it exists already
+	(CMD_gitGet) && wait
+	cd "$terminalPath" || return
+
+	# determine value of most up-to-date version and show the user
+	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt); currentVersion="${currentVersion##* }"
+
+	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
+	printf "%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
+
+	if [ "$scriptVersion" = "$currentVersion" ]; then
+		upToDate="true"
+		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1
+	else
+		upToDate="false"
+		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.5
+		#update # calling update only if necessary
+	fi
+}
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear;
@@ -187,12 +197,14 @@ printHead(){
 
 printTitle(){
 	figlet -F border -F gay -t "$scriptTitle"
+	#printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
+	#printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
 }
 
 MAINd(){
 	deviceID=""; deviceID2=""
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
-	printHead
+	checkVersion; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server; adbWAIT
@@ -220,7 +232,7 @@ MAINd(){
 MAINu(){
 	deviceID=""; deviceID2=""
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
-	printHead
+	checkVersion; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server; adbWAIT
@@ -500,6 +512,7 @@ waiting(){
 	done
 }
 
+# allow user to run the script in update mode or default mode
 if [ "$*" = "-u" ] || [ "$*" = "--update" ]; then
 	MAINu && echo || lastCatch
 else

@@ -24,19 +24,19 @@ Use the version of the script with its version number ending in 'f' if you have 
 
 The in-script help page accesible with the -h or --help option:
 
- MONKEY INSTALLER  help page:
+MONKEY INSTALLER  help page:
 
- - OPTIONS -
+- OPTIONS -
 
-  -c      also [show-c]; show the copyright information
-  -l      also [show-l]; show the license information
-  -u      also [--update]; run the script in update mode
+-c      also [show-c]; show the copyright information
+-l      also [show-l]; show the license information
+-u      also [--update]; run the script in update mode
 
-  -d      also [--debug]; run the script in debug (verbose) mode
-  -h      also [--help]; show this information
+-d      also [--debug]; run the script in debug (verbose) mode
+-h      also [--help]; show this information
 
- - INSTRUCTIONS -
+- INSTRUCTIONS -
 
 skip the OBB step using one of the following:
-  'na', '0', '.'      OBB not applicable
-  'fire'                    Amazon build
+na, 0, .      OBB not applicable
+fire                    Amazon build
