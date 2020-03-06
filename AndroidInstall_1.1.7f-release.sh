@@ -32,6 +32,7 @@ scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VER
 
 loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
 deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"
+oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
 
 # text-UI elements and related variables
 UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
@@ -185,8 +186,7 @@ printHead(){
 }
 
 printTitle(){
-	printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
-	printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
+	figlet -F border -F gay -t "$scriptTitle"
 }
 
 MAINd(){
@@ -256,6 +256,7 @@ getOBB(){
 
 	if [ "$OBBfilePath" = "" ]; then
 		printHead; adbWAIT; adb devices; printTitle
+		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
@@ -278,6 +279,7 @@ getOBB(){
 
 	until [ "$OBBvalid" = "true" ]; do
 		printHead; adbWAIT; adb devices; printTitle
+		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "\n%*s\n\n" $((COLS/2)) "That is not an OBB!"
 		getOBB
 	done
@@ -293,6 +295,7 @@ getAPK(){
 	if [ "$APKfilePath" = "" ]; then
 		printHead; adbWAIT; adb devices; printTitle
 		APKvalid="false"
+		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
 	elif [[ "$APKname" == *".apk" ]]; then
@@ -304,6 +307,7 @@ getAPK(){
 
 	until [ "$APKvalid" = "true" ]; do
 		printHead; adbWAIT; adb devices; printTitle
+		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "That is not an APK!"
 		getAPK
 	done
