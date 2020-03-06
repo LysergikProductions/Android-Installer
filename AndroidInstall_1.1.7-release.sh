@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0164
+# Build_0165
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0164"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0165"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -58,12 +58,16 @@ help(){
 	printf "  'fire'                    Amazon build\n\n"
 }
 
+if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 2; UNINSTALL="false"; OBBdone="true"; fi
+
 # allow user to see the copyright, license, or the help page without running the script
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; clear; echo "Initializing.."; INIT
-else clear; verbose=0; echo "Initializing.."; INIT; fi
+elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then echo "verbose=1"; sleep 2; verbose=1
+else verbose=0; echo "verbose=0"; sleep 2; fi
+
+echo "Initializing.."; INIT
 
 # set debug variant of core commands
 if [ $verbose = 1 ]; then
@@ -196,9 +200,9 @@ printHead(){
 }
 
 printTitle(){
-	#figlet -F border -F gay -t "$scriptTitle"
-	printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
-	printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
+	figlet -F border -F gay -t "$scriptTitle"
+	#printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
+	#printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
 }
 
 MAINd(){
@@ -206,12 +210,10 @@ MAINd(){
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
 	checkVersion; printHead
 
-	# try communicating with device, catch with adbWAIT, finally mount device
-	(CMD_communicate && wait) || adb start-server; adbWAIT
-	printf "\nMounting device...\n\n"
+	echo "run MAINd"
 	
-	adb shell settings put global development_settings_enabled 1
-	adb devices
+	# try communicating with device, catch with adbWAIT, finally mount device
+	(CMD_communicate && wait) || adb start-server
 
 	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
@@ -233,6 +235,8 @@ MAINu(){
 	deviceID=""; deviceID2=""
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
 	checkVersion; printHead
+	
+	echo "run MAINu"
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server; adbWAIT
@@ -514,9 +518,10 @@ waiting(){
 }
 
 # allow user to run the script in update mode or default mode
-if [ "$*" = "-u" ] || [ "$*" = "--update" ]; then
+if {{ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
 	MAINu && echo || lastCatch
 else
+	echo HEY; sleep 1
 	MAINd && echo || lastCatch
 fi
 
