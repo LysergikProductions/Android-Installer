@@ -1,2 +1,2 @@
-_version 1.1.6-beta
-_build 0159
+_version 1.1.7-release
+_build 0160

@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0159
+# Build_0160
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,9 +26,9 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0159"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0160"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
-scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="error while getting properties.txt"
+scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
 loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
 deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"
@@ -62,7 +62,7 @@ checkVersion(){
 	wait; cd "$terminalPath" || return
 
 	# determine value of most up-to-date version and show the user
-	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt) > /dev/null 2>&1; currentVersion="${currentVersion##* }" > /dev/null 2>&1
+	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt); currentVersion="${currentVersion##* }"
 
 	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
 	printf "%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
@@ -78,7 +78,6 @@ checkVersion(){
 }
 
 INIT(){ # initializing, then calling checkVersion
-	export LC_ALL="en_CA.UTF-8"
 	scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	mkdir ~/logs/ >/dev/null 2>&1
@@ -335,7 +334,7 @@ INSTALL(){
 		if (trap "" SIGINT; CMD_pushOBB && exit) || (
 				(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
 				if [ "$deviceConnect" = "true" ]; then
-					export errorMessage="FE1a - OBB could not be installed."
+					errorMessage="FE1a - OBB could not be installed."
 					printf "\n\nFE1a - OBB could not be installed.\n"
 
 					( set -o posix ; set ) >/tmp/variables.after
@@ -356,7 +355,7 @@ INSTALL(){
 		if CMD_installAPK || (
 			(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
 			if [ "$deviceConnect" = "true" ]; then
-				export errorMessage="FE1b - APK could not be installed."
+				errorMessage="FE1b - APK could not be installed."
 				printf "\n\nFE1b - APK could not be installed.\n"
 
 				( set -o posix ; set ) >/tmp/variables.after
@@ -397,7 +396,7 @@ UPSTALL(){
 		if CMD_installAPK || (
 			(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
 			if [ "$deviceConnect" = "true" ]; then
-				export errorMessage="FE1b - APK could not be installed."
+				errorMessage="FE1b - APK could not be installed."
 				printf "\n\nFE1b - APK could not be installed.\n"
 
 				( set -o posix ; set ) >/tmp/variables.after
@@ -456,14 +455,14 @@ installAgain(){
 
 # update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
-	tput civis
 	if (CMD_communicate); then
 		export deviceConnect="true"
 	else
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
-		{ sleep 2; printf "       ensure only one device is connected"; sleep 2; } & until (CMD_communicate); do waiting; done
+		{ sleep 8; printf "       !!ensure only one device is connected!!"; } & until (CMD_communicate)
+		do tput civis; waiting; deviceConnect="true"; done
 
-		export deviceConnect="true"; tput cnorm
+		tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
 	fi
 }
