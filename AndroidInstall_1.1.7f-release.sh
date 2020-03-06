@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0162f
+# Build_0164f
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0162f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0164f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -95,7 +95,7 @@ if [ $verbose = 1 ]; then
 	}
 else # set default variant of core commands
 	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
-	CMD_communicate(){ adb shell exit 1>/dev/null; }
+	CMD_communicate(){ adb shell exit 2>/dev/null; }
 
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
 
@@ -468,9 +468,10 @@ adbWAIT(){
 	else
 		tput civis
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
-		{ sleep 7; printf "      Ensure only one device is connected!"; } & until (printf "\n" && CMD_communicate)
-		do waiting; deviceConnect="true"; done
-
+		{ sleep 6; printf "        Ensure only one device is connected!"; } & { 
+			until (CMD_communicate)
+			do waiting; deviceConnect="true"; done
+		}
 		tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
 	fi
