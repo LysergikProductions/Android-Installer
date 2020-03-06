@@ -53,7 +53,9 @@ help(){
 	clear; printf "$scriptTitle help page:\n\n"
 	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
 	printf "  -u      also [--update]; run the script in update mode\n\n"
-	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n  -h      also [--help]; show this information\n\n"
+	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n"
+	printf "  -t      also [--top]; show device CPU and RAM usage\n\n"
+	printf "  -h      also [--help]; show this information\n\n"
 	printf " - INSTRUCTIONS -\n\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
 	printf "  'fire'                    Amazon build\n\n"
 }
