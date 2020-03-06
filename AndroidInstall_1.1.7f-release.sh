@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0165f
+# Build_0166f
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0165f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0166f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -40,7 +40,7 @@ waitMessage="-- waiting for device --"; oops=$(figlet -F metal -t "Oops!"); expo
 INIT(){ # initializing, then calling checkVersion
 	scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-	
+
 	# make logs directory, but do not overwrite if already present
 	mkdir ~/logs/ >/dev/null 2>&1
 
@@ -210,16 +210,15 @@ MAINd(){
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
 	checkVersion; printHead
 
-	echo "run MAINd"
-	
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server
+	adb shell settings put global development_settings_enabled 1
 
 	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
 
 	getOBB; getAPK
-	INSTALL && echo ||  {
+	INSTALL && echo || {
 		CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
 
 		export scriptEndDate=""; scriptEndDate=$(date)
@@ -235,15 +234,10 @@ MAINu(){
 	deviceID=""; deviceID2=""
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
 	checkVersion; printHead
-	
-	echo "run MAINu"
 
 	# try communicating with device, catch with adbWAIT, finally mount device
-	(CMD_communicate && wait) || adb start-server; adbWAIT
+	(CMD_communicate && wait) || adb start-server
 	adb shell settings put global development_settings_enabled 1
-
-	printf "\nMounting device...\n\n"
-	adb devices
 
 	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
@@ -251,7 +245,7 @@ MAINu(){
 	echo "OBB will not actually be replaced on your device, but it is still required.."
 
 	getOBB; getAPK
-	UPSTALL && echo ||  {
+	UPSTALL && echo || {
 		CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
 
 		export scriptEndDate=""; scriptEndDate=$(date)
