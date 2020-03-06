@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7.fig-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0172f
+# Build_0175f
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0172f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0175f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -46,7 +46,6 @@ INIT(){ # initializing, then calling checkVersion
 
 	# mac osx only; set font size to 15p
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
-	COLS=$(tput cols)
 }
 
 help(){
@@ -212,7 +211,9 @@ printTitle(){
 
 MAINd(){
 	deviceID=""; deviceID2=""
+
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
+	COLS=$(tput cols)
 	checkVersion; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
@@ -236,6 +237,8 @@ MAINd(){
 
 MAINu(){
 	deviceID=""; deviceID2=""; scriptTitle="  MONKEY UPDATER  "
+
+	COLS=$(tput cols)
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
 	checkVersion; printHead
 
@@ -261,7 +264,7 @@ MAINu(){
 
 getOBB(){
 	printf "\n%*s\n" $((COLS/2)) "Drag OBB and press enter:"
-	printf "\nTo skip, use: na, 0, or .\n\nEnter 'fire' if you are installing an Amazon build\n\n"
+	printf "\nTo skip, use: na, 0, or .\nEnter 'fire' if you are installing an Amazon build\n\n"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
@@ -468,15 +471,15 @@ installAgain(){
 
 warnFIRE(){
 	flashWarn=(
-		"!Remember!" ""
-		"The store may not work at all with manually installed Amazon builds"
+		"!Remember!" "" "!Remember!" "" "!Remember!"
 	)
 	for i in "${flashWarn[@]}"
 	do
 		printf "\r%*s" $((COLS/2)) "$i"
-		sleep 1.5
+		sleep 0.4
 	done
-	echo
+	printf "\r%*s" $((COLS/2)) "STORE may not work with manually installed Amazon builds!"
+	printf "\n%*s\n\n" $((COLS/2)) "It may also take a long time to install builds on this device.."
 }
 
 # update the script on status of adb connection and call waiting function until it is ready
