@@ -204,9 +204,9 @@ printHead(){
 }
 
 printTitle(){
-	figlet -F border -F gay -t "$scriptTitle"
-	#printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
-	#printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
+	#figlet -F border -F gay -t "$scriptTitle"
+	printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
+	printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
 }
 
 MAINd(){
