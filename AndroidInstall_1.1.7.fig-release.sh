@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7.fig-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0169f
+# Build_0170f
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0169f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0170f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -156,7 +156,7 @@ checkVersion(){
 
 	if [ "$scriptVersion" = "$currentVersion" ]; then
 		upToDate="true"
-		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 0.9
+		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 0.8
 	else
 		upToDate="false"
 		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.5
@@ -324,6 +324,8 @@ getAPK(){
 }
 
 INSTALL(){
+	scriptTitle="INSTALLING.."
+
 	printHead; adbWAIT
 	printf "\nMounting device...\n"
 	adb devices; printTitle
@@ -383,6 +385,8 @@ INSTALL(){
 }
 
 UPSTALL(){
+	scriptTitle=" INSTALLING.. "
+
 	printHead; adbWAIT; UNINSTALL="false"
 	printf "\nMounting device...\n"
 	adb devices; printTitle
@@ -427,14 +431,12 @@ UPSTALL(){
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, or press any other key to install this build on another device.."
-
 	read -n 1 -s -r -p ''
 	if [ ! "$REPLY" = "q" ]; then
 		OBBdone="false"; APKdone="false"
 		installAgain
-	else
-		echo && (exit)
 	fi
+	(exit)
 }
 
 installAgain(){
