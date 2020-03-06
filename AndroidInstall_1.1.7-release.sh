@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0162f
+# Build_0162
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0162f"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0162"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
