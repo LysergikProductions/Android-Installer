@@ -34,7 +34,7 @@ The in-script help page accesible with the -h or --help option:
 
   -d      also [--debug]; run the script in debug (verbose) mode
   -t      also [--top]; show device CPU and RAM usage
-
+  
   -h      also [--help]; show this information
 
  - INSTRUCTIONS -
