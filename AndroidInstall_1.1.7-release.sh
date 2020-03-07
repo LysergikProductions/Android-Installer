@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0181
+# Build_0184
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0181"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0184"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -195,7 +195,7 @@ gitConfigs(){
 	upToDate="true"
 	printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 0.8
 
-	if [ ! "$gitMESSAGE" = "" ]; then clear; echo "$gitMESSAGE"; sleep 4; fi
+	if [ ! "$gitMESSAGE" = "" ]; then clear; echo "$gitMESSAGE"; sleep 3; fi
 }
 
 printHead(){
@@ -206,23 +206,6 @@ printHead(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 		printf "$errorMessage\n\n"
-
-		if [ $deviceConnect = "false" ]; then until CMD_communicate; do
-			adbWAIT; done
-
-			export deviceConnect="true"
-			printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
-		elif [ $deviceConnect = "true" ]; then echo
-		else
-			echo "Unexpected value for deviceConnect: $deviceConnect"
-			export deviceConnect="true"
-			export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
-			export errorMessage+="ER1 - Script restarted; 'deviceConnect' had an unexpected value."
-
-			printf "\nER1 - Unexpected value in 'deviceConnect'; resetting script in..\n"
-			printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
-			MAINd
-		fi
   	else # if bug causes loopFromError to be NOT "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
 		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
@@ -294,7 +277,7 @@ getOBB(){
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
 
 	if [ "$OBBfilePath" = "" ]; then
-		printHead; adbWAIT; adb devices; printTitle
+		printHead; adb devices; printTitle
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
@@ -320,7 +303,7 @@ getOBB(){
 	fi
 
 	until [ "$OBBvalid" = "true" ]; do
-		printHead; adbWAIT; adb devices; printTitle
+		printHead; adb devices; printTitle
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "\n%*s\n\n" $((COLS/2)) "That is not an OBB!"
 		getOBB
@@ -335,7 +318,7 @@ getAPK(){
 	local cleanPath="${APKfilePath#*:*}"; APKname=$(basename "$cleanPath")
 
 	if [ "$APKfilePath" = "" ]; then
-		printHead; adbWAIT; adb devices; printTitle
+		printHead; adb devices; printTitle
 		APKvalid="false"
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
@@ -348,7 +331,7 @@ getAPK(){
 	fi
 
 	until [ "$APKvalid" = "true" ]; do
-		printHead; adbWAIT; adb devices; printTitle
+		printHead; adb devices; printTitle
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "That is not an APK!"
 		getAPK
