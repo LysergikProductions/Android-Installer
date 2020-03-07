@@ -3,4 +3,4 @@ _newVersion 1.1.7-release
 _build 0154
 
 _gitMESSAGE
-_scriptTitle   MONKEY_INSTALLER
+_scriptTitle MONKEY_INSTALLER
