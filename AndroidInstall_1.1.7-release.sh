@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 © Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0175
+# Build_0177
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,18 +26,41 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0175"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0177"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
-loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
-deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"
-
-# text-UI elements and related variables
-UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-waitMessage="-- waiting for device --"; #oops=$(figlet -F metal -t "Oops!"); export oops="$oops"
-
 INIT(){ # initializing, then calling checkVersion
+	echo "Initializing.." &
+	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
+	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"
+
+	# text-UI elements and related variables
+	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
+	waitMessage="-- waiting for device --"
+
+	if figlet -t -w 0 -F metal "TEST FULL FIG"; clear; then
+		echo "Initializing.." &
+		oops=$(figlet -F metal -t "Oops!")
+		printTitle(){
+			figlet -F border -F gay -t "$scriptTitle"
+		}
+	elif figlet -w 0 -f small "TEST SIMPLE FIG"; clear; then
+		echo "Initializing.." &
+		oops=$(figlet -f small "Oops!")
+		printTitle(){
+			figlet "$scriptTitle"
+		}
+	else
+		oops="Oops!"
+		printTitle(){
+			printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
+			printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
+		}
+	fi
+
+	OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
+
 	scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
@@ -59,7 +82,7 @@ help(){
 	printf "  'fire'                    Amazon build\n\n"
 }
 
-if [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -m 5 -o %MEM -o %CPU -o CMDLINE -s 1
+if [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1
 elif [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
 
 # allow user to see the copyright, license, or the help page without running the script
@@ -69,7 +92,7 @@ elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
 elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1
 else verbose=0; fi
 
-clear; echo "Initializing.."; INIT
+clear; INIT
 
 # set debug variant of core commands
 if [ $verbose = 1 ]; then
@@ -90,6 +113,8 @@ if [ $verbose = 1 ]; then
 			printf "\nGIT CLONED\n\n"; sleep 2
 		} || { git pull printf "\nGIT PULLED\n\n"; sleep 2; }
 	}
+
+	refreshUI(){ printHead; adb devices; printTitle; }
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt; echo "rm -rf /tmp/variables.before /tmp/variables.after ~/upt"; }
 	CMD_reset(){ printf "\n\nTerminal was NOT reset like would occur in default mode; there could be issues in the terminal.\n"; }
@@ -203,12 +228,6 @@ printHead(){
   	fi
 }
 
-printTitle(){
-	#figlet -F border -F gay -t "$scriptTitle"
-	printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
-	printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
-}
-
 MAINd(){
 	deviceID=""; deviceID2=""
 
@@ -263,15 +282,14 @@ MAINu(){
 }
 
 getOBB(){
-	printf "\n%*s\n" $((COLS/2)) "Drag OBB and press enter:"
-	printf "\nTo skip, use: na, 0, or .\nEnter 'fire' if you are installing an Amazon build\n\n"
+	printf "\n%*s\n" $((COLS/2)) "Drag OBB and press enter:"; printf "$OBBinfo"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
 
 	if [ "$OBBfilePath" = "" ]; then
 		printHead; adbWAIT; adb devices; printTitle
-		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
@@ -297,7 +315,7 @@ getOBB(){
 
 	until [ "$OBBvalid" = "true" ]; do
 		printHead; adbWAIT; adb devices; printTitle
-		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "\n%*s\n\n" $((COLS/2)) "That is not an OBB!"
 		getOBB
 	done
@@ -313,7 +331,7 @@ getAPK(){
 	if [ "$APKfilePath" = "" ]; then
 		printHead; adbWAIT; adb devices; printTitle
 		APKvalid="false"
-		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
 	elif [[ "$APKname" == *".apk" ]]; then
@@ -325,24 +343,26 @@ getAPK(){
 
 	until [ "$APKvalid" = "true" ]; do
 		printHead; adbWAIT; adb devices; printTitle
-		#printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "That is not an APK!"
 		getAPK
 	done
 }
 
 INSTALL(){
-	scriptTitle="INSTALLING.."
+	scriptTitle="Installing.."
 
 	printHead; adbWAIT
 	printf "\nMounting device...\n"
-	adb devices; printTitle
+	adb devices
 
 	# uninstall app, unless APK step wants to continue from where it left off
 	if [ "$UNINSTALL" = "true" ]; then
 		wait | CMD_uninstall
 		UNINSTALL="true"
 	fi
+	
+	echo; printTitle
 
 	# upload OBB, only if it isn't already uploaded on deviceID
 	if [ "$OBBdone" = "false" ] && [[ "$OBBname" == "com."* ]]; then
@@ -366,6 +386,10 @@ INSTALL(){
 
 	# install APK, only if APKdone=false
 	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk" ]]; then
+		if [ "$OBBname" = "fire" ]; then
+			printf "\n%*s\n\n" $((COLS/2)) "It may take a long time to install builds on this device.."
+		fi
+
 		printf "\nInstalling APK..\n"
 
 		if CMD_installAPK || (
@@ -397,7 +421,7 @@ UPSTALL(){
 
 	printHead; adbWAIT; UNINSTALL="false"
 	printf "\nMounting device...\n"
-	adb devices; printTitle
+	adb devices
 
 	# uninstall app, unless APK step wants to continue from where it left off
 	if [ "$UNINSTALL" = "true" ]; then
@@ -405,7 +429,7 @@ UPSTALL(){
 		UNINSTALL="true"
 	fi
 
-	deviceID=$(adb devices)
+	deviceID=$(adb devices); echo; printTitle
 
 	# install APK, only if APKdone=false
 	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk" ]]; then
@@ -438,6 +462,7 @@ UPSTALL(){
 
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
+	scriptTitle="Install Again?"; refreshUI
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, or press any other key to install this build on another device.."
 	read -n 1 -s -r -p ''
 	if [ ! "$REPLY" = "q" ]; then
@@ -476,10 +501,9 @@ warnFIRE(){
 	for i in "${flashWarn[@]}"
 	do
 		printf "\r%*s" $((COLS/2)) "$i"
-		sleep 0.4
+		sleep 0.3
 	done
-	printf "\r%*s" $((COLS/2)) "STORE may not work with manually installed Amazon builds!"
-	printf "\n%*s\n\n" $((COLS/2)) "It may also take a long time to install builds on this device.."
+	printf "\r%*s\n\n" $((COLS/2)) "To test the store, use the download link method"
 }
 
 # update the script on status of adb connection and call waiting function until it is ready
@@ -489,7 +513,7 @@ adbWAIT(){
 	else
 		tput civis
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
-		{ sleep 6; printf "        Ensure only one device is connected!"; } & { 
+		{ sleep 4; printf "        Ensure only one device is connected!"; } & { 
 			until (CMD_communicate)
 			do waiting; deviceConnect="true"; done
 		}
