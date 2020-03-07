@@ -39,6 +39,6 @@ The in-script help page accesible with the -h or --help option:
 
  - INSTRUCTIONS -
 
-skip the OBB step using one of the following:
+skip the OBB step using one of the following: 
   'na', '0', '.'      OBB not applicable
   'fire'                    Amazon build
