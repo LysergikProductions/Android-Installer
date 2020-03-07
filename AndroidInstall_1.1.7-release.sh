@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0184
+# Build_0186
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,10 +26,14 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0184"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0186"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
+fireAPPS=( "GO BACK" "option1" "option2" "option3" "option4" "option5" "option6" "option7" )
+studio=""
+
+# see help page in terminal by using option -h or --help
 help(){
 	clear; printf "$scriptTitle help page:\n\n"
 	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
@@ -41,16 +45,18 @@ help(){
 	printf "  'fire'                    Amazon build\n\n"
 }
 
-if [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1
-elif [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
-
-# allow user to see the copyright, license, or the help page without running the script
+# allow user to see the copyright, license, top, or the help page without running the script
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1
+else [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
+
+# check for mode flags
+if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
+if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1
 else verbose=0; fi
 
+# prepare script for running the MAIN function
 INIT(){
 	echo "Initializing.." &
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
@@ -92,29 +98,28 @@ INIT(){
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 }
 
-clear; INIT
+clear; INIT # initializing now..
+# nothing up until the first call of MAIN will be run; only being loaded into memory
 
 # set debug variant of core commands
 if [ $verbose = 1 ]; then
-	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb shell "$launchCMD"; }
 	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb shell exit; }
+	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; sleep 0.5; }
+	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb shell "$launchCMD"; }
 
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB; }
-
 	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" && exit) || (
 		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
 		trap - SIGINT
 		adb install -r "$APKfilePath"
 	) }
 
-	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; sleep 0.5; }
-
 	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git && {
-			printf "\nGIT CLONED\n\n"; sleep 2
+			printf "\nGIT CLONED\n\n"; echo "Getting configs.." & sleep 2
 		} || { git pull printf "\nGIT PULLED\n\n"; sleep 2; }
 	}
 
-	refreshUI(){ printHead; adb devices; printTitle; }
+	refreshUI(){ printTitle; }
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt; echo "rm -rf /tmp/variables.before /tmp/variables.after ~/upt"; }
 	CMD_reset(){ printf "\n\nTerminal was NOT reset like would occur in default mode; there could be issues in the terminal.\n"; }
@@ -125,23 +130,23 @@ if [ $verbose = 1 ]; then
 		( set ) > ~/logs/"FULL_$scriptEndDate".txt 2>&1
 	}
 else # set default variant of core commands
-	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
 	CMD_communicate(){ adb shell exit 2>/dev/null; }
+	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5; echo "Done!"; }
+	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
 
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
-
 	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" 2>/dev/null && exit) || (
 		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
 		trap - SIGINT
 		adb install -r "$APKfilePath" 2>/dev/null && exit
 	) }
 
-	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5; echo "Done!"; }
-
 	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git >/dev/null 2>&1 || {
 			git pull >/dev/null 2>&1
 		}
 	}
+
+	refreshUI(){ printHead; adb devices; printTitle; }
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1; }
 	CMD_reset(){ reset; }
@@ -159,7 +164,8 @@ update(){
 	cpSource="~/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
 	cp "$cpSource" "$scriptDIR" && upToDate="true"
 
-	rm -f "$scriptDIR/$scriptFileName"; rm -rf ~/upt; wait
+	#rm -f "$scriptDIR/$scriptFileName"
+	rm -rf ~/upt; wait
 
 	echo "Launching updated version of the script!"; sleep 1
 	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
@@ -174,28 +180,33 @@ gitConfigs(){
 	(CMD_gitGet); wait
 	cd "$terminalPath" || return
 
-	# determine value of most up-to-date version and last version, then show the user
+	# get config values from the master branch's properties.txt
 	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt); currentVersion="${currentVersion##* }"
 	newVersion=$(grep -n "_newVersion " ~/upt/Android-Installer/properties.txt); newVersion="${newVersion##* }"
 	gitMESSAGE=$(grep -n "_gitMESSAGE " ~/upt/Android-Installer/properties.txt); gitMESSAGE="${gitMESSAGE##* }"
+	dispGitTime=$(grep -n "_dispGitTime " ~/upt/Android-Installer/properties.txt); dispGitTime="${dispGitTime##* }"
+	
+	# set scriptTitle to match config, else use default
 	if scriptTitle=$(grep -n "_scriptTitle " ~/upt/Android-Installer/properties.txt); then
 		scriptTitle="${scriptTitle##* }"
 	else scriptTitle="$scriptTitleDEF"; fi
 
 	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
-	printf "%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
+	printf "\n%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
 	printf "%*s\n" $((COLS/2)) "Version in progress: v$newVersion"
 
 	if [ ! $scriptVersion = $currentVersion ] && [ ! $scriptVersion" = $newVersion" ]; then
 		upToDate="false"
-		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.5
+		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 2
 		update
 	fi
 
 	upToDate="true"
-	printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 0.8
+	printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1.5
 
-	if [ ! "$gitMESSAGE" = "" ]; then clear; echo "$gitMESSAGE"; sleep 3; fi
+	# display gitMESSAGE if there is one
+	if [ "$dispGitTime" = "" ]; then dispGitTime=0; fi
+	if [ ! "$gitMESSAGE" = "" ]; then clear; echo "$gitMESSAGE"; sleep "$dispGitTime"; fi
 }
 
 printHead(){
@@ -217,6 +228,7 @@ printHead(){
   	fi
 }
 
+# default MAIN function that uninstalls first in case of existing version of the app on the device
 MAINd(){
 	deviceID=""; deviceID2=""
 
@@ -243,6 +255,7 @@ MAINd(){
 	} || (echo "catch fails"; trap - SIGINT; exit 1)
 }
 
+# update MAIN function that does not delete app data, and only updates the build (beta feature)
 MAINu(){
 	deviceID=""; deviceID2=""; scriptTitle="  MONKEY UPDATER  "
 
@@ -282,15 +295,26 @@ getOBB(){
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
-		OBBvalid="true"; OBBdone="true"; LAUNCH="false"
-		OBBname="Amazon Build"; printf "OBB Name: $OBBname\n\n"
+		OBBvalid="true"; OBBdone="true"
+		UNINSTALL="false"; LAUNCH="false"
 		warnFIRE
 
-		#printf "OBB Name: Amazon Build"
-		#printf "OBB Name: Amazon Build.. Select your app from this list:"
-		#case esac
-		#export OBBname="com.budgestudios.amazon.$select"
-		#export launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
+		printf "Which Amazon app would you like to install?\n"
+		select opt in "${fireAPPS[@]}"
+		do
+			case $opt in
+	        "GO BACK")
+				refreshUI; getOBB
+				break
+					;;
+			*)
+				export OBBname="com.$studio.amazon.$opt"
+				printf "OBB Name: $OBBname\n\n"
+				export launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
+				break
+					;;
+			esac
+	      done
 	elif [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
 		OBBvalid="true"; OBBdone="true"; LAUNCH="false"
 		printf "OBB Name: N/A"
@@ -487,12 +511,14 @@ warnFIRE(){
 	flashWarn=(
 		"!Remember!" "" "!Remember!" "" "!Remember!"
 	)
+	tput civis
 	for i in "${flashWarn[@]}"
 	do
 		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.3
 	done
 	printf "\r%*s\n\n" $((COLS/2)) "To test the store, use the download link method"
+	tput cnorm
 }
 
 # update the script on status of adb connection and call waiting function until it is ready
@@ -511,7 +537,7 @@ adbWAIT(){
 	fi
 }
 
-# show the waiting 'animation'
+# show the waiting animation
 waiting(){
 	local anim1=( "" " ." " . ." " . . ." " . . . ." " . . . . ." )
 	local anim2=(
@@ -547,13 +573,16 @@ waiting(){
 	done
 }
 
-# allow user to run the script in update mode or default mode
+# the following lines lead to calling every above function starting after INIT for the first time
+
 if [[ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
+	# try update, catch
 	MAINu && echo || lastCatch
 else
+	# try install, catch
 	MAINd && echo || lastCatch
 fi
 
-# finally
+# finally remove temporary data created by the script and exit
 CMD_rmALL
 printf "\nGoodbye!\n"; exit
