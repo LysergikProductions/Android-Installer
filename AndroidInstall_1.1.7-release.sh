@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0178
+# Build_0180
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,9 +26,30 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0178"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0180"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
+
+help(){
+	clear; printf "$scriptTitle help page:\n\n"
+	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
+	printf "  -u      also [--update]; run the script in update mode\n\n"
+	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n"
+	printf "  -t      also [--top]; show device CPU and RAM usage\n\n"
+	printf "  -h      also [--help]; show this information\n\n"
+	printf " - INSTRUCTIONS -\n\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
+	printf "  'fire'                    Amazon build\n\n"
+}
+
+if [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1
+elif [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
+
+# allow user to see the copyright, license, or the help page without running the script
+if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
+elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
+elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
+elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1
+else verbose=0; fi
 
 INIT(){
 	echo "Initializing.." &
@@ -70,27 +91,6 @@ INIT(){
 	# mac osx only; set font size to 15p
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 }
-
-help(){
-	clear; printf "$scriptTitle help page:\n\n"
-	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
-	printf "  -u      also [--update]; run the script in update mode\n\n"
-	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n"
-	printf "  -t      also [--top]; show device CPU and RAM usage\n\n"
-	printf "  -h      also [--help]; show this information\n\n"
-	printf " - INSTRUCTIONS -\n\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
-	printf "  'fire'                    Amazon build\n\n"
-}
-
-if [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1
-elif [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
-
-# allow user to see the copyright, license, or the help page without running the script
-if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
-elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
-elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1
-else verbose=0; fi
 
 clear; INIT
 
