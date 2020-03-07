@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0180
+# Build_0181
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0180"; author="Nikolas A. Wagner"; license="GNU GPLv3"
-scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
+build="0181"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
 help(){
@@ -157,10 +157,9 @@ update(){
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
 	cpSource="~/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
-	cp "$cpSource" "$scriptDIR"; wait; upToDate="true"
+	cp "$cpSource" "$scriptDIR" && upToDate="true"
 
-	rm -f "$scriptDIR/$scriptFileName"; wait
-	rm -rf ~/upt; wait
+	rm -f "$scriptDIR/$scriptFileName"; rm -rf ~/upt; wait
 
 	echo "Launching updated version of the script!"; sleep 1
 	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
@@ -178,7 +177,10 @@ gitConfigs(){
 	# determine value of most up-to-date version and last version, then show the user
 	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt); currentVersion="${currentVersion##* }"
 	newVersion=$(grep -n "_newVersion " ~/upt/Android-Installer/properties.txt); newVersion="${newVersion##* }"
-	gitMESSAGE=""; gitMESSAGE=$(grep -n "_gitMESSAGE " ~/upt/Android-Installer/properties.txt); gitMESSAGE="${gitMESSAGE##* }"
+	gitMESSAGE=$(grep -n "_gitMESSAGE " ~/upt/Android-Installer/properties.txt); gitMESSAGE="${gitMESSAGE##* }"
+	if scriptTitle=$(grep -n "_scriptTitle " ~/upt/Android-Installer/properties.txt); then
+		scriptTitle="${scriptTitle##* }"
+	else scriptTitle="$scriptTitleDEF"; fi
 
 	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
 	printf "%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
@@ -193,7 +195,7 @@ gitConfigs(){
 	upToDate="true"
 	printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 0.8
 
-	if [ ! "$gitMESSAGE" = "" ]; then clear; echo "$gitMESSAGE"; sleep 5; fi
+	if [ ! "$gitMESSAGE" = "" ]; then clear; echo "$gitMESSAGE"; sleep 4; fi
 }
 
 printHead(){
@@ -207,6 +209,7 @@ printHead(){
 
 		if [ $deviceConnect = "false" ]; then until CMD_communicate; do
 			adbWAIT; done
+
 			export deviceConnect="true"
 			printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
 		elif [ $deviceConnect = "true" ]; then echo
