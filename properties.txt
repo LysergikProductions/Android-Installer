@@ -2,4 +2,4 @@ _version 1.1.6-beta
 _newVersion 1.1.7-release
 _build 0154
 
-_gitMESSAGE THIS IS A TEST
+_gitMESSAGE "THIS IS A TEST"
