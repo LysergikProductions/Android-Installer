@@ -1,8 +1,8 @@
 #!/bin/bash
 # AndroidInstall_1.1.7-release.sh
-# 2020 © Nikolas A. Wagner
+# 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0177
+# Build_0178
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0177"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0178"; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitle=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
-INIT(){ # initializing, then calling checkVersion
+INIT(){
 	echo "Initializing.." &
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
 	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"
@@ -167,17 +167,18 @@ update(){
 	trap - SIGINT
 }
 
-checkVersion(){
+gitConfigs(){
 	terminalPath=""; terminalPath=$(pwd)
 	rm -rf ~/upt; mkdir ~/upt; cd ~/upt || return
 
 	# clone repo or update it with git pull if it exists already
-	(CMD_gitGet) && wait
+	(CMD_gitGet); wait
 	cd "$terminalPath" || return
 
 	# determine value of most up-to-date version and last version, then show the user
 	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt); currentVersion="${currentVersion##* }"
 	newVersion=$(grep -n "_newVersion " ~/upt/Android-Installer/properties.txt); newVersion="${newVersion##* }"
+	gitMESSAGE=""; gitMESSAGE=$(grep -n "_gitMESSAGE " ~/upt/Android-Installer/properties.txt); gitMESSAGE="${gitMESSAGE##* }"
 
 	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
 	printf "%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
@@ -188,9 +189,11 @@ checkVersion(){
 		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 1.5
 		update
 	fi
-	
+
 	upToDate="true"
 	printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 0.8
+
+	if [ ! "$gitMESSAGE" = "" ]; then clear; echo "$gitMESSAGE"; sleep 5; fi
 }
 
 printHead(){
@@ -233,7 +236,7 @@ MAINd(){
 
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
 	COLS=$(tput cols)
-	checkVersion; printHead
+	gitConfigs; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server
@@ -259,7 +262,7 @@ MAINu(){
 
 	COLS=$(tput cols)
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
-	checkVersion; printHead
+	gitConfigs; printHead
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server
@@ -361,7 +364,7 @@ INSTALL(){
 		wait | CMD_uninstall
 		UNINSTALL="true"
 	fi
-	
+
 	echo; printTitle
 
 	# upload OBB, only if it isn't already uploaded on deviceID
