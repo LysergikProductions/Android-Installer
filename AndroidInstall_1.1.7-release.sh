@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0214
+# Build_0215
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0214"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0215"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.7-release; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -120,6 +120,10 @@ if [ $verbose = 1 ]; then
 	}
 
 	refreshUI(){ printTitle; }
+	header(){
+		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
+		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+	}
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt; echo "rm -rf /tmp/variables.before /tmp/variables.after ~/upt"; }
 	CMD_reset(){ printf "\n\nTerminal was NOT reset like would occur in default mode; there could be issues in the terminal.\n"; }
@@ -147,6 +151,10 @@ else # set default variant of core commands
 	}
 
 	refreshUI(){ printHead; adb devices; printTitle; }
+	header(){
+		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n"
+		printf "\nDistributed with the $license license\n\n$UIsep_head\n"
+	}
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1; }
 	CMD_reset(){ reset; }
@@ -158,14 +166,13 @@ else # set default variant of core commands
 fi
 
 update(){
-	trap "" SIGINT
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
 	cpSource=~/upt/Android-Installer/$scriptPrefix$currentVersion.sh
-	cp "$cpSource" "$scriptDIR" && upToDate="true"
 
+	trap "" SIGINT
+	cp "$cpSource" "$scriptDIR" && upToDate="true"
 	trap - SIGINT
-	#rm -f "$scriptDIR/$scriptFileName"
 
 	echo "Launching updated version of the script!"; sleep 1
 	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
@@ -219,13 +226,8 @@ gitConfigs(){
 }
 
 printHead(){
-	if [ $loopFromError = "false" ]; then clear;
-		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
-		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
-	elif [ $loopFromError = "true" ]; then clear;
-		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
-		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
-		printf "$errorMessage\n\n"
+	if [ $loopFromError = "false" ]; then clear; header
+	elif [ $loopFromError = "true" ]; then clear; header; printf "$errorMessage\n\n"
   	else # if bug causes loopFromError to be NOT "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
 		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
@@ -492,6 +494,7 @@ installAgainPrompt(){
 		OBBdone="false"; APKdone="false"
 		installAgain
 	fi
+	OBBdone="true"; APKdone="true"; LAUNCH="false"
 	(exit)
 }
 
