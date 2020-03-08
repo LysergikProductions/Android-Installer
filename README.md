@@ -9,10 +9,10 @@ Description:
 This script simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge.
 
 Options:
-	-h or --help		show the help page in the terminal
-	- t or --top		show device's live CPU and RAM usage
-	-q or --quiet		run the script in quiet mode
-	- d or --debug		run the script in debug mode
+- -h or --help	:____show the help page in the terminal
+- -t or --top	:____show device's live CPU and RAM usage
+- -q or --quiet	:____run the script in quiet mode
+- - d or --debug:____run the script in debug mode
 
 Instructions:
 	If you do not want to install an OBB file, or if there is not one to install in the first place,
