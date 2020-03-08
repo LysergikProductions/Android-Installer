@@ -16,7 +16,7 @@ Options:
 - -h or --help	:____show the help page in the terminal
 - -t or --top	:____show device's live CPU and RAM usage
 - -q or --quiet	:____run the script in quiet mode
-- - d or --debug:____run the script in debug mode
+- -d or --debug:____run the script in debug mode
 
 Instructions:
 	If you do not want to install an OBB file, or if there is not one to install in the first place,
@@ -28,7 +28,7 @@ Instructions:
 
 	Enter "fire" to tell the script you are installing a build on an Amazon device.
 
-	Otherwise, drag in the OBB to the terminal window and press enter to continue the installation process.
+Otherwise, drag in the OBB to the terminal window and press enter to continue the installation process.
 
 DEV:
 If you want users to be able to have full script functionality, then before running this script, populate the fireAPPS array in the beginning of the source code as well as the 'studio' variable.
