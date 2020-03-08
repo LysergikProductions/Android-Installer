@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0186
+# Build_0187
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0186"; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0187"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -49,7 +49,7 @@ help(){
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-else [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
+elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
 
 # check for mode flags
 if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
@@ -181,11 +181,11 @@ gitConfigs(){
 	cd "$terminalPath" || return
 
 	# get config values from the master branch's properties.txt
-	currentVersion=$(grep -n "_version " ~/upt/Android-Installer/properties.txt); currentVersion="${currentVersion##* }"
-	newVersion=$(grep -n "_newVersion " ~/upt/Android-Installer/properties.txt); newVersion="${newVersion##* }"
-	gitMESSAGE=$(grep -n "_gitMESSAGE " ~/upt/Android-Installer/properties.txt); gitMESSAGE="${gitMESSAGE##* }"
-	dispGitTime=$(grep -n "_dispGitTime " ~/upt/Android-Installer/properties.txt); dispGitTime="${dispGitTime##* }"
-	
+	currentVersion=$(grep -n "_version " ~/upt/$gitName/properties.txt); currentVersion="${currentVersion##* }"
+	newVersion=$(grep -n "_newVersion " ~/upt/$gitName/properties.txt); newVersion="${newVersion##* }"
+	gitMESSAGE=$(grep -n "_gitMESSAGE " ~/upt/$gitName/properties.txt); gitMESSAGE="${gitMESSAGE##* }"
+	dispGitTime=$(grep -n "_dispGitTime " ~/upt/$gitName/properties.txt); dispGitTime="${dispGitTime##* }"
+
 	# set scriptTitle to match config, else use default
 	if scriptTitle=$(grep -n "_scriptTitle " ~/upt/Android-Installer/properties.txt); then
 		scriptTitle="${scriptTitle##* }"
@@ -303,8 +303,8 @@ getOBB(){
 		select opt in "${fireAPPS[@]}"
 		do
 			case $opt in
-	        "GO BACK")
-				refreshUI; getOBB
+			"GO BACK")
+					refreshUI; getOBB
 				break
 					;;
 			*)
