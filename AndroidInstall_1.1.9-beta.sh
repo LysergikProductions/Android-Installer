@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.8-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0224
+# Build_0228
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0224"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0228"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.8-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -45,17 +45,25 @@ help(){
 	printf "  'fire'                    Amazon build\n\n"
 }
 
-# allow user to see the copyright, license, top, or the help page without running the script
-if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
-elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
-elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
+getMode(){
+	if [[ "$*" = *"--help"* ]] || [[ "$*" = *"-h"* ]]; then help; exit
+	elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
 
-# check for mode flags
-if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
-if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="false"
-elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
-else verbose=0; qMode="false"; fi
+	# check for mode flags
+	if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
+	if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="false"
+	elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
+	else verbose=0; qMode="false"; fi
+}
+
+# allow user to see the copyright, license, top, or the help page without running the script
+if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
+	printf "2020 © Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n"
+	getMode
+	exit
+else
+	getMode
+fi
 
 # prepare script for running the MAIN function
 INIT(){
