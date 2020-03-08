@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0217
+# Build_0218
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0217"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0218"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.7-release; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -352,7 +352,7 @@ getOBB(){
 
 getAPK(){
 	APKvalid="true"
-	printf "\n%*s\n" $((COLS/2)) "Drag APK anywhere here:"
+	printf "\n%*s\n\n" $((COLS/2)) "Drag APK anywhere here:"
 	read -p '' APKfilePath
 
 	local cleanPath="${APKfilePath#*:*}"; APKname=$(basename "$cleanPath")
@@ -376,6 +376,7 @@ getAPK(){
 		printf "%*s\n\n" $((COLS/2)) "That is not an APK!"
 		getAPK
 	done
+	echo
 }
 
 INSTALL(){
@@ -492,14 +493,33 @@ UPSTALL(){
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
 	scriptTitle="Install Again?"; refreshUI
-	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, or press any other key to install this build on another device.."
+	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, 'r' to install different build"
+	printf "\n%*s\n" $((COLS/2)) "To Install:"
+	printf "%*s\n" $((COLS/2)) "$APKname, again.."
+	printf "\n%*s\n" $((COLS/2)) "Press any other key!"
 	read -n 1 -s -r -p ''
-	if [ ! "$REPLY" = "q" ]; then
+	if [ "$REPLY" = "q" ]; then
+		OBBdone="true"; APKdone="true"; LAUNCH="false"
+		(exit)
+	elif [ "$REPLY" = "r" ]; then
+		OBBdone="false"; APKdone="false"; UNINSTALL="true"
+
+		refreshUI; tput cnorm; trap - SIGINT
+
+		getOBB; getAPK; INSTALL && echo || {
+			CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
+
+			export scriptEndDate=""; scriptEndDate=$(date)
+			export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
+			printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
+
+			diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
+			trap - SIGINT
+		} || (echo "catch fails"; trap - SIGINT; exit 1)
+	else
 		OBBdone="false"; APKdone="false"
 		installAgain
 	fi
-	OBBdone="true"; APKdone="true"; LAUNCH="false"
-	(exit)
 }
 
 installAgain(){
