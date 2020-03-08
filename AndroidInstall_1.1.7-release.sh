@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0215
+# Build_0216
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,9 +26,9 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0215"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0216"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
-scriptVersion=1.1.7-release; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
+scriptVersion=1.1.5-release; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
 # studio specific variables
 fireAPPS=( "GO BACK" "option1" "option2" "option3" "option4" "option5" "option6" "option7" )
@@ -60,7 +60,7 @@ else verbose=0; fi
 INIT(){
 	echo "Initializing.." &
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
-	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"
+	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"; errExec="false"
 
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
@@ -175,7 +175,7 @@ update(){
 	trap - SIGINT
 
 	echo "Launching updated version of the script!"; sleep 1
-	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
+	exec "$scriptDIR/$scriptPrefix$currentVersion.sh" || { errExec="true" && gitConfigs; }
 }
 
 gitConfigs(){
@@ -211,13 +211,17 @@ gitConfigs(){
 		upToDate="true"
 		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1
 	else
-		upToDate="false"
-		printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
-		printf "\n%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
-		printf "%*s\n" $((COLS/2)) "Version in progress: v$newVersion"
-		
-		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 2
-		update
+		if [ "$errExec" = "false" ]; then
+			upToDate="false"
+			printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
+			printf "\n%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
+			printf "%*s\n" $((COLS/2)) "Version in progress: v$newVersion"
+
+			printf "\n%*s" $((COLS/2)) "Update required..."; sleep 2
+			update
+		elif [ "$errExec" = "true" ]; then
+			echo "error when launching new script.. ignoring"; sleep 1
+		fi
 	fi
 
 	# display gitMESSAGE if there is one
