@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.9-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0230
+# Build_0231
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0230"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0231"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.8-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -36,7 +36,8 @@ studio=""
 
 help(){
 	printf "$scriptTitle help page:\n\n"
-	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
+	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n\n"
+	printf "  -q      also [--quiet]; run the script in quiet mode\n"
 	printf "  -u      also [--update]; run the script in update mode\n\n"
 	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n"
 	printf "  -t      also [--top]; show device CPU and RAM usage\n\n"
@@ -294,6 +295,20 @@ printHead(){
 		printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
 		MAINd
   	fi
+}
+
+warnFIRE(){
+	flashWarn=(
+		"!Remember!" "" "!Remember!" "" "!Remember!"
+	)
+	tput civis
+	for i in "${flashWarn[@]}"
+	do
+		printf "\r%*s" $((COLS/2)) "$i"
+		sleep 0.3
+	done
+	printf "\r%*s\n\n" $((COLS/2)) "To test the store, use the download link method"
+	tput cnorm
 }
 
 # default MAIN function that uninstalls first in case of existing version of the app on the device
@@ -594,20 +609,6 @@ installAgain(){
 	else
 		INSTALL
 	fi
-	tput cnorm
-}
-
-warnFIRE(){
-	flashWarn=(
-		"!Remember!" "" "!Remember!" "" "!Remember!"
-	)
-	tput civis
-	for i in "${flashWarn[@]}"
-	do
-		printf "\r%*s" $((COLS/2)) "$i"
-		sleep 0.3
-	done
-	printf "\r%*s\n\n" $((COLS/2)) "To test the store, use the download link method"
 	tput cnorm
 }
 
