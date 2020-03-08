@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.8-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0223
+# Build_0224
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0223"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0224"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.8-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -53,7 +53,7 @@ elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb -d shell top -d 2
 
 # check for mode flags
 if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
-if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1
+if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="false"
 elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
 else verbose=0; qMode="false"; fi
 
