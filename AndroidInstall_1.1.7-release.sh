@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0218
+# Build_0219
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0218"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0219"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.7-release; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
-# studio specific variables
+# studio specific variables	
 fireAPPS=( "GO BACK" "option1" "option2" "option3" "option4" "option5" "option6" "option7" )
 studio=""
 
@@ -49,7 +49,7 @@ help(){
 if [ "$*" = "show-c" ] || [ "$*" = "-c" ]; then echo "2020 © Nikolas A. Wagner"; exit
 elif [ "$*" = "show-l" ] || [ "$*" = "-l" ]; then echo "GNU GPLv3: https://www.gnu.org/licenses/"; exit
 elif [ "$*" = "--help" ] || [ "$*" = "-h" ]; then help; exit
-elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
+elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
 
 # check for mode flags
 if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then echo "update mode"; sleep 1; UNINSTALL="false"; OBBdone="true"; fi
@@ -65,6 +65,9 @@ INIT(){
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 	waitMessage="-- waiting for device --"
+
+	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short) || usrIP=$(curl https://ipinfo.io/ip)
+	IPdata=$(curl "https://ipvigilante.com/$usrIP" 2>/dev/null)
 
 	if figlet -t -w 0 -F metal "TEST FULL FIG"; clear; then
 		echo "Initializing.." &
@@ -118,11 +121,16 @@ if [ $verbose = 1 ]; then
 			printf "\nGIT CLONED\n\n"; echo "Getting configs.." & sleep 2
 		} || { git pull printf "\nGIT PULLED\n\n"; sleep 2; }
 	}
+	printIP(){
+		IPdata=$(curl "https://ipvigilante.com/$usrIP")
+		printf "\nIP Data:\n$IPdata\n"
+	}
 
 	refreshUI(){ printTitle; }
 	header(){
-		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
-		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n"
+		printIP
+		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head"
 	}
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt; echo "rm -rf /tmp/variables.before /tmp/variables.after ~/upt"; }
@@ -149,11 +157,15 @@ else # set default variant of core commands
 			git pull >/dev/null 2>&1
 		}
 	}
+	printIP(){
+		printf "Your IP: $usrIP"
+	}
 
 	refreshUI(){ printHead; adb devices; printTitle; }
 	header(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n"
-		printf "\nDistributed with the $license license\n\n$UIsep_head\n"
+		printIP
+		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 	}
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1; }
