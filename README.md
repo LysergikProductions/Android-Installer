@@ -25,3 +25,7 @@ Use the version of the script with its version number ending in 'fig-release' if
 The in-script help page accesible with the -h or --help option:
 
 You can also use the -t or --top option to display some process information on the connected device!
+
+DEV:
+
+If you want users to be able to have full script functionality, then before running this script, populate the fireAPPS array in the beginning of the source code as well as the 'studio' variable.
