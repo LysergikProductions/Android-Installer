@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0219
+# Build_0220
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0219"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0220"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.7-release; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -64,10 +64,11 @@ INIT(){
 
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-	waitMessage="-- waiting for device --"
+	waitMessage="-- waiting for device --"; showIP="false"
 
-	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short) || usrIP=$(curl https://ipinfo.io/ip)
-	IPdata=$(curl "https://ipvigilante.com/$usrIP" 2>/dev/null)
+	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
+	deviceIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
+	IPdata=$(adb -d shell curl "https://ipvigilante.com/$deviceIP" 2>/dev/null)
 
 	if figlet -t -w 0 -F metal "TEST FULL FIG"; clear; then
 		echo "Initializing.." &
@@ -106,9 +107,9 @@ clear; INIT # initializing now..
 
 # set debug variant of core commands
 if [ $verbose = 1 ]; then
-	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb shell exit; }
+	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb -d shell exit; }
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; sleep 0.5; }
-	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb shell "$launchCMD"; }
+	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb -d shell "$launchCMD"; }
 
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB; }
 	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" && exit) || (
@@ -122,14 +123,19 @@ if [ $verbose = 1 ]; then
 		} || { git pull printf "\nGIT PULLED\n\n"; sleep 2; }
 	}
 	printIP(){
-		IPdata=$(curl "https://ipvigilante.com/$usrIP")
+		IPdata=$(curl "https://ipvigilante.com/$deviceIP")
+		printf "\nComputer IP: $usrIP\nDevice IP: $deviceIP\n"
 		printf "\nIP Data:\n$IPdata\n"
 	}
 
 	refreshUI(){ printTitle; }
-	header(){
+	headerIP(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n"
 		printIP
+		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head"
+	}
+	header(){
+		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head"
 	}
 
@@ -142,9 +148,9 @@ if [ $verbose = 1 ]; then
 		( set ) > ~/logs/"FULL_$scriptEndDate".txt 2>&1
 	}
 else # set default variant of core commands
-	CMD_communicate(){ adb shell exit 2>/dev/null; }
+	CMD_communicate(){ adb -d shell exit 2>/dev/null; }
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5; echo "Done!"; }
-	CMD_launch(){ adb shell "$launchCMD" >/dev/null 2>&1; }
+	CMD_launch(){ adb -d shell "$launchCMD" >/dev/null 2>&1; }
 
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
 	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" 2>/dev/null && exit) || (
@@ -158,14 +164,18 @@ else # set default variant of core commands
 		}
 	}
 	printIP(){
-		printf "Your IP: $usrIP"
+		printf "Device IP: $deviceIP"
 	}
 
 	refreshUI(){ printHead; adb devices; printTitle; }
-	header(){
+	headerIP(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n"
 		printIP
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+	}
+	header(){
+		printf "$scriptFileName | Build $build\n2020 (C) $author"
+		printf "\n$UIsep_err0\n\nDistributed with the $license license\n\n$UIsep_head\n"
 	}
 
 	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1; }
@@ -242,8 +252,9 @@ gitConfigs(){
 }
 
 printHead(){
-	if [ $loopFromError = "false" ]; then clear; header
-	elif [ $loopFromError = "true" ]; then clear; header; printf "$errorMessage\n\n"
+	if [ $loopFromError = "false" ]; then clear
+		if [ "$showIP" = "true" ]; then headerIP; else header; fi
+	elif [ $loopFromError = "true" ]; then clear; headerIP; printf "$errorMessage\n\n"
   	else # if bug causes loopFromError to be NOT "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
 		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
@@ -265,7 +276,7 @@ MAINd(){
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server
-	adb shell settings put global development_settings_enabled 1
+	adb -d shell settings put global development_settings_enabled 1
 
 	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
@@ -292,7 +303,7 @@ MAINu(){
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server
-	adb shell settings put global development_settings_enabled 1
+	adb -d shell settings put global development_settings_enabled 1
 
 	printTitle
 	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
@@ -392,7 +403,7 @@ getAPK(){
 }
 
 INSTALL(){
-	scriptTitle="Installing.."
+	scriptTitle="Installing.."; showIP="true"
 
 	printHead; adbWAIT
 	printf "\nMounting device...\n"
@@ -459,7 +470,7 @@ INSTALL(){
 }
 
 UPSTALL(){
-	scriptTitle=" INSTALLING.. "
+	scriptTitle=" INSTALLING.. "; showIP="true"
 
 	printHead; adbWAIT; UNINSTALL="false"
 	printf "\nMounting device...\n"
@@ -504,7 +515,7 @@ UPSTALL(){
 
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
-	scriptTitle="Install Again?"; refreshUI
+	scriptTitle="Install Again?"; showIP="true"; refreshUI
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, 'r' to install different build"
 	printf "\n%*s\n" $((COLS/2)) "To Install:"
 	printf "%*s\n" $((COLS/2)) "$APKname, again.."
