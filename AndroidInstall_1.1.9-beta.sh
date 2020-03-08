@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.9-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0232
+# Build_0233
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0232"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0233"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.8-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -62,6 +62,18 @@ if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="fal
 elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
 else verbose=0; qMode="false"; fi
 
+updateIP(){
+	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
+	deviceIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
+	IPlocXML=$(curl https://freegeoip.app/xml/$deviceIP 2>/dev/null)
+
+	IPcountry=$(grep -oPm1 "(?<=<CountryName>)[^<]+" <<< "$IPlocXML")
+	IPregion=$(grep -oPm1 "(?<=<RegionName>)[^<]+" <<< "$IPlocXML")
+	IPcity=$(grep -oPm1 "(?<=<City>)[^<]+" <<< "$IPlocXML")
+
+	deviceLOC="$IPcity, $IPregion, $IPcountry"
+}
+
 # prepare script for running the MAIN function
 INIT(){
 	echo "Initializing.." &
@@ -81,9 +93,7 @@ INIT(){
 	OBBinfo=""
 
 	if [ "$qMode" = "false" ]; then
-		usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
-		deviceIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
-		IPdata=$(adb -d shell curl "https://ipvigilante.com/$deviceIP" 2>/dev/null)
+		updateIP
 
 		OBBquest="Drag OBB and press enter:"
 		OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
@@ -143,7 +153,8 @@ if [ $verbose = 1 ]; then
 	}
 	printIP(){
 		IPdata=$(curl "https://ipvigilante.com/$deviceIP")
-		printf "\nComputer IP: $usrIP\nDevice IP: $deviceIP\n"
+		printf "\nComputer IP: $usrIP\n"
+		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC\n"
 		printf "\nIP Data:\n$IPdata\n"
 	}
 
@@ -190,7 +201,7 @@ else # set default variant of core commands
 		}
 	}
 	printIP(){
-		printf "Device IP: $deviceIP"
+		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC"
 	}
 
 	if [ "$qMode" = "false" ]; then
@@ -218,7 +229,7 @@ else # set default variant of core commands
 	}
 fi
 
-update(){
+updateScript(){
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
 	cpSource=~/upt/Android-Installer/$scriptPrefix$currentVersion.sh
@@ -271,7 +282,7 @@ gitConfigs(){
 			printf "%*s\n" $((COLS/2)) "Version in progress: v$newVersion"
 
 			printf "\n%*s" $((COLS/2)) "Update required..."; sleep 2
-			update
+			updateScript
 		elif [ "$errExec" = "true" ]; then
 			echo "error when launching new script.. ignoring"; sleep 1
 		fi
@@ -451,7 +462,7 @@ INSTALL(){
 	scriptTitle="Installing.."; showIP="true"
 
 	printHead; adbWAIT
-	printf "\nMounting device...\n"
+	printf "Mounting device...\n"
 	adb devices
 
 	# uninstall app, unless APK step wants to continue from where it left off
@@ -560,7 +571,8 @@ UPSTALL(){
 
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
-	scriptTitle="Install Again?"; showIP="true"; refreshUI
+	scriptTitle="Install Again?"; showIP="true"
+	updateIP; refreshUI
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, 'r' to install different build"
 	printf "\n%*s\n" $((COLS/2)) "To Install:"
 	printf "%*s\n" $((COLS/2)) "$APKname, again.."
