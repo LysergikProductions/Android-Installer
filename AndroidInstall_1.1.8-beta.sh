@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.8-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0222
+# Build_0223
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0222"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0223"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.8-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -66,34 +66,45 @@ INIT(){
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 	waitMessage="-- waiting for device --"; showIP="false"
+	oops="Oops!"; OBBquest="OBB"; APKquest="APK"
+	
+	printTitle(){
+		printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
+		printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
+	}
+	
+	OBBinfo=""
 
 	if [ "$qMode" = "false" ]; then
 		usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
 		deviceIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
 		IPdata=$(adb -d shell curl "https://ipvigilante.com/$deviceIP" 2>/dev/null)
-	fi
 
-	if figlet -t -w 0 -F metal "TEST FULL FIG"; clear; then
-		echo "Initializing.." &
-		oops=$(figlet -F metal -t "Oops!")
-		printTitle(){
-			figlet -F border -F gay -t "$scriptTitle"
-		}
-	elif figlet -w 0 -f small "TEST SIMPLE FIG"; clear; then
-		echo "Initializing.." &
-		oops=$(figlet -f small "Oops!")
-		printTitle(){
-			figlet "$scriptTitle"
-		}
-	else
-		oops="Oops!"
-		printTitle(){
-			printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
-			printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
-		}
-	fi
+		OBBquest="Drag OBB and press enter:"
+		OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
+		
+		APKquest="Drag APK anywhere here:"
 
-	OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
+		if figlet -t -w 0 -F metal "TEST FULL FIG"; clear; then
+			echo "Initializing.." &
+			oops=$(figlet -F metal -t "Oops!")
+			printTitle(){
+				figlet -F border -F gay -t "$scriptTitle"
+			}
+		elif figlet -w 0 -f small "TEST SIMPLE FIG"; clear; then
+			echo "Initializing.." &
+			oops=$(figlet -f small "Oops!")
+			printTitle(){
+				figlet "$scriptTitle"
+			}
+		else
+			oops="Oops!"
+			printTitle(){
+				printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
+				printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
+			}
+		fi
+	fi
 
 	scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -152,7 +163,14 @@ if [ $verbose = 1 ]; then
 	}
 else # set default variant of core commands
 	CMD_communicate(){ adb -d shell exit 2>/dev/null; }
-	CMD_uninstall(){ echo "Uninstalling $OBBname.."; wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5; echo "Done!"; }
+	CMD_uninstall(){
+		if [ "$qMode" = "false" ]; then
+			echo "Uninstalling $OBBname.."
+			wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5; echo "Done!"
+		else
+			wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5
+		fi
+	}
 	CMD_launch(){ adb -d shell "$launchCMD" >/dev/null 2>&1; }
 
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
@@ -330,7 +348,7 @@ MAINu(){
 }
 
 getOBB(){
-	printf "\n%*s\n" $((COLS/2)) "Drag OBB and press enter:"; printf "$OBBinfo"
+	printf "\n%*s\n" $((COLS/2)) "$OBBquest"; printf "$OBBinfo"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
@@ -383,7 +401,7 @@ getOBB(){
 
 getAPK(){
 	APKvalid="true"
-	printf "\n%*s\n\n" $((COLS/2)) "Drag APK anywhere here:"
+	printf "\n%*s\n\n" $((COLS/2)) "$APKquest"
 	read -p '' APKfilePath
 
 	local cleanPath="${APKfilePath#*:*}"; APKname=$(basename "$cleanPath")
