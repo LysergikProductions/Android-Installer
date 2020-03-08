@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0187
+# Build_0189
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0187"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0189"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
-scriptVersion="1.1.7-release"; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
+export scriptVersion=1.1.7-release; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
+# studio specific variables
 fireAPPS=( "GO BACK" "option1" "option2" "option3" "option4" "option5" "option6" "option7" )
-studio=""
+studio="budgestudios"
 
-# see help page in terminal by using option -h or --help
 help(){
 	clear; printf "$scriptTitle help page:\n\n"
 	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n"
@@ -161,7 +161,7 @@ update(){
 	trap "" SIGINT
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
-	cpSource="~/upt/Android-Installer/$scriptPrefix$currentVersion.sh"
+	cpSource=~/upt/Android-Installer/$scriptPrefix$currentVersion.sh
 	cp "$cpSource" "$scriptDIR" && upToDate="true"
 
 	#rm -f "$scriptDIR/$scriptFileName"
@@ -179,30 +179,37 @@ gitConfigs(){
 	# clone repo or update it with git pull if it exists already
 	(CMD_gitGet); wait
 	cd "$terminalPath" || return
-
+	
 	# get config values from the master branch's properties.txt
-	currentVersion=$(grep -n "_version " ~/upt/$gitName/properties.txt); currentVersion="${currentVersion##* }"
-	newVersion=$(grep -n "_newVersion " ~/upt/$gitName/properties.txt); newVersion="${newVersion##* }"
-	gitMESSAGE=$(grep -n "_gitMESSAGE " ~/upt/$gitName/properties.txt); gitMESSAGE="${gitMESSAGE##* }"
-	dispGitTime=$(grep -n "_dispGitTime " ~/upt/$gitName/properties.txt); dispGitTime="${dispGitTime##* }"
+	currentVersionLine=$(grep -n "_version " ~/upt/$gitName/properties.txt)
+	currentVersion="${currentVersionLine##* }"; currentVersion=${currentVersion%$'\r'}
+
+	newVersionLine=$(grep -n "_newVersion " ~/upt/$gitName/properties.txt)
+	newVersion="${newVersionLine##* }"; newVersion=${newVersion%$'\r'}
+
+	gitMESSAGELine=$(grep -n "_gitMESSAGE " ~/upt/$gitName/properties.txt); gitMESSAGE="${gitMESSAGELine##* }"
+	dispGitTimeLine=$(grep -n "_dispGitTime " ~/upt/$gitName/properties.txt); dispGitTime="${dispGitTimeLine##* }"
 
 	# set scriptTitle to match config, else use default
 	if scriptTitle=$(grep -n "_scriptTitle " ~/upt/Android-Installer/properties.txt); then
 		scriptTitle="${scriptTitle##* }"
 	else scriptTitle="$scriptTitleDEF"; fi
 
-	printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
-	printf "\n%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
-	printf "%*s\n" $((COLS/2)) "Version in progress: v$newVersion"
-
-	if [ ! $scriptVersion = $currentVersion ] && [ ! $scriptVersion" = $newVersion" ]; then
+	if [ "$currentVersion" = "$scriptVersion" ]; then
+		upToDate="true"
+		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1
+	elif [ "$newVersion" = "$scriptVersion" ]; then
+		upToDate="true"
+		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1
+	else
 		upToDate="false"
+		printf "\n\n\n\n\n%*s\n" $((COLS/2)) "This script: v$scriptVersion"
+		printf "\n%*s\n" $((COLS/2)) "Latest version: v$currentVersion"
+		printf "%*s\n" $((COLS/2)) "Version in progress: v$newVersion"
+		
 		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 2
-		update
+		#update
 	fi
-
-	upToDate="true"
-	printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1.5
 
 	# display gitMESSAGE if there is one
 	if [ "$dispGitTime" = "" ]; then dispGitTime=0; fi
@@ -297,7 +304,8 @@ getOBB(){
 	elif [ "$OBBfilePath" = "fire" ]; then
 		OBBvalid="true"; OBBdone="true"
 		UNINSTALL="false"; LAUNCH="false"
-		warnFIRE
+
+		refreshUI; warnFIRE
 
 		printf "Which Amazon app would you like to install?\n"
 		select opt in "${fireAPPS[@]}"
@@ -419,9 +427,9 @@ INSTALL(){
 			adbWAIT; deviceConnect="true"; deviceID=$(adb devices)
 
 			if [ "$LAUNCH" = "true" ]; then
-				CMD_launch
+				CMD_launch &
 				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
-				tput cnorm; installAgainPrompt
+				wait; tput cnorm; installAgainPrompt
 			else
 				tput cnorm; installAgainPrompt
 			fi
