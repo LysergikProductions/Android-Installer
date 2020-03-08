@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.7-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0191
+# Build_0193
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0191"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0193"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 export scriptVersion=1.1.7-release; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -165,7 +165,6 @@ update(){
 	cp "$cpSource" "$scriptDIR" && upToDate="true"
 
 	#rm -f "$scriptDIR/$scriptFileName"
-	rm -rf ~/upt; wait
 
 	echo "Launching updated version of the script!"; sleep 1
 	exec "$scriptDIR/$scriptPrefix$currentVersion.sh"
@@ -211,7 +210,7 @@ gitConfigs(){
 		printf "%*s\n" $((COLS/2)) "Version in progress: v$newVersion"
 		
 		printf "\n%*s" $((COLS/2)) "Update required..."; sleep 2
-		#update
+		update
 	fi
 
 	# display gitMESSAGE if there is one
