@@ -1,5 +1,5 @@
 #!/bin/bash
-# AndroidInstall_1.1.8-beta.sh
+# AndroidInstall_1.1.9-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 # Build_0228
