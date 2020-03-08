@@ -19,3 +19,13 @@ If you do not want to install an OBB file, or if there is not one to install in 
 
 Enter "fire" to tell the script you are installing a build on an Amazon device.
 Otherwise, drag in the OBB to the terminal window and press enter to continue the installation process.
+
+Use the version of the script with its version number ending in 'fig-release' if you have figlet already installed in your shell
+
+The in-script help page accesible with the -h or --help option:
+
+You can also use the -t or --top option to display some process information on the connected device!
+
+DEV:
+
+If you want users to be able to have full script functionality, then before running this script, populate the fireAPPS array in the beginning of the source code as well as the 'studio' variable.
