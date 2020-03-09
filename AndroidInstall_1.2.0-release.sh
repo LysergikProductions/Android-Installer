@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0252
+# Build_0253
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0252"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0253"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -479,7 +479,8 @@ getAPK(){
 
 INSTALL(){
 	scriptTitle="Installing.."; showIP="true"
-
+	
+	updateIP
 	printHead; adbWAIT
 
 	if [  "$qMode" = "false" ]; then
@@ -551,6 +552,7 @@ INSTALL(){
 UPSTALL(){
 	scriptTitle=" INSTALLING.. "; showIP="true"
 
+	updateIP
 	printHead; adbWAIT; UNINSTALL="false"
 	printf "\nMounting device...\n"
 	adb devices
@@ -659,16 +661,17 @@ installAgain(){
 # update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
 	if (CMD_communicate); then
-		export deviceConnect="true"
+		export deviceConnect="true"; updateIP
 	else
 		tput civis
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
-		{ sleep 4; printf "        Ensure only one device is connected!"; } & { 
+		{ sleep 3; printf "        Ensure only one device is connected!"; } & { 
 			until (CMD_communicate)
 			do waiting; deviceConnect="true"; done
 		}
 		tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
+		updateIP
 	fi
 }
 
