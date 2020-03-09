@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.9-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0246
+# Build_0247
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0246"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0247"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.9-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -64,13 +64,12 @@ if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] 
 	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
 	elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
 		clear; updateIP; COLS=$(tput cols)
-		{ while true
+		{ sleep 0.5; while true
 			do
-				sleep 1
 				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
-				sleep 1
+				sleep 1.99
 			done
-		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s; exit
+		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; exit
 	fi
 fi
 
@@ -618,13 +617,13 @@ installAgainPrompt(){
 			trap - SIGINT
 		} || (echo "catch fails"; trap - SIGINT; exit 1)
 	elif [ "$REPLY" = "t" ]; then
-		clear; updateIP
-		{ while true
+		clear; updateIP; COLS=$(tput cols)
+		{ sleep 0.5; while true
 			do
-				sleep 1.99
 				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+				sleep 1.99
 			done
-		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1
+		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; exit
 	else
 		OBBdone="false"; APKdone="false"
 		installAgain
