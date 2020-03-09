@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0253
+# Build_0254
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0253"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0254"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -46,15 +46,15 @@ help(){
 }
 
 updateIP(){
-	if [ $verbose = 1 ]; then printf "\n\nUpdating IP\n"; fi
+	if [ $verbose = 1 ]; then printf "\n\nUpdating IP\n\n"; fi
 	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
-	deviceIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
 	IPlocXML=$(curl https://freegeoip.app/xml/$deviceIP 2>/dev/null)
 
 	IPcountry=$(grep -oPm1 "(?<=<CountryName>)[^<]+" <<< "$IPlocXML")
 	IPregion=$(grep -oPm1 "(?<=<RegionName>)[^<]+" <<< "$IPlocXML")
 	IPcity=$(grep -oPm1 "(?<=<City>)[^<]+" <<< "$IPlocXML")
 
+	deviceIP=$(grep -oPm1 "(?<=<IP>)[^<]+" <<< "$IPlocXML")
 	deviceLOC="$IPcity, $IPregion, $IPcountry"
 }
 
@@ -109,14 +109,12 @@ INIT(){
 	OBBinfo=""
 
 	if [ "$qMode" = "false" ]; then
-		updateIP
-
 		OBBquest="Drag OBB and press enter:"
 		OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
 
 		APKquest="Drag APK anywhere here:"
 
-		if [ $verbose = 1 ]; then printf "\nTesting for figlet compatibility..\n"; sleep 1; fi
+		if [ $verbose = 1 ]; then printf "\n\nTesting for figlet compatibility..\n"; sleep 1; fi
 		if figlet -t -w 0 -F metal "TEST FULL FIG"; then
 			if [ $verbose = 0 ]; then clear; echo "Initializing.."; fi &
 			oops=$(figlet -F metal -t "Oops!"); clear
@@ -169,13 +167,13 @@ if [ $verbose = 1 ]; then
 		} || { git pull printf "\nGIT PULLED\n\n"; sleep 2; }
 	}
 	printIP(){
-		IPdata=$(curl "https://ipvigilante.com/$deviceIP")
-		printf "\nComputer IP: $usrIP\n"
+		updateIP
 		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC\n"
-		printf "\nIP Data:\n$IPdata\n"
+		printf "\nDevice IP Data:\n$IPlocXML\n"
+		printf "\nComputer IP: $usrIP\n\n"
 	}
 
-	refreshUI(){ adb devices; printTitle; }
+	refreshUI(){ updateIP && printIP; adb devices; printTitle; }
 	headerIP(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n"
 		printIP
@@ -218,6 +216,7 @@ else # set default variant of core commands
 		}
 	}
 	printIP(){
+		updateIP
 		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC"
 	}
 
@@ -479,8 +478,7 @@ getAPK(){
 
 INSTALL(){
 	scriptTitle="Installing.."; showIP="true"
-	
-	updateIP
+
 	printHead; adbWAIT
 
 	if [  "$qMode" = "false" ]; then
@@ -552,7 +550,6 @@ INSTALL(){
 UPSTALL(){
 	scriptTitle=" INSTALLING.. "; showIP="true"
 
-	updateIP
 	printHead; adbWAIT; UNINSTALL="false"
 	printf "\nMounting device...\n"
 	adb devices
@@ -597,7 +594,7 @@ UPSTALL(){
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
 	scriptTitle="Install Again?"; showIP="true"
-	updateIP; refreshUI
+	refreshUI
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit"
 	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
 	printf "\n%*s\n" $((COLS/2)) "Press 'r' to install different build"
@@ -661,7 +658,7 @@ installAgain(){
 # update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
 	if (CMD_communicate); then
-		export deviceConnect="true"; updateIP
+		export deviceConnect="true"
 	else
 		tput civis
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
@@ -671,7 +668,6 @@ adbWAIT(){
 		}
 		tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
-		updateIP
 	fi
 }
 
