@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.9-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0247
+# Build_0248
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,21 +26,20 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0247"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0248"; scriptVersion=1.1.9-beta; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
-scriptVersion=1.1.9-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
+adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
-# studio specific variables	
+# studio specific variables
 fireAPPS=( "GO BACK" "option1" "option2" "option3" "option4" "option5" "option6" "option7" )
-studio=""
+studio=""; gitName="Android-Installer"
 
 help(){
 	printf "$scriptTitle help page:\n\n"
-	printf " - OPTIONS -\n\n  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n\n"
-	printf "  -q      also [--quiet]; run the script in quiet mode\n"
-	printf "  -u      also [--update]; run the script in update mode\n\n"
-	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n"
-	printf "  -t      also [--top]; show device CPU and RAM usage\n\n"
+	printf " - OPTIONS -\n\n
+	printf "  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n\n"
+	printf "  -q      also [--quiet]; run the script in quiet mode\n  -u      also [--update]; run the script in update mode\n\n"
+	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n  -t      also [--top]; show device CPU and RAM usage\n\n"
 	printf "  -h      also [--help]; show this information\n\n"
 	printf " - INSTRUCTIONS -\n\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
 	printf "  'fire'                    Amazon build\n\n"
@@ -99,12 +98,12 @@ INIT(){
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 	waitMessage="-- waiting for device --"; showIP="true"
 	oops="Oops!"; OBBquest="OBB"; APKquest="APK"
-	
+
 	printTitle(){
 		printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
 		printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
 	}
-	
+
 	OBBinfo=""
 
 	if [ "$qMode" = "false" ]; then
@@ -112,7 +111,7 @@ INIT(){
 
 		OBBquest="Drag OBB and press enter:"
 		OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
-		
+
 		APKquest="Drag APK anywhere here:"
 
 		if figlet -t -w 0 -F metal "TEST FULL FIG"; clear; then
@@ -264,7 +263,7 @@ gitConfigs(){
 	# clone repo or update it with git pull if it exists already
 	(CMD_gitGet); wait
 	cd "$terminalPath" || return
-	
+
 	# get config values from the master branch's properties.txt
 	currentVersionLine=$(grep -n "_version " ~/upt/$gitName/properties.txt)
 	currentVersion="${currentVersionLine##* }"; currentVersion=${currentVersion%$'\r'}
@@ -477,7 +476,7 @@ INSTALL(){
 	scriptTitle="Installing.."; showIP="true"
 
 	printHead; adbWAIT
-	
+
 	if [  "$qMode" = "false" ]; then
 		printf "Mounting device...\n"
 		adb devices
