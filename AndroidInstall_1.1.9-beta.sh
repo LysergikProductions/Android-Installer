@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.9-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0233
+# Build_0236
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0233"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0236"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.8-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -82,7 +82,7 @@ INIT(){
 
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-	waitMessage="-- waiting for device --"; showIP="false"
+	waitMessage="-- waiting for device --"; showIP="true"
 	oops="Oops!"; OBBquest="OBB"; APKquest="APK"
 	
 	printTitle(){
@@ -295,7 +295,7 @@ gitConfigs(){
 
 printHead(){
 	if [ $loopFromError = "false" ]; then clear
-		if [ "$showIP" = "true" ]; then headerIP; else header; fi
+		if [ "$showIP" = "true" ] && [ "$qMode" = "false" ]; then headerIP; else header; fi
 	elif [ $loopFromError = "true" ]; then clear; headerIP; printf "$errorMessage\n\n"
   	else # if bug causes loopFromError to be NOT "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
@@ -462,8 +462,13 @@ INSTALL(){
 	scriptTitle="Installing.."; showIP="true"
 
 	printHead; adbWAIT
-	printf "Mounting device...\n"
-	adb devices
+	
+	if [  "$qMode" = "false" ]; then
+		printf "Mounting device...\n"
+		adb devices
+	else
+		echo
+	fi
 
 	# uninstall app, unless APK step wants to continue from where it left off
 	if [ "$UNINSTALL" = "true" ]; then
@@ -471,7 +476,7 @@ INSTALL(){
 		UNINSTALL="true"
 	fi
 
-	echo; printTitle
+	printTitle
 
 	# upload OBB, only if it isn't already uploaded on deviceID
 	if [ "$OBBdone" = "false" ] && [[ "$OBBname" == "com."* ]]; then
@@ -495,12 +500,11 @@ INSTALL(){
 
 	# install APK, only if APKdone=false
 	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk" ]]; then
-		if [ "$OBBname" = "fire" ]; then
+		if [[ "$OBBfilePath" == *"fire"* ]]; then
 			printf "\n%*s\n\n" $((COLS/2)) "It may take a long time to install builds on this device.."
 		fi
 
 		printf "\nInstalling APK..\n"
-
 		if CMD_installAPK || (
 			(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
 			if [ "$deviceConnect" = "true" ]; then
