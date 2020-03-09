@@ -4,5 +4,5 @@ _build 0251
 
 _scriptTitle \_HappyChani_/
 
-_gitMESSAGE
+_gitMESSAGE HEY!
 _dispGitTime 2
