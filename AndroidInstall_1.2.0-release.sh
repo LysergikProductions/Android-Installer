@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0248
+# Build_0251
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0248"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0251"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -36,7 +36,7 @@ studio=""; gitName="Android-Installer"
 
 help(){
 	printf "$scriptTitle help page:\n\n"
-	printf " - OPTIONS -\n\n
+	printf " - OPTIONS -\n\n"
 	printf "  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n\n"
 	printf "  -q      also [--quiet]; run the script in quiet mode\n  -u      also [--update]; run the script in update mode\n\n"
 	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n  -t      also [--top]; show device CPU and RAM usage\n\n"
