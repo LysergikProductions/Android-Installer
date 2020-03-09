@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0255
+# Build_0256
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0255"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0256"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -49,14 +49,14 @@ updateIP(){
 	if [ $verbose = 1 ]; then printf "\n\nUpdating IP\n\n"; fi
 	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(curl https://ipinfo.io/ip 2>/dev/null)
 	deviceIP1=$(adb -d shell dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || deviceIP1=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)|| deviceIP1="error"
-	IPlocXML=$(curl https://freegeoip.app/xml/$deviceIP1 2>/dev/null)
+	devIPlocXML=$(curl https://freegeoip.app/xml/$deviceIP1 2>/dev/null)
 
-	IPcountry=$(grep -oPm1 "(?<=<CountryName>)[^<]+" <<< "$IPlocXML")
-	IPregion=$(grep -oPm1 "(?<=<RegionName>)[^<]+" <<< "$IPlocXML")
-	IPcity=$(grep -oPm1 "(?<=<City>)[^<]+" <<< "$IPlocXML")
+	devIPcountry=$(grep -oPm1 "(?<=<CountryName>)[^<]+" <<< "$devIPlocXML")
+	devIPregion=$(grep -oPm1 "(?<=<RegionName>)[^<]+" <<< "$devIPlocXML")
+	devIPcity=$(grep -oPm1 "(?<=<City>)[^<]+" <<< "$devIPlocXML")
 
-	deviceIP=$(grep -oPm1 "(?<=<IP>)[^<]+" <<< "$IPlocXML")
-	deviceLOC="$IPcity, $IPregion, $IPcountry"
+	deviceIP=$(grep -oPm1 "(?<=<IP>)[^<]+" <<< "$devIPlocXML")
+	deviceLOC="$devIPcity, $devIPregion, $devIPcountry"
 }
 
 # allow user to see the copyright, license, top, or the help page without running the script
@@ -174,7 +174,7 @@ if [ $verbose = 1 ]; then
 		printf "\nComputer IP: $usrIP\n\n"
 	}
 
-	refreshUI(){ updateIP && printIP; adb devices; printTitle; }
+	refreshUI(){ printIP; adb devices; printTitle; }
 	headerIP(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n"
 		printIP
