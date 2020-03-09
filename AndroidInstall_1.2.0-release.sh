@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0251
+# Build_0252
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0251"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0252"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -46,6 +46,7 @@ help(){
 }
 
 updateIP(){
+	if [ $verbose = 1 ]; then printf "\n\nUpdating IP\n"; fi
 	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
 	deviceIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
 	IPlocXML=$(curl https://freegeoip.app/xml/$deviceIP 2>/dev/null)
@@ -91,6 +92,7 @@ else verbose=0; qMode="false"; fi
 # prepare script for running the MAIN function
 INIT(){
 	echo "Initializing.." &
+
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
 	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"; errExec="false"
 
@@ -114,15 +116,16 @@ INIT(){
 
 		APKquest="Drag APK anywhere here:"
 
-		if figlet -t -w 0 -F metal "TEST FULL FIG"; clear; then
-			echo "Initializing.." &
-			oops=$(figlet -F metal -t "Oops!")
+		if [ $verbose = 1 ]; then printf "\nTesting for figlet compatibility..\n"; sleep 1; fi
+		if figlet -t -w 0 -F metal "TEST FULL FIG"; then
+			if [ $verbose = 0 ]; then clear; echo "Initializing.."; fi &
+			oops=$(figlet -F metal -t "Oops!"); clear
 			printTitle(){
 				figlet -F border -F gay -t "$scriptTitle"
 			}
-		elif figlet -w 0 -f small "TEST SIMPLE FIG"; clear; then
-			echo "Initializing.." &
-			oops=$(figlet -f small "Oops!")
+		elif figlet -w 0 -f small "TEST SIMPLE FIG"; then
+			if [ $verbose = 0 ]; then clear; echo "Initializing.."; fi &
+			oops=$(figlet -f small "Oops!"); clear
 			printTitle(){
 				figlet "$scriptTitle"
 			}
@@ -162,7 +165,7 @@ if [ $verbose = 1 ]; then
 	) }
 
 	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git && {
-			printf "\nGIT CLONED\n\n"; echo "Getting configs.." & sleep 2
+			printf "\nGIT CLONED\n\n"; echo "Storing config values into variables.." & sleep 2
 		} || { git pull printf "\nGIT PULLED\n\n"; sleep 2; }
 	}
 	printIP(){
@@ -246,6 +249,7 @@ fi
 updateScript(){
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
+	if [ $verbose = 1 ]; then printf "\nCopying new version of script into current script directory\n"; sleep 0.6; fi
 	cpSource=~/upt/Android-Installer/$scriptPrefix$currentVersion.sh
 
 	trap "" SIGINT
@@ -257,6 +261,7 @@ updateScript(){
 }
 
 gitConfigs(){
+	if [ $verbose = 1 ]; then printf "\nDownloading configs..\n\n"; fi
 	terminalPath=""; terminalPath=$(pwd)
 	rm -rf ~/upt; mkdir ~/upt; cd ~/upt || return
 
