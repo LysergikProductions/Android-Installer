@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.9-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0242
+# Build_0246
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0242"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0246"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.9-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -46,22 +46,6 @@ help(){
 	printf "  'fire'                    Amazon build\n\n"
 }
 
-# allow user to see the copyright, license, top, or the help page without running the script
-if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
-	printf "\n2020 © Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n"
-	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
-	elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
-	exit
-fi
-
-if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
-elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; fi
-
-if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then UNINSTALL="false"; OBBdone="true"; fi
-if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="false"
-elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
-else verbose=0; qMode="false"; fi
-
 updateIP(){
 	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
 	deviceIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
@@ -73,6 +57,38 @@ updateIP(){
 
 	deviceLOC="$IPcity, $IPregion, $IPcountry"
 }
+
+# allow user to see the copyright, license, top, or the help page without running the script
+if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
+	printf "\n2020 © Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n"
+	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
+	elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
+		clear; updateIP; COLS=$(tput cols)
+		{ while true
+			do
+				sleep 1
+				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+				sleep 1
+			done
+		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s; exit
+	fi
+fi
+
+if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
+elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
+	clear; updateIP; COLS=$(tput cols)
+	{ sleep 0.5; while true
+		do
+			printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+			sleep 1.99
+		done
+	} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; exit
+fi
+
+if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then UNINSTALL="false"; OBBdone="true"; fi
+if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="false"
+elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
+else verbose=0; qMode="false"; fi
 
 # prepare script for running the MAIN function
 INIT(){
@@ -577,10 +593,11 @@ UPSTALL(){
 installAgainPrompt(){
 	scriptTitle="Install Again?"; showIP="true"
 	updateIP; refreshUI
-	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit, 'r' to install different build"
-	printf "\n%*s\n" $((COLS/2)) "To Install:"
-	printf "%*s\n" $((COLS/2)) "$APKname, again.."
-	printf "\n%*s\n" $((COLS/2)) "Press any other key!"
+	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit"
+	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
+	printf "\n%*s\n" $((COLS/2)) "Press 'r' to install different build"
+	printf "\n\n%*s\n" $((0)) "!Press any other key to install this build again!"
+	printf "\n%*s\n" $((0)) "$APKname"
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
 		OBBdone="true"; APKdone="true"; LAUNCH="false"
@@ -600,6 +617,14 @@ installAgainPrompt(){
 			diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
 			trap - SIGINT
 		} || (echo "catch fails"; trap - SIGINT; exit 1)
+	elif [ "$REPLY" = "t" ]; then
+		clear; updateIP
+		{ while true
+			do
+				sleep 1.99
+				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+			done
+		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1
 	else
 		OBBdone="false"; APKdone="false"
 		installAgain
