@@ -2,7 +2,7 @@
 # AndroidInstall_1.1.9-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0236
+# Build_0237
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0236"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
+build="0237"; author="Nikolas A. Wagner"; license="GNU GPLv3"; gitName="Android-Installer"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 scriptVersion=1.1.8-beta; adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -158,7 +158,7 @@ if [ $verbose = 1 ]; then
 		printf "\nIP Data:\n$IPdata\n"
 	}
 
-	refreshUI(){ adbDevices; printTitle; }
+	refreshUI(){ adb devices; printTitle; }
 	headerIP(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n"
 		printIP
