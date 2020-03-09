@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0254
+# Build_0255
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0254"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0255"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -47,8 +47,9 @@ help(){
 
 updateIP(){
 	if [ $verbose = 1 ]; then printf "\n\nUpdating IP\n\n"; fi
-	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)
-	IPlocXML=$(curl https://freegeoip.app/xml/$deviceIP 2>/dev/null)
+	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(curl https://ipinfo.io/ip 2>/dev/null)
+	deviceIP1=$(adb -d shell dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || deviceIP1=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)|| deviceIP1="error"
+	IPlocXML=$(curl https://freegeoip.app/xml/$deviceIP1 2>/dev/null)
 
 	IPcountry=$(grep -oPm1 "(?<=<CountryName>)[^<]+" <<< "$IPlocXML")
 	IPregion=$(grep -oPm1 "(?<=<RegionName>)[^<]+" <<< "$IPlocXML")
