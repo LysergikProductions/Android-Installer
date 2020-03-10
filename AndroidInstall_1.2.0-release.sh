@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0277
+# Build_0279
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ file /tmp/variables.before 1>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0277"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0279"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -560,7 +560,7 @@ getAPK(){
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
-	elif [[ "$APKname" == *".apk" ]]; then
+	elif [[ "$APKname" == *".apk"* ]]; then
 		APKvalid="true"
 		printf "APK Name: $APKname\n\n"
 	else
@@ -617,7 +617,7 @@ INSTALL(){
 	adbWAIT
 
 	# install APK, only if APKdone=false
-	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk" ]]; then
+	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk"* ]]; then
 		if [[ "$OBBfilePath" == *"fire"* ]]; then
 			printf "\n%*s\n\n" $((COLS/2)) "It may take a long time to install builds on this device.."
 		fi
@@ -663,7 +663,7 @@ UPSTALL(){
 	deviceID=$(adb devices); echo; printTitle
 
 	# install APK, only if APKdone=false
-	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk" ]]; then
+	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk"* ]]; then
 		printf "\nInstalling APK..\n"
 
 		if CMD_installAPK || (
