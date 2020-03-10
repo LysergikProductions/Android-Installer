@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0263
+# Build_0264
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -22,12 +22,14 @@
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 #                                          --  -  ---  -  --
 
-# temp file that includes all system variables on script execution
-( set -o posix ; set ) >/tmp/variables.before
-scriptStartDate=""; scriptStartDate=$(date)
+rm /tmp/variables.before # remove any pre-existing tmp file for security
+( set -o posix ; set ) >/tmp/variables.before # log all system variables at script execution
+file /tmp/variables.before 1>/dev/null || exit 1 # ensure tmp file exists for security
 
 # some global variables
-build="0263"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+scriptStartDate=""; scriptStartDate=$(date) 
+
+build="0264"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
