@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0266
+# Build_0267
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -23,16 +23,16 @@
 #                                          --  -  ---  -  --
 
 # kill script if script would have root privileges
-if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill -9 > /dev/null 2>&1 || exit 1; fi
+if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) || exit 1; fi
 
 rm -f /tmp/variables.before # remove any pre-existing tmp file for security
 ( set -o posix ; set ) >/tmp/variables.before # log all system variables at script execution
 file /tmp/variables.before 1>/dev/null || exit 1 # ensure tmp file exists for security
 
 # some global variables
-scriptStartDate=""; scriptStartDate=$(date) 
+scriptStartDate=""; scriptStartDate=$(date)
 
-build="0266"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0267"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -42,9 +42,11 @@ studio=""; gitName="Android-Installer"
 
 # make sure SIGINT always works even in presence of infinite loops
 exitScript() {
-   	trap - SIGINT SIGTERM SIGTERM # clear the trap
-   	CMD_rmALL # removes temporary files
-   	kill -- -$$ # Sends SIGTERM to child/sub processes
+	trap - SIGINT SIGTERM SIGTERM # clear the trap
+	CMD_rmALL # removes temporary files
+
+	kill -- -$$ # Sends SIGTERM to child/sub processes
+	kill $( jobs -p ) # kills any remaining processes
 }; trap exitScript SIGINT SIGTERM
 
 help(){
@@ -116,7 +118,7 @@ INIT(){
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 	waitMessage="-- waiting for device --"; OBBquest="OBB"; APKquest="APK"; showIP="true"; OBBinfo=""
-	
+
 	anim1=( # doge so like
 	"                        " "W                       " "Wo                      " "Wow                     " "Wow!                    " "Wow!                    "
 	"Wow!                    " "Wow!                    " "Wow!                    " "Wow!                    " "Wow! V                  " "Wow! Ve                 "
@@ -145,7 +147,7 @@ INIT(){
 	"110010110110101100010100" "010010110111001001011110" "100110100011000110111011" "100110010010001100110110" "100110010111001101101101" "101101101101011101010101"
 	"101011011101001110011001" "010111010101110110101001" "101010010101110000100010" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
 	)
-	
+
 	printTitle(){
 		printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
 		printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
@@ -473,7 +475,7 @@ getOBB(){
 			*)
 				UNINSTALL="true"; LAUNCH="true"; OBBname="com.$studio.amazon.$opt"
 				launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
-				
+
 				printf "OBB Name: $OBBname\n\n"
 				break
 					;;
