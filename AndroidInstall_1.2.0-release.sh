@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0268
+# Build_0276
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ file /tmp/variables.before 1>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0268"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0276"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -122,7 +122,7 @@ parse_IPdata(){
 	IFS=$ORIGINAL_IFS
 }
 
-# allow user to see the copyright, license, top, or the help page without running the script
+# allow user to see the copyright, license, or the help page without running the script
 COLS=$(tput cols)
 if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
 	printf "\n2020 © Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n"
