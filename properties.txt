@@ -1,6 +1,6 @@
 _version 1.1.7-release
 _newVersion 1.2.0-release
-_build 0267
+_build 0268
 
 _scriptTitle \_HappyDroid_/
 

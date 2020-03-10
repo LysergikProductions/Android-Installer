@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0267
+# Build_0268
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -25,14 +25,16 @@
 # kill script if script would have root privileges
 if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) || exit 1; fi
 
-rm -f /tmp/variables.before # remove any pre-existing tmp file for security
-( set -o posix ; set ) >/tmp/variables.before # log all system variables at script execution
-file /tmp/variables.before 1>/dev/null || exit 1 # ensure tmp file exists for security
+# remove any pre-existing tmp file for security then log all system variables at script execution
+rm -f /tmp/variables.before /tmp/usrIPdata.xml /tmp/devIPdata.xml
+( set -o posix ; set ) >/tmp/variables.before
+
+file /tmp/variables.before 1>/dev/null || exit 1
 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0267"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0268"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -43,7 +45,9 @@ studio=""; gitName="Android-Installer"
 # make sure SIGINT always works even in presence of infinite loops
 exitScript() {
 	trap - SIGINT SIGTERM SIGTERM # clear the trap
+
 	CMD_rmALL # removes temporary files
+	IFS=$ORIGINAL_IFS # set original IFS
 
 	kill -- -$$ # Sends SIGTERM to child/sub processes
 	kill $( jobs -p ) # kills any remaining processes
@@ -64,17 +68,57 @@ help(){
 }
 
 updateIP(){
-	if [ "$verbose" = 1 ]; then printf "\n\nUpdating IP\n\n"; fi
-	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(curl https://ipinfo.io/ip 2>/dev/null)
-	deviceIP1=$(adb -d shell dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || deviceIP1=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)|| deviceIP1="error"
-	devIPlocXML=$(curl https://freegeoip.app/xml/$deviceIP1 2>/dev/null)
+	wait | update_IPdata 2>/dev/null
+	parse_IPdata
+	deviceIP="$devIP"
+	deviceLOC="$devCity, $devRegion, $devCountry"
+}
 
-	devIPcountry=$(grep -oPm1 "(?<=<CountryName>)[^<]+" <<< "$devIPlocXML")
-	devIPregion=$(grep -oPm1 "(?<=<RegionName>)[^<]+" <<< "$devIPlocXML")
-	devIPcity=$(grep -oPm1 "(?<=<City>)[^<]+" <<< "$devIPlocXML")
+update_IPdata(){
+	if [ "$verbose" = 1 ]; then printf "\n\nUpdating IP DATA\n\n"; fi
+	
+	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short) || usrIP=$(curl https://ipinfo.io/ip) || usrIP="error"
+	devIP=$(adb -d shell dig @resolver1.opendns.com ANY myip.opendns.com +short) || devIP=$(adb -d shell curl https://ipinfo.io/ip)|| devIP="error"
 
-	deviceIP=$(grep -oPm1 "(?<=<IP>)[^<]+" <<< "$devIPlocXML")
-	deviceLOC="$devIPcity, $devIPregion, $devIPcountry"
+	usrIP_XML=$(curl https://freegeoip.app/xml/$usrIP >/tmp/usrIPdata.xml)
+	devIP_XML=$(adb -d shell curl https://freegeoip.app/xml/$devIP >/tmp/devIPdata.xml)
+}
+
+parse_IPdata(){
+	if [ "$verbose" = 1 ]; then printf "\n\nParsing IP DATA\n\n"; fi
+	
+	readXML(){
+		IFS=\>
+		read -d \< ENTITY CONTENT
+		ret=$?
+		TAG_NAME="${ENTITY%% *}"
+		ATTRIBUTES="${ENTITY#* }"
+		return $ret
+	}
+	
+	parse_usrIP_XML(){
+		if [[ "$TAG_NAME" = "IP" ]] ; then usrIP=$CONTENT; fi
+		if [[ "$TAG_NAME" = "CountryName" ]] ; then usrCountry=$CONTENT; fi
+		if [[ "$TAG_NAME" = "RegionName" ]] ; then usrRegion=$CONTENT; fi
+		if [[ "$TAG_NAME" = "City" ]] ; then usrCity=$CONTENT; fi
+	}
+
+	parse_devIP_XML(){
+		if [[ "$TAG_NAME" = "IP" ]] ; then devIP=$CONTENT; fi
+		if [[ "$TAG_NAME" = "CountryName" ]] ; then devCountry=$CONTENT; fi
+		if [[ "$TAG_NAME" = "RegionName" ]] ; then devRegion=$CONTENT; fi
+		if [[ "$TAG_NAME" = "City" ]] ; then devCity=$CONTENT; fi	
+	}
+	
+	while readXML; do
+		parse_usrIP_XML
+	done < /tmp/usrIPdata.xml
+
+	while readXML; do
+		parse_devIP_XML
+	done < /tmp/devIPdata.xml
+	
+	IFS=$ORIGINAL_IFS
 }
 
 # allow user to see the copyright, license, top, or the help page without running the script
@@ -92,7 +136,7 @@ elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
 		updateIP
 		{ sleep 0.5; while (trap exitScript SIGINT SIGTERM)
 			do
-				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+				printf "\n%*s\n" $((COLS/2)) "Device Location: $deviceLOC"
 				sleep 1.99
 			done
 		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1 || exit
@@ -233,7 +277,7 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 
 	CMD_rmALL(){
 		printf "\n\nrm -rf /tmp/variables.before /tmp/variables.after ~/upt ; tput cnorm\n"
-		rm -rf /tmp/variables.before /tmp/variables.after ~/upt
+		rm -rf /tmp/variables.before /tmp/variables.after ~/upt /tmp/usrIPdata.xml /tmp/devIPdata.xml
 		tput cnorm
 	}
 
@@ -286,7 +330,7 @@ else # set default variant of core commands
 	}
 
 	CMD_rmALL(){
-		rm -rf /tmp/variables.before /tmp/variables.after ~/upt
+		rm -rf /tmp/variables.before /tmp/variables.after ~/upt /tmp/usrIPdata.xml /tmp/devIPdata.xml
 		tput cnorm
 	}
 
