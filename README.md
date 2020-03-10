@@ -1,11 +1,11 @@
 # Android-Installer v1.2
 Android Installer v1.2
 
-Requirements:
+Minimum requirements:
 - Bash shell
 - Android Debug Bridge
 
-Requirements for Full Functionality:
+Additional requirements for complete functionality:
 - Internet connection
 - Figlet (http://www.figlet.org/)
 

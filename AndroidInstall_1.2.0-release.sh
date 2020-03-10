@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0257
+# Build_0259
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0257"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0259"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -66,11 +66,12 @@ updateIP(){
 }
 
 # allow user to see the copyright, license, top, or the help page without running the script
+COLS=$(tput cols)
 if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
 	printf "\n2020 © Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n"
 	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
 	elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
-		clear; updateIP; COLS=$(tput cols)
+		clear; updateIP
 		{ sleep 0.5; while true
 			do
 				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
@@ -83,7 +84,7 @@ fi
 
 if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
 elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
-	clear; updateIP; COLS=$(tput cols)
+	clear; updateIP
 	{ sleep 0.5; trap exit_script SIGINT SIGTERM; while true
 		do
 			printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
@@ -131,9 +132,9 @@ INIT(){
 			}
 		elif figlet -w 0 -f small "TEST SIMPLE FIG"; then
 			if [ "$verbose" = 0 ]; then clear; echo "Initializing.."; fi &
-			oops=$(figlet -f small "Oops!"); clear
+			oops=$(figlet -f -w $COLS small "Oops!"); clear
 			printTitle(){
-				figlet "$scriptTitle"
+				figlet -w $COLS "$scriptTitle"
 			}
 		else
 			oops="Oops!"
@@ -158,7 +159,7 @@ clear; INIT # initializing now..
 # nothing up until the first call of MAIN will be run; only being loaded into memory
 
 # set debug variant of core commands
-if [ "$verbose" = 1 ]; then
+if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	if [ "$verbose" = "2" ]; then set -x; fi
 	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb -d shell exit; }
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; sleep 0.5; }
@@ -177,7 +178,7 @@ if [ "$verbose" = 1 ]; then
 	printIP(){
 		updateIP
 		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC\n"
-		printf "\nDevice IP Data:\n$IPlocXML\n"
+		printf "\nDevice IP Data:\n$devIPlocXML\n"
 		printf "\nComputer IP: $usrIP\n\n"
 	}
 
