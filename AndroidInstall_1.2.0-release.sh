@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0261
+# Build_0262
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 scriptStartDate=""; scriptStartDate=$(date)
 
 # some global variables
-build="0261"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0262"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -118,14 +118,17 @@ INIT(){
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 	waitMessage="-- waiting for device --"; OBBquest="OBB"; APKquest="APK"; showIP="true"; OBBinfo=""
 	
-	anim1=(
-	"oooooooooooooooooooooooo"
-	"Oooooooooooooooooooooooo" "oOoooooooooooooooooooooo" "ooOooooooooooooooooooooo" "oooOoooooooooooooooooooo" "ooooOooooooooooooooooooo" "oooooOoooooooooooooooooo"
-	"ooooooOooooooooooooooooo" "oooooooOoooooooooooooooo" "ooooooooOooooooooooooooo" "oooooooooOoooooooooooooo" "ooooooooooOooooooooooooo" "oooooooooooOoooooooooooo"
-	"ooooooooooooOooooooooooo" "oooooooooooooOoooooooooo" "ooooooooooooooOooooooooo" "oooooooooooooooOoooooooo" "ooooooooooooooooOooooooo" "oooooooooooooooooOoooooo"
-	"ooooooooooooooooooOooooo" "oooooooooooooooooooOoooo" "ooooooooooooooooooooOooo" "oooooooooooooooooooooOoo" "ooooooooooooooooooooooOo" "oooooooooooooooooooooooO"
+	anim1=( # doge so like
+	"                        " "W                       " "Wo                      " "Wow                     " "Wow!                    " "Wow!                    "
+	"Wow!                    " "Wow!                    " "Wow!                    " "Wow!                    " "Wow! V                  " "Wow! Ve                 "
+	"Wow! Ver                " "Wow! Very               " "Wow! Very               " "Wow! Very l             " "Wow! Very lo            " "Wow! Very loa           "
+	"Wow! Very load          " "Wow! Very loadi         " "Wow! Very loadin        " "Wow! Very loading       " "Wow! Very loading.      " "Wow! Very loading..     "
+	"Wow! Very loading...    " "Wow! Very loading....   " "Wow! Very loading.....  " "Wow! Very loading...... " "Wow! Very loading......." "Wow! Very loading......."
+	"Wow! Very loading...... " "Wow! Very loading.....  " "Wow! Very loading....   " "Wow! Very loading...    " "Wow! Very loading..     " "Wow! Very loading.      "
+	"Wow! Very loading       " "Wow! Very loading.      " "Wow! Very loading..     " "Wow! Very loading...    " "Wow! Very loading....   " "Wow! Very loading.....  "
+	"Wow! Very loading...... " "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......."
 	)
-	anim2=(
+	anim2=( # simple / professional
 	"oooooooooooooooooooooooo"
 	"ooooooooooo00ooooooooooo" "oooooooooo0oo0oooooooooo" "ooooooooo0oooo0ooooooooo" "oooooooo0oooooo0oooooooo" "ooooooo0oooooooo0ooooooo" "oooooo0oooooooooo0oooooo"
 	"ooooo0oooooooooooo0ooooo" "oooo0oooooooooooooo0oooo" "ooo0oooooooooooooooo0ooo" "oo0oooooooooooooooooo0oo" "o0oooooooooooooooooooo0o" "0oooooooooooooooooooooo0"
@@ -133,7 +136,7 @@ INIT(){
 	"oooo0oooooooooooooo0oooo" "ooooo0oooooooooooo0ooooo" "oooooo0oooooooooo0oooooo" "ooooooo0oooooooo0ooooooo" "oooooooo0oooooo0oooooooo" "ooooooooo0oooo0ooooooooo"
 	"oooooooooo0oo0oooooooooo" "ooooooooooo00ooooooooooo" "oooooooooooooooooooooooo"
 	)
-	anim3=(
+	anim3=( # matrix
 	"110010110110101100010100" "010010110111001001011110" "100110100011000110111011" "100110010010001100110110" "100110010111001101101101" "101101101101011101010101"
 	"100011011101001110011001" "011010110001101101110110" "101010010101110100100010" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
 	"101011011101001110011001" "011010110001101101110110" "101010010101100000100011" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
@@ -709,7 +712,7 @@ waiting(){
 	for i in "${anim3[@]}"
 	do
 		printf "\r%*s" $((COLS/2)) "$i"
-		sleep 0.04
+		sleep 0.05
 	done
 }
 
