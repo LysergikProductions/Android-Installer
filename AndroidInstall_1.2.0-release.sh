@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0262
+# Build_0263
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 scriptStartDate=""; scriptStartDate=$(date)
 
 # some global variables
-build="0262"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0263"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -38,6 +38,7 @@ studio=""; gitName="Android-Installer"
 # make sure SIGINT always works even in presence of infinite loops
 exit_script() {
    	trap - SIGINT SIGTERM SIGTERM # clear the trap
+   	CMD_rmALL # removes temporary files
    	kill -- -$$ # Sends SIGTERM to child/sub processes
 }; trap exit_script SIGINT SIGTERM
 
@@ -221,13 +222,17 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 		printIP
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head"
 	}
+
 	header(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head"
 	}
 
-	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt; echo "rm -rf /tmp/variables.before /tmp/variables.after ~/upt"; }
-	CMD_reset(){ printf "\n\nTerminal was NOT reset like would occur in default mode; there could be issues in the terminal.\n"; }
+	CMD_rmALL(){
+		printf "\n\nrm -rf /tmp/variables.before /tmp/variables.after ~/upt ; tput cnorm\n"
+		rm -rf /tmp/variables.before /tmp/variables.after ~/upt
+		tput cnorm
+	}
 
 	lastCatch(){
 		scriptEndDate=$(date)
@@ -271,13 +276,16 @@ else # set default variant of core commands
 		printIP
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
 	}
+
 	header(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author"
 		printf "\n$UIsep_err0\n\nDistributed with the $license license\n\n$UIsep_head\n"
 	}
 
-	CMD_rmALL(){ rm -rf /tmp/variables.before /tmp/variables.after ~/upt >/dev/null 2>&1; }
-	CMD_reset(){ reset; }
+	CMD_rmALL(){
+		rm -rf /tmp/variables.before /tmp/variables.after ~/upt
+		tput cnorm
+	}
 
 	lastCatch(){
 		scriptEndDate=$(date)
@@ -395,7 +403,7 @@ MAINd(){
 	tput cnorm # ensure cursor is visible and that crtl-C is functional
 
 	getOBB; getAPK; INSTALL && echo || {
-		CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
+		printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
 
 		export scriptEndDate=""; scriptEndDate=$(date)
 		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
@@ -422,7 +430,7 @@ MAINu(){
 
 	echo "OBB will not actually be replaced on your device, but it is still required.."
 	getOBB; getAPK; UPSTALL && echo || {
-		CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
+		printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
 
 		export scriptEndDate=""; scriptEndDate=$(date)
 		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
@@ -648,7 +656,7 @@ installAgainPrompt(){
 		refreshUI; tput cnorm
 
 		getOBB; getAPK; INSTALL && echo || {
-			CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
+			printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
 
 			export scriptEndDate=""; scriptEndDate=$(date)
 			export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
@@ -709,11 +717,13 @@ adbWAIT(){
 
 # show the waiting animation
 waiting(){
+	tput civis
 	for i in "${anim3[@]}"
 	do
 		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.05
 	done
+	tput cnorm
 }
 
 if [[ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
