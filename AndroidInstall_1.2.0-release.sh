@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0264
+# Build_0265
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -22,14 +22,16 @@
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 #                                          --  -  ---  -  --
 
-rm /tmp/variables.before # remove any pre-existing tmp file for security
+if [ "$EUID" = 0 ]; then echo "You cannot run script this as a root user!"; kill -9 > /dev/null 2>&1 || exit 1; fi
+
+rm -f /tmp/variables.before # remove any pre-existing tmp file for security
 ( set -o posix ; set ) >/tmp/variables.before # log all system variables at script execution
 file /tmp/variables.before 1>/dev/null || exit 1 # ensure tmp file exists for security
 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date) 
 
-build="0264"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0265"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -164,13 +166,13 @@ INIT(){
 		if [ "$verbose" = 1 ]; then printf "\n\nTesting for figlet compatibility..\n"; sleep 1; fi
 		if figlet -t -w 0 -F metal "TEST FULL FIG"; then
 			if [ "$verbose" = 0 ]; then clear; echo "Initializing.."; fi &
-			oops=$(figlet -F metal -t "Oops!"); clear
+			oops=$(figlet -F metal -t "Oops!"); if [ "$verbose" = 0 ]; then clear; fi
 			printTitle(){
 				figlet -F border -F gay -t "$scriptTitle"
 			}
 		elif figlet -w 0 -f small "TEST SIMPLE FIG"; then
 			if [ "$verbose" = 0 ]; then clear; echo "Initializing.."; fi &
-			oops=$(figlet -f -w $COLS small "Oops!"); clear
+			oops=$(figlet -f -w $COLS small "Oops!"); if [ "$verbose" = 0 ]; then clear; fi
 			printTitle(){
 				figlet -w $COLS "$scriptTitle"
 			}
@@ -398,7 +400,7 @@ MAINd(){
 	gitConfigs; COLS=$(tput cols)
 
 	# try communicating with device, catch with adbWAIT, finally mount device
-	(CMD_communicate && wait) || adb start-server
+	(CMD_communicate 1>/dev/null) || adb start-server
 	adb -d shell settings put global development_settings_enabled 1
 
 	refreshUI
