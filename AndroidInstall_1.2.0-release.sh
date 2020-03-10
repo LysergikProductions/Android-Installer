@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0265
+# Build_0266
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@
 # Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
 #                                          --  -  ---  -  --
 
-if [ "$EUID" = 0 ]; then echo "You cannot run script this as a root user!"; kill -9 > /dev/null 2>&1 || exit 1; fi
+# kill script if script would have root privileges
+if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill -9 > /dev/null 2>&1 || exit 1; fi
 
 rm -f /tmp/variables.before # remove any pre-existing tmp file for security
 ( set -o posix ; set ) >/tmp/variables.before # log all system variables at script execution
@@ -31,7 +32,7 @@ file /tmp/variables.before 1>/dev/null || exit 1 # ensure tmp file exists for se
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date) 
 
-build="0265"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0266"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -40,11 +41,11 @@ fireAPPS=( "GO BACK" "option1" "option2" "option3" "option4" "option5" "option6"
 studio=""; gitName="Android-Installer"
 
 # make sure SIGINT always works even in presence of infinite loops
-exit_script() {
+exitScript() {
    	trap - SIGINT SIGTERM SIGTERM # clear the trap
    	CMD_rmALL # removes temporary files
    	kill -- -$$ # Sends SIGTERM to child/sub processes
-}; trap exit_script SIGINT SIGTERM
+}; trap exitScript SIGINT SIGTERM
 
 help(){
 	printf "  Help Page\n\n"
@@ -78,29 +79,22 @@ updateIP(){
 COLS=$(tput cols)
 if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
 	printf "\n2020 © Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n"
-	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
-	elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
-		clear; updateIP
-		{ sleep 0.5; while true
-			do
-				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
-				sleep 1.99
-			done
-			exit
-		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; exit
-	fi
+	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit; fi
 fi
 
 # if user didn't choose -c or -l at all, then check..
 if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
 elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
-	clear; updateIP
-	{ sleep 0.5; trap exit_script SIGINT SIGTERM; while true
-		do
-			printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
-			sleep 1.99
-		done
-	} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; exit
+	clear
+	if adb -d shell exit; then
+		updateIP
+		{ sleep 0.5; while (trap exitScript SIGINT SIGTERM)
+			do
+				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+				sleep 1.99
+			done
+		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1 || exit
+	else exit 1; fi
 fi
 
 # if user did not choose any above options, then check for script mode flags
@@ -163,15 +157,17 @@ INIT(){
 
 		APKquest="Drag APK anywhere here:"
 
-		if [ "$verbose" = 1 ]; then printf "\n\nTesting for figlet compatibility..\n"; sleep 1; fi
+		if [ "$verbose" = 1 ]; then printf "\nTesting for figlet compatibility..\n"; sleep 1; fi
 		if figlet -t -w 0 -F metal "TEST FULL FIG"; then
-			if [ "$verbose" = 0 ]; then clear; echo "Initializing.."; fi &
+			if [ "$verbose" = 0 ]; then clear; fi
+			echo "Initializing.." &
 			oops=$(figlet -F metal -t "Oops!"); if [ "$verbose" = 0 ]; then clear; fi
 			printTitle(){
 				figlet -F border -F gay -t "$scriptTitle"
 			}
 		elif figlet -w 0 -f small "TEST SIMPLE FIG"; then
-			if [ "$verbose" = 0 ]; then clear; echo "Initializing.."; fi &
+			if [ "$verbose" = 0 ]; then clear; fi
+			echo "Initializing.." &
 			oops=$(figlet -f -w $COLS small "Oops!"); if [ "$verbose" = 0 ]; then clear; fi
 			printTitle(){
 				figlet -w $COLS "$scriptTitle"
@@ -183,6 +179,7 @@ INIT(){
 				printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
 			}
 		fi
+		echo "Initializing.." &
 	fi
 
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
@@ -208,7 +205,7 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB; }
 	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" && exit) || (
 		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-		adb install -r "$APKfilePath"
+		adb install -r "$APKfilePath" && exit || exit 1
 	) }
 
 	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git && {
@@ -258,7 +255,7 @@ else # set default variant of core commands
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
 	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" 2>/dev/null && exit) || (
 		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-		adb install -r "$APKfilePath" 2>/dev/null && exit
+		adb install -r "$APKfilePath" 2>/dev/null && exit || exit 1
 	) }
 
 	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git >/dev/null 2>&1 || {
@@ -340,10 +337,10 @@ gitConfigs(){
 
 	if [ "$currentVersion" = "$scriptVersion" ]; then
 		upToDate="true"
-		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1
+		printf "\n%*s\n" $((COLS/2)) "This script is up-to-date!"; sleep 1
 	elif [ "$newVersion" = "$scriptVersion" ]; then
 		upToDate="true"
-		printf "\n%*s" $((COLS/2)) "This script is up-to-date!"; sleep 1
+		printf "\n%*s\n" $((COLS/2)) "This script is up-to-date!"; sleep 1
 	else
 		if [ "$errExec" = "false" ]; then
 			upToDate="false"
@@ -364,9 +361,13 @@ gitConfigs(){
 }
 
 printHead(){
-	if [ "$loopFromError" = "false" ]; then clear
+	if [ "$loopFromError" = "false" ]; then
+		if [ "$verbose" = 0 ]; then clear; fi
 		if [ "$showIP" = "true" ] && [ "$qMode" = "false" ]; then headerIP; else header; fi
-	elif [ "$loopFromError" = "true" ]; then clear; headerIP; printf "$errorMessage\n\n"
+	elif [ "$loopFromError" = "true" ]; then
+		if [ "$verbose" = 0 ]; then clear; fi
+		if [ "$showIP" = "true" ] && [ "$qMode" = "false" ]; then headerIP; else header; fi
+		printf "$errorMessage\n\n"
   	else # if bug causes loopFromError to be NOT "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
 		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
@@ -669,13 +670,16 @@ installAgainPrompt(){
 			diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
 		} || (echo "catch fails"; exit 1)
 	elif [ "$REPLY" = "t" ]; then
-		clear; updateIP; COLS=$(tput cols)
-		{ sleep 0.5; while true
-			do
-				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
-				sleep 1.99
-			done
-		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; exit
+		clear
+		if adb -d shell exit; then
+			updateIP
+			{ sleep 0.5; while (trap exitScript SIGINT SIGTERM)
+				do
+					printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+					sleep 1.99
+				done
+			} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1 || exit
+		else exit 1; fi
 	else
 		OBBdone="false"; APKdone="false"
 		installAgain
