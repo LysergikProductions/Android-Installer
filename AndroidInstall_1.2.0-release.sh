@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0256
+# Build_0257
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,13 +26,19 @@
 ( set -o posix ; set ) >/tmp/variables.before
 
 # some global variables
-build="0256"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0257"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
 # studio specific variables
 fireAPPS=( "GO BACK" "option1" "option2" "option3" "option4" "option5" "option6" "option7" )
 studio=""; gitName="Android-Installer"
+
+# make sure SIGINT always works even in presence of infinite loops
+exit_script() {
+   	trap - SIGINT SIGTERM SIGTERM # clear the trap
+   	kill -- -$$ # Sends SIGTERM to child/sub processes
+}; trap exit_script SIGINT SIGTERM
 
 help(){
 	printf "$scriptTitle help page:\n\n"
@@ -46,7 +52,7 @@ help(){
 }
 
 updateIP(){
-	if [ $verbose = 1 ]; then printf "\n\nUpdating IP\n\n"; fi
+	if [ "$verbose" = 1 ]; then printf "\n\nUpdating IP\n\n"; fi
 	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || usrIP=$(curl https://ipinfo.io/ip 2>/dev/null)
 	deviceIP1=$(adb -d shell dig @resolver1.opendns.com ANY myip.opendns.com +short 2>/dev/null) || deviceIP1=$(adb -d shell curl https://ipinfo.io/ip 2>/dev/null)|| deviceIP1="error"
 	devIPlocXML=$(curl https://freegeoip.app/xml/$deviceIP1 2>/dev/null)
@@ -70,6 +76,7 @@ if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] 
 				printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
 				sleep 1.99
 			done
+			exit
 		} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; exit
 	fi
 fi
@@ -77,7 +84,7 @@ fi
 if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
 elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
 	clear; updateIP; COLS=$(tput cols)
-	{ sleep 0.5; while true
+	{ sleep 0.5; trap exit_script SIGINT SIGTERM; while true
 		do
 			printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
 			sleep 1.99
@@ -86,7 +93,7 @@ elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
 fi
 
 if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then UNINSTALL="false"; OBBdone="true"; fi
-if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="false"
+if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="false"; if [[ "$*" == *"-v"* ]]; then set -x; fi
 elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
 else verbose=0; qMode="false"; fi
 
@@ -101,7 +108,7 @@ INIT(){
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
 	waitMessage="-- waiting for device --"; showIP="true"
 	oops="Oops!"; OBBquest="OBB"; APKquest="APK"
-
+	
 	printTitle(){
 		printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
 		printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
@@ -115,15 +122,15 @@ INIT(){
 
 		APKquest="Drag APK anywhere here:"
 
-		if [ $verbose = 1 ]; then printf "\n\nTesting for figlet compatibility..\n"; sleep 1; fi
+		if [ "$verbose" = 1 ]; then printf "\n\nTesting for figlet compatibility..\n"; sleep 1; fi
 		if figlet -t -w 0 -F metal "TEST FULL FIG"; then
-			if [ $verbose = 0 ]; then clear; echo "Initializing.."; fi &
+			if [ "$verbose" = 0 ]; then clear; echo "Initializing.."; fi &
 			oops=$(figlet -F metal -t "Oops!"); clear
 			printTitle(){
 				figlet -F border -F gay -t "$scriptTitle"
 			}
 		elif figlet -w 0 -f small "TEST SIMPLE FIG"; then
-			if [ $verbose = 0 ]; then clear; echo "Initializing.."; fi &
+			if [ "$verbose" = 0 ]; then clear; echo "Initializing.."; fi &
 			oops=$(figlet -f small "Oops!"); clear
 			printTitle(){
 				figlet "$scriptTitle"
@@ -151,7 +158,8 @@ clear; INIT # initializing now..
 # nothing up until the first call of MAIN will be run; only being loaded into memory
 
 # set debug variant of core commands
-if [ $verbose = 1 ]; then
+if [ "$verbose" = 1 ]; then
+	if [ "$verbose" = "2" ]; then set -x; fi
 	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb -d shell exit; }
 	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; sleep 0.5; }
 	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb -d shell "$launchCMD"; }
@@ -159,13 +167,12 @@ if [ $verbose = 1 ]; then
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB; }
 	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" && exit) || (
 		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-		trap - SIGINT
 		adb install -r "$APKfilePath"
 	) }
 
 	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git && {
-			printf "\nGIT CLONED\n\n"; echo "Storing config values into variables.." & sleep 2
-		} || { git pull printf "\nGIT PULLED\n\n"; sleep 2; }
+			printf "\nGIT CLONED\n\n"; echo "Storing config values into variables.."
+		} || { git pull printf "\nGIT PULLED\n\n"; }
 	}
 	printIP(){
 		updateIP
@@ -174,7 +181,7 @@ if [ $verbose = 1 ]; then
 		printf "\nComputer IP: $usrIP\n\n"
 	}
 
-	refreshUI(){ printIP; adb devices; printTitle; }
+	refreshUI(){ COLS=$(tput cols); printIP; adb devices; printTitle; }
 	headerIP(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n"
 		printIP
@@ -208,7 +215,6 @@ else # set default variant of core commands
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
 	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" 2>/dev/null && exit) || (
 		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-		trap - SIGINT
 		adb install -r "$APKfilePath" 2>/dev/null && exit
 	) }
 
@@ -222,9 +228,9 @@ else # set default variant of core commands
 	}
 
 	if [ "$qMode" = "false" ]; then
-		refreshUI(){ printHead; adb devices; printTitle; }
+		refreshUI(){ COLS=$(tput cols); printHead; adb devices; printTitle; }
 	else
-		refreshUI(){ printHead; }
+		refreshUI(){ COLS=$(tput cols); printHead; }
 	fi
 
 	headerIP(){
@@ -249,19 +255,19 @@ fi
 updateScript(){
 	clear; printf "\n%*s\n\n" $((COLS/2)) "Updating Script:"
 
-	if [ $verbose = 1 ]; then printf "\nCopying new version of script into current script directory\n"; sleep 0.6; fi
+	if [ "$verbose" = 1 ]; then printf "\nCopying new version of script into current script directory\n"; sleep 0.6; fi
 	cpSource=~/upt/Android-Installer/$scriptPrefix$currentVersion.sh
 
 	trap "" SIGINT
 	cp "$cpSource" "$scriptDIR" && upToDate="true"
-	trap - SIGINT
+	trap exitScript SIGINT SIGTERM
 
 	echo "Launching updated version of the script!"; sleep 1
 	exec "$scriptDIR/$scriptPrefix$currentVersion.sh" || { errExec="true" && gitConfigs; }
 }
 
 gitConfigs(){
-	if [ $verbose = 1 ]; then printf "\nDownloading configs..\n\n"; fi
+	if [ "$verbose" = 1 ]; then printf "\nDownloading configs..\n\n"; fi
 	terminalPath=""; terminalPath=$(pwd)
 	rm -rf ~/upt; mkdir ~/upt; cd ~/upt || return
 
@@ -313,9 +319,9 @@ gitConfigs(){
 }
 
 printHead(){
-	if [ $loopFromError = "false" ]; then clear
+	if [ "$loopFromError" = "false" ]; then clear
 		if [ "$showIP" = "true" ] && [ "$qMode" = "false" ]; then headerIP; else header; fi
-	elif [ $loopFromError = "true" ]; then clear; headerIP; printf "$errorMessage\n\n"
+	elif [ "$loopFromError" = "true" ]; then clear; headerIP; printf "$errorMessage\n\n"
   	else # if bug causes loopFromError to be NOT "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
 		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
@@ -346,15 +352,14 @@ MAINd(){
 	deviceID=""; deviceID2=""
 
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
-	COLS=$(tput cols)
-	gitConfigs
+	gitConfigs; COLS=$(tput cols)
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate && wait) || adb start-server
 	adb -d shell settings put global development_settings_enabled 1
 
 	refreshUI
-	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
+	tput cnorm # ensure cursor is visible and that crtl-C is functional
 
 	getOBB; getAPK; INSTALL && echo || {
 		CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
@@ -364,8 +369,7 @@ MAINd(){
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
-		trap - SIGINT
-	} || (echo "catch fails"; trap - SIGINT; exit 1)
+	} || (echo "catch fails"; exit 1)
 }
 
 # update MAIN function that does not delete app data, and only updates the build (beta feature)
@@ -381,7 +385,7 @@ MAINu(){
 	adb -d shell settings put global development_settings_enabled 1
 
 	refreshUI
-	tput cnorm; trap - SIGINT # ensure cursor is visible and that crtl-C is functional
+	tput cnorm # ensure cursor is visible and that crtl-C is functional
 
 	echo "OBB will not actually be replaced on your device, but it is still required.."
 	getOBB; getAPK; UPSTALL && echo || {
@@ -392,8 +396,7 @@ MAINu(){
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
 		diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
-		trap - SIGINT
-	} || (echo "catch fails"; trap - SIGINT; exit 1)
+	} || (echo "catch fails"; exit 1)
 }
 
 getOBB(){
@@ -422,9 +425,10 @@ getOBB(){
 				break
 					;;
 			*)
-				export OBBname="com.$studio.amazon.$opt"
+				UNINSTALL="true"; LAUNCH="true"; OBBname="com.$studio.amazon.$opt"
+				launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
+				
 				printf "OBB Name: $OBBname\n\n"
-				export launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
 				break
 					;;
 			esac
@@ -501,7 +505,7 @@ INSTALL(){
 	if [ "$OBBdone" = "false" ] && [[ "$OBBname" == "com."* ]]; then
 		printf "\nUploading OBB..\n"
 		if (CMD_pushOBB && exit) || (
-				(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
+				(CMD_communicate && deviceConnect="true") || deviceConnect="false"
 				if [ "$deviceConnect" = "true" ]; then
 					errorMessage="FE1a - OBB could not be installed."
 					printf "\n\nFE1a - OBB could not be installed.\n"
@@ -512,7 +516,7 @@ INSTALL(){
 			); then
 				OBBdone="true"
 				adbWAIT; deviceConnect="true"; deviceID=$(adb devices)
-		else (trap - SIGINT; exit 1); fi
+		else (exit 1); fi
 	fi
 
 	adbWAIT
@@ -525,7 +529,7 @@ INSTALL(){
 
 		printf "\nInstalling APK..\n"
 		if CMD_installAPK || (
-			(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
+			(CMD_communicate && deviceConnect="true") || deviceConnect="false"
 			if [ "$deviceConnect" = "true" ]; then
 				errorMessage="FE1b - APK could not be installed."
 				printf "\n\nFE1b - APK could not be installed.\n"
@@ -544,7 +548,7 @@ INSTALL(){
 			else
 				tput cnorm; installAgainPrompt
 			fi
-		else (trap - SIGINT; exit 1); fi
+		else (exit 1); fi
 	fi
 }
 
@@ -568,7 +572,7 @@ UPSTALL(){
 		printf "\nInstalling APK..\n"
 
 		if CMD_installAPK || (
-			(CMD_communicate && deviceConnect="true") || { trap - SIGINT; deviceConnect="false"; }
+			(CMD_communicate && deviceConnect="true") || deviceConnect="false"
 			if [ "$deviceConnect" = "true" ]; then
 				errorMessage="FE1b - APK could not be installed."
 				printf "\n\nFE1b - APK could not be installed.\n"
@@ -588,7 +592,7 @@ UPSTALL(){
 			else
 				tput cnorm; installAgainPrompt
 			fi
-		else (trap - SIGINT; exit 1); fi
+		else (exit 1); fi
 	fi
 }
 
@@ -608,7 +612,7 @@ installAgainPrompt(){
 	elif [ "$REPLY" = "r" ]; then
 		OBBdone="false"; APKdone="false"; UNINSTALL="true"
 
-		refreshUI; tput cnorm; trap - SIGINT
+		refreshUI; tput cnorm
 
 		getOBB; getAPK; INSTALL && echo || {
 			CMD_reset; printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
@@ -618,8 +622,7 @@ installAgainPrompt(){
 			printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
 			diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
-			trap - SIGINT
-		} || (echo "catch fails"; trap - SIGINT; exit 1)
+		} || (echo "catch fails"; exit 1)
 	elif [ "$REPLY" = "t" ]; then
 		clear; updateIP; COLS=$(tput cols)
 		{ sleep 0.5; while true
@@ -635,7 +638,6 @@ installAgainPrompt(){
 }
 
 installAgain(){
-	trap - SIGINT
 	adbWAIT
 	deviceID2=$(adb devices); wait
 
