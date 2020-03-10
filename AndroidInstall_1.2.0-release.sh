@@ -2,7 +2,7 @@
 # AndroidInstall_1.2.0-release.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
-# Build_0259
+# Build_0260
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -24,9 +24,10 @@
 
 # temp file that includes all system variables on script execution
 ( set -o posix ; set ) >/tmp/variables.before
+scriptStartDate=""; scriptStartDate=$(date)
 
 # some global variables
-build="0259"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0260"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -41,14 +42,17 @@ exit_script() {
 }; trap exit_script SIGINT SIGTERM
 
 help(){
-	printf "$scriptTitle help page:\n\n"
+	printf "  Help Page\n\n"
 	printf " - OPTIONS -\n\n"
-	printf "  -c      also [show-c]; show the copyright information\n  -l      also [show-l]; show the license information\n\n"
-	printf "  -q      also [--quiet]; run the script in quiet mode\n  -u      also [--update]; run the script in update mode\n\n"
-	printf "  -d      also [--debug]; run the script in debug (verbose) mode\n  -t      also [--top]; show device CPU and RAM usage\n\n"
+	printf "  -c      also [show-c]; show the copyright information\n"
+	printf "  -l      also [show-l]; show the license information\n\n"
+	printf "  -u      also [--update]; run the script in update mode\n"
+	printf "  -q      also [--quiet]; run the script in quiet mode\n"
+	printf "  -d      also [--debug]; run the script in debug mode. Add a -v to increase verbosity!\n\n"
+	printf "  -t      also [--top]; show device CPU and RAM usage\n"
 	printf "  -h      also [--help]; show this information\n\n"
-	printf " - INSTRUCTIONS -\n\nskip the OBB step using one of the following:\n  'na', '0', '.'      OBB not applicable\n"
-	printf "  'fire'                    Amazon build\n\n"
+	printf " - INSTRUCTIONS -\n\nSkip the OBB step using one of the following:\n\n  na, 0, .      OBB not applicable\n"
+	printf "  fire          Amazon build\n\n"
 }
 
 updateIP(){
@@ -82,6 +86,7 @@ if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] 
 	fi
 fi
 
+# if user didn't choose -c or -l at all, then check..
 if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit
 elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
 	clear; updateIP
@@ -93,8 +98,11 @@ elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
 	} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1; exit
 fi
 
+# if user did not choose any above options, then check for script mode flags
 if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then UNINSTALL="false"; OBBdone="true"; fi
-if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then verbose=1; qMode="false"; if [[ "$*" == *"-v"* ]]; then set -x; fi
+if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then
+	verbose=1; qMode="false"
+	if [[ "$*" == *"-v"* ]] || [[ "$*" == *"--verbose"* ]]; then verbose=2; fi
 elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
 else verbose=0; qMode="false"; fi
 
@@ -102,13 +110,13 @@ else verbose=0; qMode="false"; fi
 INIT(){
 	echo "Initializing.." &
 
+	# some default/starting variables values
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
 	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"; errExec="false"
 
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-	waitMessage="-- waiting for device --"; showIP="true"
-	oops="Oops!"; OBBquest="OBB"; APKquest="APK"
+	waitMessage="-- waiting for device --"; OBBquest="OBB"; APKquest="APK"; showIP="true"
 	
 	printTitle(){
 		printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
@@ -145,7 +153,6 @@ INIT(){
 		fi
 	fi
 
-	scriptStartDate=""; scriptStartDate=$(date)
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 	# make logs directory, but do not overwrite if already present
@@ -153,6 +160,7 @@ INIT(){
 
 	# mac osx only; set font size to 15p
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
+	updateIP
 }
 
 clear; INIT # initializing now..
@@ -176,9 +184,7 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 		} || { git pull printf "\nGIT PULLED\n\n"; }
 	}
 	printIP(){
-		updateIP
 		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC\n"
-		printf "\nDevice IP Data:\n$devIPlocXML\n"
 		printf "\nComputer IP: $usrIP\n\n"
 	}
 
@@ -224,7 +230,6 @@ else # set default variant of core commands
 		}
 	}
 	printIP(){
-		updateIP
 		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC"
 	}
 
@@ -545,7 +550,7 @@ INSTALL(){
 			if [ "$LAUNCH" = "true" ]; then
 				CMD_launch &
 				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
-				wait; tput cnorm; installAgainPrompt
+				tput cnorm; installAgainPrompt
 			else
 				tput cnorm; installAgainPrompt
 			fi
@@ -600,7 +605,7 @@ UPSTALL(){
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
 	scriptTitle="Install Again?"; showIP="true"
-	refreshUI
+	updateIP; refreshUI
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit"
 	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
 	printf "\n%*s\n" $((COLS/2)) "Press 'r' to install different build"
