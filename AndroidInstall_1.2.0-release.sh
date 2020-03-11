@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0280
+# Build_0281
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ file /tmp/variables.before 1>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0280"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0281"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -80,8 +80,8 @@ update_IPdata(){
 	
 	rm -f >/tmp/usrIPdata.xml >/tmp/devIPdata.xml
 	
-	usrIP=$(dig @resolver1.opendns.com ANY myip.opendns.com +short) || usrIP=$(curl https://ipinfo.io/ip) || usrIP="error"
-	devIP=$(adb -d shell dig @resolver1.opendns.com ANY myip.opendns.com +short) || devIP=$(adb -d shell curl https://ipinfo.io/ip)|| devIP="error"
+	usrIP=$(curl https://ipinfo.io/ip) || usrIP="error"
+	devIP=$(adb -d shell curl https://ipinfo.io/ip)|| devIP="error"
 
 	usrIP_XML=$(curl https://freegeoip.app/xml/$usrIP >/tmp/usrIPdata.xml)
 	devIP_XML=$(adb -d shell curl https://freegeoip.app/xml/$devIP >/tmp/devIPdata.xml)
