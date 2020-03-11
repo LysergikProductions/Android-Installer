@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0279
+# Build_0280
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ file /tmp/variables.before 1>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0279"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0280"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -497,6 +497,7 @@ MAINu(){
 getOBB(){
 	printf "\n%*s\n" $((COLS/2)) "$OBBquest"; printf "$OBBinfo"
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
+	OBBfilePath="${OBBfilePath%* }"
 
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
 
@@ -551,6 +552,7 @@ getAPK(){
 	APKvalid="true"
 	printf "\n%*s\n\n" $((COLS/2)) "$APKquest"
 	read -p '' APKfilePath
+	APKfilePath="${APKfilePath%* }"
 
 	local cleanPath="${APKfilePath#*:*}"; APKname=$(basename "$cleanPath")
 
@@ -560,7 +562,7 @@ getAPK(){
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
-	elif [[ "$APKname" == *".apk"* ]]; then
+	elif [[ "$APKname" == *".apk" ]]; then
 		APKvalid="true"
 		printf "APK Name: $APKname\n\n"
 	else
