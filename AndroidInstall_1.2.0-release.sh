@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0283
+# Build_0284
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -19,14 +19,14 @@
 	#along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-#                                          -- Description --
-# Simplifies the process of installing builds on Android devices via Mac OSX using Android Debug Bridge
+#                                          -- Purpose --
+# Simplify the process of installing and make it as convenient as possible to install builds on Android devices, via Android Debug Bridge
 #                                          --  -  ---  -  --
 
 # kill script if script would have root privileges
 if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-# remove any pre-existing tmp file for security, log all system variables at script execution, check file still exists
+# remove any pre-existing tmp files, log all system variables at script execution, then check that file still exists
 rm -f /tmp/variables.before /tmp/variables.after /tmp/usrIPdata.xml /tmp/devIPdata.xml
 if ! ( set -o posix ; set ) >/tmp/variables.before; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
 if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0283"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0284"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -46,12 +46,12 @@ studio=""; gitName="Android-Installer"
 exitScript() {
 	trap - SIGINT SIGTERM SIGTERM # clear the trap
 
-	CMD_rmALL # removes temporary files
+	CMD_rmALL # remove temporary files
 	IFS=$ORIGINAL_IFS # set original IFS
 
-	kill -- -$$ # Sends SIGTERM to child/sub processes
-	kill $( jobs -p ) # kills any remaining processes
-}; trap exitScript SIGINT SIGTERM
+	kill -- -$$ # Send SIGTERM to child/sub processes
+	kill $( jobs -p ) # kill any remaining processes
+}; trap exitScript SIGINT SIGTERM # set trap
 
 help(){
 	printf "  Help Page\n\n"
@@ -77,9 +77,9 @@ updateIP(){
 
 update_IPdata(){
 	if [ "$verbose" = 1 ]; then printf "\n\nUpdating IP DATA\n\n"; fi
-	
+
 	rm -f >/tmp/usrIPdata.xml >/tmp/devIPdata.xml
-	
+
 	usrIP=$(curl https://ipinfo.io/ip) || usrIP="error"
 	devIP=$(adb -d shell curl https://ipinfo.io/ip)|| devIP="error"
 
@@ -89,7 +89,7 @@ update_IPdata(){
 
 parse_IPdata(){
 	if [ "$verbose" = 1 ]; then printf "\n\nParsing IP DATA\n\n"; fi
-	
+
 	readXML(){
 		IFS=\>
 		read -d \< ENTITY CONTENT
@@ -98,7 +98,7 @@ parse_IPdata(){
 		ATTRIBUTES="${ENTITY#* }"
 		return $ret
 	}
-	
+
 	parse_usrIP_XML(){
 		if [[ "$TAG_NAME" = "IP" ]] ; then usrIP=$CONTENT; fi
 		if [[ "$TAG_NAME" = "CountryName" ]] ; then usrCountry=$CONTENT; fi
@@ -110,9 +110,9 @@ parse_IPdata(){
 		if [[ "$TAG_NAME" = "IP" ]] ; then devIP=$CONTENT; fi
 		if [[ "$TAG_NAME" = "CountryName" ]] ; then devCountry=$CONTENT; fi
 		if [[ "$TAG_NAME" = "RegionName" ]] ; then devRegion=$CONTENT; fi
-		if [[ "$TAG_NAME" = "City" ]] ; then devCity=$CONTENT; fi	
+		if [[ "$TAG_NAME" = "City" ]] ; then devCity=$CONTENT; fi
 	}
-	
+
 	while readXML; do
 		parse_usrIP_XML
 	done < /tmp/usrIPdata.xml
@@ -120,8 +120,20 @@ parse_IPdata(){
 	while readXML; do
 		parse_devIP_XML
 	done < /tmp/devIPdata.xml
-	
+
 	IFS=$ORIGINAL_IFS
+}
+
+getBitWidth(){
+	bitWidth_raw=$(adb -d shell getprop ro.product.cpu.abi)
+	if [ "$bitWidth_raw" = "" ]; then
+		bitWidth=""
+	elif [ "$bitWidth_raw" = "" ]; then
+		bitWidth="
+	else
+		bitWidth="under construction"
+		echo "$bitWidth_raw"
+	fi
 }
 
 # allow user to see the copyright, license, or the help page without running the script
@@ -546,7 +558,7 @@ getOBB(){
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "\n%*s\n\n" $((COLS/2)) "That is not an OBB!"
 		printf "I'm sorry, I don't know what to do with this file..\n\n$OBBname\n"
-		
+
 		getOBB
 	done
 }
