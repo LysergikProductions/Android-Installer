@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0281
+# Build_0282
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -24,19 +24,18 @@
 #                                          --  -  ---  -  --
 
 # kill script if script would have root privileges
-if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) || exit 1; fi
+if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-# remove any pre-existing tmp file for security then log all system variables at script execution
-rm -f /tmp/variables.before /tmp/usrIPdata.xml /tmp/devIPdata.xml
-( set -o posix ; set ) >/tmp/variables.before
-
-file /tmp/variables.before 1>/dev/null || exit 1
+# remove any pre-existing tmp file for security, log all system variables at script execution, check file still exists
+rm -f /tmp/variables.before /tmp/variables.after /tmp/usrIPdata.xml /tmp/devIPdata.xml
+if ! ( set -o posix ; set ) >/tmp/variables.before; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
+if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0281"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
-scriptTitleDEF=" MONKEY INSTALLER "; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
+build="0282"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
 # studio specific variables
@@ -59,8 +58,9 @@ help(){
 	printf " - OPTIONS -\n\n"
 	printf "  -c      also [show-c]; show the copyright information\n"
 	printf "  -l      also [show-l]; show the license information\n\n"
-	printf "  -u      also [--update]; run the script in update mode\n"
+	printf "  -u      also [--update]; run the script in update mode (not working yet)\n"
 	printf "  -q      also [--quiet]; run the script in quiet mode\n"
+	printf "  -s      also [--safe]; run the script in safe mode\n"
 	printf "  -d      also [--debug]; run the script in debug mode. Add a -v to increase verbosity!\n\n"
 	printf "  -t      also [--top]; show device CPU and RAM usage\n"
 	printf "  -h      also [--help]; show this information\n\n"
@@ -147,9 +147,10 @@ elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
 fi
 
 # if user did not choose any above options, then check for script mode flags
-if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then UNINSTALL="false"; OBBdone="true"; fi
+#if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then UNINSTALL="false"; OBBdone="true"; fi
+if [[ "$*" == *"--safe"* ]] || [[ "$*" == *"-s"* ]]; then sMode="true"; else sMode="false"; fi
 if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then
-	verbose=1; qMode="false"
+	verbose=1; qMode="false"; sMode="false"
 	if [[ "$*" == *"-v"* ]] || [[ "$*" == *"--verbose"* ]]; then verbose=2; fi
 elif [[ "$*" == *"--quiet"* ]] || [[ "$*" == *"-q"* ]]; then verbose=0; qMode="true"
 else verbose=0; qMode="false"; fi
@@ -167,14 +168,14 @@ INIT(){
 	waitMessage="-- waiting for device --"; OBBquest="OBB"; APKquest="APK"; showIP="true"; OBBinfo=""
 
 	anim1=( # doge so like
-	"                        " "W                       " "Wo                      " "Wow                     " "Wow!                    " "Wow!                    "
+	"                        " "W                       " "Wo                      " "Wow                     " "Wow!                    " "Wow!                    " "Wow!                    "
 	"Wow!                    " "Wow!                    " "Wow!                    " "Wow!                    " "Wow! V                  " "Wow! Ve                 "
 	"Wow! Ver                " "Wow! Very               " "Wow! Very               " "Wow! Very l             " "Wow! Very lo            " "Wow! Very loa           "
 	"Wow! Very load          " "Wow! Very loadi         " "Wow! Very loadin        " "Wow! Very loading       " "Wow! Very loading.      " "Wow! Very loading..     "
-	"Wow! Very loading...    " "Wow! Very loading....   " "Wow! Very loading.....  " "Wow! Very loading...... " "Wow! Very loading......." "Wow! Very loading......."
+	"Wow! Very loading...    " "Wow! Very loading....   " "Wow! Very loading.....  " "Wow! Very loading...... " "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......."
 	"Wow! Very loading...... " "Wow! Very loading.....  " "Wow! Very loading....   " "Wow! Very loading...    " "Wow! Very loading..     " "Wow! Very loading.      "
 	"Wow! Very loading       " "Wow! Very loading.      " "Wow! Very loading..     " "Wow! Very loading...    " "Wow! Very loading....   " "Wow! Very loading.....  "
-	"Wow! Very loading...... " "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......."
+	"Wow! Very loading...... " "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......." "Wow! Very loading......."
 	)
 	anim2=( # simple / professional
 	"oooooooooooooooooooooooo"
@@ -398,7 +399,7 @@ gitConfigs(){
 			printf "%*s\n" $((COLS/2)) "Version in progress: v$newVersion"
 
 			printf "\n%*s" $((COLS/2)) "Update required..."; sleep 2
-			updateScript
+			if [ "sMode" = "false" ]; then updateScript; fi
 		elif [ "$errExec" = "true" ]; then
 			echo "error when launching new script.. ignoring"; sleep 1
 		fi
@@ -544,6 +545,8 @@ getOBB(){
 		refreshUI
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "\n%*s\n\n" $((COLS/2)) "That is not an OBB!"
+		printf "I'm sorry, I don't know what to do with this file..\n\n$OBBname\n"
+		
 		getOBB
 	done
 }
@@ -573,12 +576,14 @@ getAPK(){
 		refreshUI
 		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
 		printf "%*s\n\n" $((COLS/2)) "That is not an APK!"
+		printf "I'm sorry, I don't know what to do with this file..\n\n$APKname\n"
 		getAPK
 	done
 	echo
 }
 
 INSTALL(){
+	tput civis
 	scriptTitle="Installing.."; showIP="true"
 
 	printHead; adbWAIT
@@ -647,6 +652,7 @@ INSTALL(){
 			fi
 		else (exit 1); fi
 	fi
+	tput cnorm
 }
 
 UPSTALL(){
@@ -767,7 +773,9 @@ adbWAIT(){
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
 		{ sleep 3; printf "        Ensure only one device is connected!"; } & { 
 			until (CMD_communicate)
-			do waiting; deviceConnect="true"; done
+			do
+				if [ "$sMode" = "false" ]; then waiting; fi; deviceConnect="true"
+			done
 		}
 		tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
@@ -777,12 +785,11 @@ adbWAIT(){
 # show the waiting animation
 waiting(){
 	tput civis
-	for i in "${anim3[@]}"
+	for i in "${anim1[@]}"
 	do
 		printf "\r%*s" $((COLS/2)) "$i"
-		sleep 0.05
+		sleep 0.045
 	done
-	tput cnorm
 }
 
 if [[ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
