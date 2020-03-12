@@ -12,7 +12,7 @@ brew cask install android-platform-tools && success="true" || {
 
 xcode-select --install >/dev/null
 
-if [ "$succes" = "true" ]; then
+if [ "$success" = "true" ]; then
 	printf "\nSuccess!\n\n Type 'adb devices' after connecting an Android device.\nThen accept the USB debugging prompt on the device to get started!\n"
 else
 	printf "\nFailure!\n\n"
