@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0289
+# Build_0290
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0289"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0290"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -80,11 +80,11 @@ update_IPdata(){
 
 	rm -f >/tmp/usrIPdata.xml >/tmp/devIPdata.xml
 
-	usrIP=$(timeout 2s curl https://ipinfo.io/ip)
-	devIP=$(timeout 4s adb -d shell curl https://ipinfo.io/ip)
+	usrIP=$(curl https://ipinfo.io/ip)
+	devIP=$(adb -d shell curl https://ipinfo.io/ip)
 
-	usrIP_XML=$(timeout 3s curl https://freegeoip.app/xml/$usrIP >/tmp/usrIPdata.xml)
-	devIP_XML=$(timeout 4s adb -d shell curl https://freegeoip.app/xml/$devIP >/tmp/devIPdata.xml)
+	usrIP_XML=$(curl https://freegeoip.app/xml/$usrIP >/tmp/usrIPdata.xml)
+	devIP_XML=$(adb -d shell curl https://freegeoip.app/xml/$devIP >/tmp/devIPdata.xml)
 }
 
 parse_IPdata(){
@@ -126,15 +126,16 @@ parse_IPdata(){
 
 getBitWidth(){
 	bitWidth_raw=$(adb -d shell getprop ro.product.cpu.abi)
-	if [ "$bitWidth_raw" = "" ]; then
-		bitWidth=""
-	elif [ "$bitWidth_raw" = "" ]; then
-		bitWidth=""
+	if [[ "$bitWidth_raw" == *"arm64"* ]]; then
+		bitWidth="64-bit"
+	elif [[ "$bitWidth_raw" == *"armeabi"* ]]; then
+		bitWidth="32-bit"
 	else
-		bitWidth="under construction"
-		echo "$bitWidth_raw"
+		bitWidth="unexpected value"
 	fi
 }
+
+#function timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
 
 # allow user to see the copyright, license, or the help page without running the script
 COLS=$(tput cols)
@@ -275,8 +276,9 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 		} || { git pull printf "\nGIT PULLED\n\n"; }
 	}
 	printIP(){
+		getBitWidth
 		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC\n"
-		printf "\nComputer IP: $usrIP\n\n"
+		printf "\nComputer IP: $usrIP\n\n$Device Bit Width: bitWidth\n\n"
 	}
 
 	refreshUI(){ COLS=$(tput cols); printIP; adb devices; printTitle; }
