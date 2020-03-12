@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0288
+# Build_0289
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0288"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0289"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -729,8 +729,7 @@ installAgainPrompt(){
 	printf "\n%*s\n" $((0)) "$APKname"
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
-		OBBdone="true"; APKdone="true"; LAUNCH="false"
-		(exit)
+		return
 	elif [ "$REPLY" = "r" ]; then
 		OBBdone="false"; APKdone="false"; UNINSTALL="true"
 
