@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0286
+# Build_0287
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0286"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0287"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -284,11 +284,13 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n"
 		printIP
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head"
+		if [ "$sMode" = "true" ]; then printf "\n\nSafe Mode\n\n"; fi
 	}
 
 	header(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n"
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head"
+		if [ "$sMode" = "true" ]; then printf "\n\nSafe Mode\n\n"; fi
 	}
 
 	CMD_rmALL(){
@@ -335,14 +337,16 @@ else # set default variant of core commands
 	fi
 
 	headerIP(){
-		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n"
-		printIP
+		printf "$scriptFileName | Build $build\n2020 (C) $author\n"
+		if [ "$sMode" = "false" ] && [ "$qMode" = "false" ]; then printf "$UIsep_err0\n"; printIP; fi
 		printf "\n$UIsep_head\n\nDistributed with the $license license\n\n$UIsep_head\n\n"
+		if [ "$sMode" = "true" ]; then printf "Safe Mode\n\n"; fi
 	}
 
 	header(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author"
 		printf "\n$UIsep_err0\n\nDistributed with the $license license\n\n$UIsep_head\n"
+		if [ "$sMode" = "true" ]; then printf "Safe Mode\n\n"; fi
 	}
 
 	CMD_rmALL(){
