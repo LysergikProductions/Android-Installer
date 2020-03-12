@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0284
+# Build_0286
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0284"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0286"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -69,7 +69,7 @@ help(){
 }
 
 updateIP(){
-	wait | update_IPdata 2>/dev/null
+	update_IPdata 2>/dev/null
 	parse_IPdata
 	deviceIP="$devIP"
 	deviceLOC="$devCity, $devRegion, $devCountry"
@@ -80,11 +80,11 @@ update_IPdata(){
 
 	rm -f >/tmp/usrIPdata.xml >/tmp/devIPdata.xml
 
-	usrIP=$(curl https://ipinfo.io/ip) || usrIP="error"
-	devIP=$(adb -d shell curl https://ipinfo.io/ip)|| devIP="error"
+	usrIP=$(timeout 3s curl https://ipinfo.io/ip) || usrIP="timeout or error"
+	devIP=$(timeout 3s adb -d shell curl https://ipinfo.io/ip)|| devIP="timeout"
 
-	usrIP_XML=$(curl https://freegeoip.app/xml/$usrIP >/tmp/usrIPdata.xml)
-	devIP_XML=$(adb -d shell curl https://freegeoip.app/xml/$devIP >/tmp/devIPdata.xml)
+	usrIP_XML=$(timeout 3s curl https://freegeoip.app/xml/$usrIP >/tmp/usrIPdata.xml)
+	devIP_XML=$(timeout 3s adb -d shell curl https://freegeoip.app/xml/$devIP >/tmp/devIPdata.xml)
 }
 
 parse_IPdata(){
@@ -129,7 +129,7 @@ getBitWidth(){
 	if [ "$bitWidth_raw" = "" ]; then
 		bitWidth=""
 	elif [ "$bitWidth_raw" = "" ]; then
-		bitWidth="
+		bitWidth=""
 	else
 		bitWidth="under construction"
 		echo "$bitWidth_raw"
@@ -714,7 +714,9 @@ UPSTALL(){
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
 	scriptTitle="Install Again?"; showIP="true"
-	updateIP; refreshUI
+	updateIP
+
+	refreshUI
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit"
 	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
 	printf "\n%*s\n" $((COLS/2)) "Press 'r' to install different build"
