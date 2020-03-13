@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0295
+# Build_0296
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0295"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0296"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -263,7 +263,6 @@ INIT(){
 
 	# mac osx only; set font size to 15p
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
-	#updateIP
 }
 
 clear; INIT # initializing now..
@@ -573,7 +572,7 @@ getOBB(){
 			esac
 	      done
 	elif [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
-		OBBvalid="true"; OBBdone="true"; LAUNCH="false"
+		OBBvalid="true"; OBBdone="true"; LAUNCH="false"; UNINSTALL="false"
 		printf "OBB Name: N/A"
 	elif [[ "$OBBname" == "com."* ]]; then
 		OBBvalid="true"; LAUNCH="true"
