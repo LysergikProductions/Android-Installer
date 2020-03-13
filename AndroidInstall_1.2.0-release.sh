@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0294
+# Build_0295
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0294"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0295"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -134,6 +134,8 @@ parse_IPdata(){
 }
 
 getBitWidth(){
+	if [ "$verbose" = 1 ]; then printf "\n\nGetting bitwidth..\n\n"; fi
+
 	bitWidth_raw=$(adb -d shell getprop ro.product.cpu.abi)
 	if [[ "$bitWidth_raw" == *"arm64"* ]]; then
 		bitWidth="64-bit"
@@ -261,7 +263,7 @@ INIT(){
 
 	# mac osx only; set font size to 15p
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
-	updateIP
+	#updateIP
 }
 
 clear; INIT # initializing now..
@@ -415,10 +417,10 @@ gitConfigs(){
 
 	if [ "$currentVersion" = "$scriptVersion" ]; then
 		upToDate="true"
-		printf "\n%*s\n" $((COLS/2)) "This script is up-to-date!"; sleep 1
+		printf "\n%*s\n" $((COLS/2)) "This script is up-to-date!"; sleep 0.2
 	elif [ "$newVersion" = "$scriptVersion" ]; then
 		upToDate="true"
-		printf "\n%*s\n" $((COLS/2)) "This script is up-to-date!"; sleep 1
+		printf "\n%*s\n" $((COLS/2)) "This script is up-to-date!"; sleep 0.2
 	else
 		if [ "$errExec" = "false" ]; then
 			upToDate="false"
@@ -480,8 +482,10 @@ MAINd(){
 	deviceID=""; deviceID2=""
 
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
+	if [ "$verbose" = 1 ]; then printf "\nqMode is $qMode, sMode is $sMode\n\n"; fi	
+
 	if [ "$sMode" = "false" ]; then gitConfigs; fi
-	COLS=$(tput cols)
+	COLS=$(tput cols); updateIP
 
 	# try communicating with device, catch with adbWAIT, finally mount device
 	(CMD_communicate 1>/dev/null) || adb start-server
