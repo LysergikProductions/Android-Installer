@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0293
+# Build_0294
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0293"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0294"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -73,6 +73,14 @@ updateIP(){
 	parse_IPdata
 	deviceIP="$devIP"
 	deviceLOC="$devCity, $devRegion, $devCountry"
+	
+	if [ "$usrIP" = "" ]; then
+		if ! curl -V; then usrIP="curl unavailable"; else usrIP="IP unavailable"; fi
+	fi
+
+	if [ "$devIP" = "" ]; then
+		if ! adb -d shell curl -V; then deviceLOC="curl unavailable"; else deviceLOC="IP unavailable"; fi
+	fi
 }
 
 update_IPdata(){
@@ -81,7 +89,7 @@ update_IPdata(){
 	# remove pre-existing files
 	rm -f >/tmp/usrIPdata.xml >/tmp/devIPdata.xml
 
-	usrIP=$(curl https://ipinfo.io/ip) || if ! curl -V; then usrIP="curl unavailable"; else usrIP="IP unavailable"; fi
+	usrIP=$(curl https://ipinfo.io/ip)
 	devIP=$(adb -d shell curl https://ipinfo.io/ip)
 
 	usrIP_XML=$(curl https://freegeoip.app/xml/$usrIP >/tmp/usrIPdata.xml)
@@ -132,7 +140,7 @@ getBitWidth(){
 	elif [[ "$bitWidth_raw" == *"armeabi"* ]]; then
 		bitWidth="32-bit"
 	else
-		bitWidth="unexpected value"
+		bitWidth="unknown"
 	fi
 }
 

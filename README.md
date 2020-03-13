@@ -15,7 +15,7 @@ This script simplifies the process of installing builds on Android devices via M
 Options:
 - -q or --quiet	:____run the script in quiet mode
 - -s or --safe	:____run the script in safe mode
-- -d or --debug:____run the script in debug mode. Add a -v for increased verbosity!
+- -d or --debug	:____run the script in debug mode. Add a -v for increased verbosity!
 - -h or --help	:____show the help page in the terminal
 - -t or --top	:____show device's live CPU and RAM usage
 
