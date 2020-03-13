@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0291
+# Build_0292
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0291"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0292"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -140,7 +140,7 @@ getBitWidth(){
 # allow user to see the copyright, license, or the help page without running the script
 COLS=$(tput cols)
 if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
-	printf "\n2020 © Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n"
+	printf "\n2020 (C) Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n\n"; exit
 	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit; fi
 fi
 
@@ -215,7 +215,7 @@ INIT(){
 	}
 
 	if [ "$qMode" = "false" ]; then
-		OBBquest="Drag OBB and press enter:"
+		OBBquest="Drag in the folder containing the OBB file; press enter:"
 		OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
 
 		APKquest="Drag APK anywhere here:"
@@ -520,7 +520,12 @@ MAINu(){
 }
 
 getOBB(){
-	printf "\n%*s\n" $((COLS/2)) "$OBBquest"; printf "$OBBinfo"
+	if [ "$qMode" = "false" ]; then
+		printf "\n%*s\n" $((0)) "$OBBquest"; printf "$OBBinfo"
+	else
+		printf "\n%*s\n" $((COLS/2)) "$OBBquest"; printf "$OBBinfo"
+	fi
+	
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
 	OBBfilePath="${OBBfilePath%* }"
 
