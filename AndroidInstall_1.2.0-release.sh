@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0290
+# Build_0291
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0290"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0291"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -80,7 +80,7 @@ update_IPdata(){
 
 	rm -f >/tmp/usrIPdata.xml >/tmp/devIPdata.xml
 
-	usrIP=$(curl https://ipinfo.io/ip)
+	usrIP=$(curl https://ipinfo.io/ip) || if ! curl -V; then usrIP="curl unavailable"; else usrIP="IP unavailable"; fi
 	devIP=$(adb -d shell curl https://ipinfo.io/ip)
 
 	usrIP_XML=$(curl https://freegeoip.app/xml/$usrIP >/tmp/usrIPdata.xml)
@@ -329,7 +329,8 @@ else # set default variant of core commands
 		}
 	}
 	printIP(){
-		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC"
+		getBitWidth
+		printf "Device Bit Width: $bitWidth\nDevice IP Location: $deviceLOC"
 	}
 
 	if [ "$qMode" = "false" ]; then
@@ -430,12 +431,16 @@ gitConfigs(){
 
 printHead(){
 	if [ "$loopFromError" = "false" ]; then
+		tput civis
 		if [ "$verbose" = 0 ]; then clear; fi
 		if [ "$showIP" = "true" ] && [ "$qMode" = "false" ]; then headerIP; else header; fi
+		tput cnorm
 	elif [ "$loopFromError" = "true" ]; then
+		tput civis
 		if [ "$verbose" = 0 ]; then clear; fi
 		if [ "$showIP" = "true" ] && [ "$qMode" = "false" ]; then headerIP; else header; fi
 		printf "$errorMessage\n\n"
+		tput cnorm
   	else # if bug causes loopFromError to be NOT "true" or "false", then fix value and reset script
 		export errorMessage="$errorMessage\n\n$UIsep_err0\n\n"
 		export errorMessage+="ER1 - Script restarted; 'loopFromError' had an unexpected value."
@@ -523,7 +528,7 @@ getOBB(){
 
 	if [ "$OBBfilePath" = "" ]; then
 		refreshUI
-		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "fire" ]; then
@@ -562,7 +567,7 @@ getOBB(){
 
 	until [ "$OBBvalid" = "true" ]; do
 		refreshUI
-		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "\n%*s\n\n" $((COLS/2)) "That is not an OBB!"
 		printf "I'm sorry, I don't know what to do with this file..\n\n$OBBname\n"
 
@@ -581,7 +586,7 @@ getAPK(){
 	if [ "$APKfilePath" = "" ]; then
 		refreshUI
 		APKvalid="false"
-		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
 	elif [[ "$APKname" == *".apk" ]]; then
@@ -593,7 +598,7 @@ getAPK(){
 
 	until [ "$APKvalid" = "true" ]; do
 		refreshUI
-		printf "%*s\n" $((COLS/2)) "$oops"; sleep 0.05
+		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "That is not an APK!"
 		printf "I'm sorry, I don't know what to do with this file..\n\n$APKname\n"
 		getAPK
@@ -603,7 +608,7 @@ getAPK(){
 
 INSTALL(){
 	tput civis
-	scriptTitle="Installing.."; showIP="true"
+	scriptTitle="Installing...  "; showIP="true"
 
 	printHead; adbWAIT
 
@@ -632,7 +637,7 @@ INSTALL(){
 					printf "\n\nFE1a - OBB could not be installed.\n"
 
 					( set -o posix ; set ) >/tmp/variables.after
-					echo "Please report this error code (FE1a) to Nick."; exit 1
+					printf "Please report this error code (FE1a) to Nick.\n\n"; exit 1
 				else OBBdone="false"; INSTALL; fi
 			); then
 				OBBdone="true"
