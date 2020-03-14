@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0301
+# Build_0302
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0301"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0302"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -75,11 +75,11 @@ updateIP(){
 	deviceLOC="$devCity, $devRegion, $devCountry"
 	
 	if [ "$usrIP" = "" ]; then
-		if ! curl -V; then usrIP="curl unavailable"; else usrIP="IP unavailable"; fi
+		if ! curl -V >/dev/null 2>&1; then usrIP="curl unavailable"; else usrIP="IP unavailable"; fi
 	fi
 
 	if [ "$devIP" = "" ]; then
-		if ! adb -d shell curl -V; then deviceLOC="curl unavailable"; else deviceLOC="IP unavailable"; fi
+		if ! adb -d shell curl -V >/dev/null 2>&1; then deviceLOC="curl unavailable"; else deviceLOC="IP unavailable"; fi
 	fi
 }
 
@@ -335,7 +335,7 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 
 	CMD_rmALL(){
 		printf "\n\nrm -rf /tmp/variables.before /tmp/variables.after ~/upt ; tput cnorm\n"
-		rm -rf /tmp/variables.before /tmp/variables.after ~/upt /tmp/usrIPdata.xml /tmp/devIPdata.xml
+		rm -rf /tmp/variables.before /tmp/variables.after ~/upt /tmp/usrIPdata.xml /tmp/devIPdata.xml $secureFile $secureFile2
 		tput cnorm
 	}
 
@@ -420,7 +420,7 @@ else # set default variant of core commands
 	}
 
 	CMD_rmALL(){
-		rm -rf /tmp/variables.before /tmp/variables.after ~/upt /tmp/usrIPdata.xml /tmp/devIPdata.xml
+		rm -rf /tmp/variables.before /tmp/variables.after ~/upt /tmp/usrIPdata.xml /tmp/devIPdata.xml $secureFile $secureFile2
 		tput cnorm
 	}
 
@@ -445,6 +445,9 @@ updateScript(){
 }
 
 gitConfigs(){
+	rm -rf secureFile2
+	secureFile2=$(mktemp $$.$RANDOM.txt)
+
 	if [ "$verbose" = 1 ]; then printf "\nDownloading configs..\n\n"; fi
 	terminalPath=""; terminalPath=$(pwd)
 	rm -rf ~/upt; mkdir ~/upt; cd ~/upt || return
@@ -453,24 +456,46 @@ gitConfigs(){
 	(CMD_gitGet); wait
 	cd "$terminalPath" || return
 
+	rm -rf secureFile
+	secureFile=$(mktemp $$.$RANDOM.txt)
+	
+	cat ~/upt/$gitName/properties.txt > $secureFile
+	cat ~/upt/$gitName/properties.txt > $secureFile2
+	if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+		echo; cat "$secureFile"; echo
+	fi
+
+	# check secureFiles still exists
+	file $secureFile >/dev/null 2>&1 || exit 1
+	file $secureFile2 >/dev/null 2>&1 || exit 1
+
 	# get config values from the master branch's properties.txt
-	currentVersionLine=$(grep -n "_version " ~/upt/$gitName/properties.txt)
+	currentVersionLine=$(grep -n "_version " $secureFile)
 	currentVersion="${currentVersionLine##* }"; currentVersion=${currentVersion%$'\r'}
 
-	newVersionLine=$(grep -n "_newVersion " ~/upt/$gitName/properties.txt)
+	newVersionLine=$(grep -n "_newVersion " $secureFile)
 	newVersion="${newVersionLine##* }"; newVersion=${newVersion%$'\r'}
 
-	gitMESSAGELine=$(grep -n "_gitMESSAGE " ~/upt/$gitName/properties.txt)
+	gitMESSAGELine=$(grep -n "_gitMESSAGE " $secureFile)
 	gitMESSAGE="${gitMESSAGELine##* }"; gitMESSAGE=${gitMESSAGE%$'\r'}
 
-	dispGitTimeLine=$(grep -n "_dispGitTime " ~/upt/$gitName/properties.txt)
+	dispGitTimeLine=$(grep -n "_dispGitTime " $secureFile)
 	dispGitTime="${dispGitTimeLine##* }"; dispGitTime=${dispGitTime%$'\r'}
 
 	# set scriptTitle to match config, else use default
-	if scriptTitle=$(grep -n "_scriptTitle " ~/upt/Android-Installer/properties.txt); then
+	if scriptTitle=$(grep -n "_scriptTitle " $secureFile); then
 		scriptTitle="${scriptTitle##* }"
 	else scriptTitle="$scriptTitleDEF"; fi
 
+	# try to catch race attacks
+	if [ ! "$(cat $secureFile)" = "$(cat $secureFile2)" ]; then	
+		if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+			echo; cat "$secureFile2"; echo
+		fi
+		exitScript; exit 1
+	fi
+
+	# check if script is up-to-date or not; update the script if not
 	if [ "$currentVersion" = "$scriptVersion" ]; then
 		upToDate="true"
 		printf "\n%*s\n" $((COLS/2)) "This script is up-to-date!"; sleep 0.2
@@ -493,7 +518,10 @@ gitConfigs(){
 
 	# display gitMESSAGE if there is one
 	if [ "$dispGitTime" = "" ]; then dispGitTime=0; fi
-	if [ ! "$gitMESSAGE" = "" ]; then clear; echo "$gitMESSAGE"; sleep "$dispGitTime"; fi
+	if [ ! "$gitMESSAGE" = "" ]; then
+		if [ "$verbose" = 0 ]; then clear; fi
+		echo "$gitMESSAGE" & sleep "$dispGitTime"
+	fi
 }
 
 printHead(){

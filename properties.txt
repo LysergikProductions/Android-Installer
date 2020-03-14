@@ -1,8 +1,8 @@
 _version 1.2.0-release
 _newVersion 1.2.1-release
-_build 0301
+_build 0302
 
 _scriptTitle \_HappyDroid_/
 
 _gitMESSAGE WE_GOT_THIS!
-_dispGitTime 2
+_dispGitTime 1.8
