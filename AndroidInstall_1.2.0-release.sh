@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0303
+# Build_0304
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 # kill script if script would have root privileges
 if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-# remove any pre-existing tmp files, log all system variables at script execution, then check that file still exists
+# remove any pre-existing tmp files, log all system variables at script execution, then check those files still exists
 rm -f /tmp/variables.before /tmp/variables.after /tmp/usrIPdata.xml /tmp/devIPdata.xml
 if ! ( set -o posix ; set ) >/tmp/variables.before; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
 if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0303"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0304"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -151,8 +151,8 @@ getBitWidth(){
 # allow user to see the copyright, license, or the help page without running the script
 COLS=$(tput cols)
 if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
+	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; fi
 	printf "\n2020 (C) Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n\n"; exit
-	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; exit; fi
 fi
 
 # if user didn't choose -c or -l at all, then check..
