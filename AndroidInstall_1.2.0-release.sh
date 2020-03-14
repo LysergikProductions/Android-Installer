@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0297
+# Build_0298
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0297"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0298"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -275,9 +275,9 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb -d shell exit; }
 	CMD_uninstall(){ 
 		if [ "$updateAPK" = "true" ]; then
-			echo "Keeping user data for $OBBname.."; adb uninstall -k "$OBBname"; sleep 0.5
+			echo "Keeping user data for $OBBname.."; adb shell cmd "$OBBname" uninstall -k; sleep 0.5
 		else
-			echo "Uninstalling $OBBname.."; adb uninstall -k "$OBBname"; sleep 0.5
+			echo "Uninstalling $OBBname.."; adb shell cmd "$OBBname" uninstall -k; sleep 0.5
 		fi
 	}
 
@@ -341,9 +341,9 @@ else # set default variant of core commands
 		if [ "$updateAPK" = "true" ]; then
 			if [ "$qMode" = "false" ]; then
 				echo "Keeping user data for $OBBname.."
-				adb uninstall -k "$OBBname"; sleep 0.5
+				adb shell cmd "$OBBname" uninstall -k; sleep 0.5
 			else
-				adb uninstall -k "$OBBname"; sleep 0.5
+				adb shell cmd "$OBBname" uninstall -k; sleep 0.5
 			fi
 		else
 			if [ "$qMode" = "false" ]; then
@@ -788,50 +788,6 @@ UPSTALL(){
 		else (exit 1); fi
 	fi
 	tput cnorm
-}
-
-UPSTALL(){
-	scriptTitle=" INSTALLING.. "; showIP="true"; updateAPK="true"
-
-	printHead; adbWAIT; UNINSTALL="false"
-	printf "\nMounting device...\n"
-	adb devices
-
-	# uninstall app, unless APK step wants to continue from where it left off
-	if [ "$UNINSTALL" = "true" ]; then
-		wait | CMD_uninstall
-		UNINSTALL="true"
-	fi
-
-	deviceID=$(adb devices); echo; printTitle
-
-	# install APK, only if APKdone=false
-	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk"* ]]; then
-		printf "\nInstalling APK..\n"
-
-		if CMD_installAPK || (
-			(CMD_communicate && deviceConnect="true") || deviceConnect="false"
-			if [ "$deviceConnect" = "true" ]; then
-				errorMessage="FE1b - APK could not be installed."
-				printf "\n\nFE1b - APK could not be installed.\n"
-
-				( set -o posix ; set ) >/tmp/variables.after
-				echo "Please report this error code (FE1b) to Nick."; exit 1
-			else APKdone="false"; UNINSTALL="false"; INSTALL; fi
-		); then
-			printf "\ncheck for proper connect, and define deviceID(1)\nLaunch App\n"
-			APKdone="true"
-			adbWAIT; deviceConnect="true"; deviceID=$(adb devices)
-
-			if [ "$LAUNCH" = "true" ]; then
-				CMD_launch
-				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
-				tput cnorm; installAgainPrompt
-			else
-				tput cnorm; installAgainPrompt
-			fi
-		else (exit 1); fi
-	fi
 }
 
 # check if user wants to install again on another device, or the same device if they choose to
