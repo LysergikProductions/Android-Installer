@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0304
+# Build_0305
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0304"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0305"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -913,7 +913,7 @@ adbWAIT(){
 		{ sleep 3; printf "        Ensure only one device is connected!"; } & { 
 			until (CMD_communicate)
 			do
-				if [ "$sMode" = "false" ]; then waiting; fi; deviceConnect="true"
+				if [ "$sMode" = "false" ] && [ "$qMode" = "false" ]; then waiting; fi; deviceConnect="true"
 			done
 		}
 		tput cnorm
