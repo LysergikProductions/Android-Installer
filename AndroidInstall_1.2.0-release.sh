@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0298
+# Build_0300
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0298"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0300"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -288,12 +288,22 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 		if [ "$updateAPK" = "true" ]; then
 			(adb install --streaming "$APKfilePath" && exit) || {
 				printf "\n--streaming option failed\n\nAttempting default install type..\n"
-				adb install "$APKfilePath" && exit || exit 1
+				(adb install "$APKfilePath" && exit || {
+						printf "\nER0 - Something is wrong here; let's try again!; resetting script in..\n"
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						MAINu
+					}
+				)
 			}
 		else
 			(adb install -r --no-streaming "$APKfilePath" && exit) || {
 				printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-				adb install -r "$APKfilePath" && exit || exit 1
+				( adb install -r "$APKfilePath" && exit || { 
+						printf "\nER0 - Something is wrong here; let's try again!; resetting script in..\n"
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						MAINd
+					}
+				)
 			}
 		fi
 	}
@@ -362,12 +372,22 @@ else # set default variant of core commands
 		if [ "$updateAPK" = "true" ]; then
 			(adb install --streaming "$APKfilePath" 2>/dev/null && exit) || {
 				printf "\n--streaming option failed\n\nAttempting default install type..\n"
-				adb install "$APKfilePath" 2>/dev/null && exit || exit 1
+				(adb install "$APKfilePath" 2>/dev/null && exit || {
+						printf "\nER0 - Something is wrong here; let's try again!; resetting script in..\n"
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						MAINu
+					}
+				)
 			}
 		else
 			(adb install -r --no-streaming "$APKfilePath" 2>/dev/null && exit) || {
 				printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-				adb install -r "$APKfilePath" 2>/dev/null && exit || exit 1
+				( adb install -r "$APKfilePath" 2>/dev/null && exit || { 
+						printf "\nER0 - Something is wrong here; let's try again!; resetting script in..\n"
+						printf "3.. "; sleep 1; printf "2.. "; sleep 1; printf "1.. "; sleep 1
+						MAINd
+					}
+				)
 			}
 		fi
 	}
