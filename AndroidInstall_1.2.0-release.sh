@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0300
+# Build_0301
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0300"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0301"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -171,9 +171,8 @@ elif [[ "$*" == *"--top"* ]] || [[ "$*" == *"-t"* ]]; then
 fi
 
 # if user did not choose any above options, then check for script mode flags
-#if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then UNINSTALL="false"; OBBdone="true"; fi
 if [[ "$*" == *"--safe"* ]] || [[ "$*" == *"-s"* ]]; then sMode="true"; else sMode="false"; fi
-if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then updateAPK="true"; else updateAPK="false"; fi
+if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then updateAPK="true"; else updateAPK="false"; OBBdone="true"; fi
 if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then
 	verbose=1; qMode="false"
 	if [[ "$*" == *"-v"* ]] || [[ "$*" == *"--verbose"* ]]; then verbose=2; fi
@@ -897,7 +896,7 @@ adbWAIT(){
 # show the waiting animation
 waiting(){
 	tput civis
-	for i in "${anim1[@]}"
+	for i in "${anim3[@]}"
 	do
 		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.045
