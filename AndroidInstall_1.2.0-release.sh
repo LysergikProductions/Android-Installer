@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0302
+# Build_0303
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0302"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0303"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -445,8 +445,8 @@ updateScript(){
 }
 
 gitConfigs(){
-	rm -rf secureFile2
-	secureFile2=$(mktemp $$.$RANDOM.txt)
+	rm -rf $secureFile2
+	secureFile2=$(mktemp /tmp/$$.$RANDOM.txt)
 
 	if [ "$verbose" = 1 ]; then printf "\nDownloading configs..\n\n"; fi
 	terminalPath=""; terminalPath=$(pwd)
@@ -456,8 +456,8 @@ gitConfigs(){
 	(CMD_gitGet); wait
 	cd "$terminalPath" || return
 
-	rm -rf secureFile
-	secureFile=$(mktemp $$.$RANDOM.txt)
+	rm -rf $secureFile
+	secureFile=$(mktemp /tmp/$$.$RANDOM.txt)
 	
 	cat ~/upt/$gitName/properties.txt > $secureFile
 	cat ~/upt/$gitName/properties.txt > $secureFile2
