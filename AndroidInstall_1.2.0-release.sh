@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0296
+# Build_0297
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0296"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0297"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -173,6 +173,7 @@ fi
 # if user did not choose any above options, then check for script mode flags
 #if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then UNINSTALL="false"; OBBdone="true"; fi
 if [[ "$*" == *"--safe"* ]] || [[ "$*" == *"-s"* ]]; then sMode="true"; else sMode="false"; fi
+if [[ "$*" == *"--update"* ]] || [[ "$*" == *"-u"* ]]; then updateAPK="true"; else updateAPK="false"; fi
 if [[ "$*" == *"--debug"* ]] || [[ "$*" == *"-d"* ]]; then
 	verbose=1; qMode="false"
 	if [[ "$*" == *"-v"* ]] || [[ "$*" == *"--verbose"* ]]; then verbose=2; fi
@@ -272,19 +273,36 @@ clear; INIT # initializing now..
 if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	if [ "$verbose" = "2" ]; then set -x; fi
 	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb -d shell exit; }
-	CMD_uninstall(){ echo "Uninstalling $OBBname.."; adb uninstall "$OBBname"; sleep 0.5; }
-	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb -d shell "$launchCMD"; }
+	CMD_uninstall(){ 
+		if [ "$updateAPK" = "true" ]; then
+			echo "Keeping user data for $OBBname.."; adb uninstall -k "$OBBname"; sleep 0.5
+		else
+			echo "Uninstalling $OBBname.."; adb uninstall -k "$OBBname"; sleep 0.5
+		fi
+	}
 
+	CMD_launch(){ printf "\n\nRunning monkey event to launch app..\n\n"; adb -d shell "$launchCMD"; }
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB; }
-	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" && exit) || (
-		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-		adb install -r "$APKfilePath" && exit || exit 1
-	) }
+
+	CMD_installAPK(){
+		if [ "$updateAPK" = "true" ]; then
+			(adb install --streaming "$APKfilePath" && exit) || {
+				printf "\n--streaming option failed\n\nAttempting default install type..\n"
+				adb install "$APKfilePath" && exit || exit 1
+			}
+		else
+			(adb install -r --no-streaming "$APKfilePath" && exit) || {
+				printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
+				adb install -r "$APKfilePath" && exit || exit 1
+			}
+		fi
+	}
 
 	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git && {
 			printf "\nGIT CLONED\n\n"; echo "Storing config values into variables.."
 		} || { git pull printf "\nGIT PULLED\n\n"; }
 	}
+
 	printIP(){
 		getBitWidth
 		printf "Device IP: $deviceIP\nDevice IP Location: $deviceLOC\n"
@@ -292,6 +310,7 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	}
 
 	refreshUI(){ COLS=$(tput cols); printIP; adb devices; printTitle; }
+
 	headerIP(){
 		printf "$scriptFileName | Build $build\n2020 (C) $author\n$UIsep_err0\n\n$adbVersion\n\nBash version $bashVersion\n\n"
 		printIP
@@ -318,21 +337,40 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	}
 else # set default variant of core commands
 	CMD_communicate(){ adb -d shell exit 2>/dev/null; }
-	CMD_uninstall(){
-		if [ "$qMode" = "false" ]; then
-			echo "Uninstalling $OBBname.."
-			wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5; echo "Done!"
+	CMD_uninstall(){ 
+		if [ "$updateAPK" = "true" ]; then
+			if [ "$qMode" = "false" ]; then
+				echo "Keeping user data for $OBBname.."
+				adb uninstall -k "$OBBname"; sleep 0.5
+			else
+				adb uninstall -k "$OBBname"; sleep 0.5
+			fi
 		else
-			wait | adb uninstall "$OBBname" >/dev/null 2>&1; sleep 0.5
+			if [ "$qMode" = "false" ]; then
+				echo "Uninstalling $OBBname.."
+				adb uninstall "$OBBname"; sleep 0.5
+			else
+				adb uninstall "$OBBname"; sleep 0.5
+			fi
 		fi
 	}
-	CMD_launch(){ adb -d shell "$launchCMD" >/dev/null 2>&1; }
 
+	CMD_launch(){ adb -d shell "$launchCMD" >/dev/null 2>&1; }
 	CMD_pushOBB(){ adb push "$OBBfilePath" /sdcard/Android/OBB 2>/dev/null; }
-	CMD_installAPK(){ (adb install -r --no-streaming "$APKfilePath" 2>/dev/null && exit) || (
-		printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
-		adb install -r "$APKfilePath" 2>/dev/null && exit || exit 1
-	) }
+
+	CMD_installAPK(){
+		if [ "$updateAPK" = "true" ]; then
+			(adb install --streaming "$APKfilePath" 2>/dev/null && exit) || {
+				printf "\n--streaming option failed\n\nAttempting default install type..\n"
+				adb install "$APKfilePath" 2>/dev/null && exit || exit 1
+			}
+		else
+			(adb install -r --no-streaming "$APKfilePath" 2>/dev/null && exit) || {
+				printf "\n--no-streaming option failed\n\nAttempting default install type..\n"
+				adb install -r "$APKfilePath" 2>/dev/null && exit || exit 1
+			}
+		fi
+	}
 
 	CMD_gitGet(){ git clone https://github.com/LysergikProductions/Android-Installer.git >/dev/null 2>&1 || {
 			git pull >/dev/null 2>&1
@@ -508,18 +546,20 @@ MAINd(){
 MAINu(){
 	deviceID=""; deviceID2=""; scriptTitle="  MONKEY UPDATER  "
 
-	COLS=$(tput cols)
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
-	gitConfigs
+	if [ "$verbose" = 1 ]; then printf "\nqMode is $qMode, sMode is $sMode\n\n"; fi	
+
+	if [ "$sMode" = "false" ]; then gitConfigs; fi
+	COLS=$(tput cols); updateIP
 
 	# try communicating with device, catch with adbWAIT, finally mount device
-	(CMD_communicate && wait) || adb start-server
+	(CMD_communicate 1>/dev/null) || adb start-server
 	adb -d shell settings put global development_settings_enabled 1
 
 	refreshUI
 	tput cnorm # ensure cursor is visible and that crtl-C is functional
 
-	echo "OBB will not actually be replaced on your device, but it is still required.."
+	echo "User data will not be deleted.."
 	getOBB; getAPK; UPSTALL && echo || {
 		printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
 
@@ -625,7 +665,7 @@ getAPK(){
 
 INSTALL(){
 	tput civis
-	scriptTitle="Installing...  "; showIP="true"
+	scriptTitle="Installing...  "; showIP="true"; updateAPK="false"
 
 	printHead; adbWAIT
 
@@ -697,7 +737,61 @@ INSTALL(){
 }
 
 UPSTALL(){
-	scriptTitle=" INSTALLING.. "; showIP="true"
+	tput civis
+	scriptTitle="Installing...  "
+	showIP="true"; updateAPK="true"
+
+	printHead; adbWAIT
+
+	if [  "$qMode" = "false" ]; then
+		printf "Mounting device...\n"
+		adb devices
+	else
+		echo
+	fi
+
+	# uninstall app, unless APK step wants to continue from where it left off
+	if [ "$UNINSTALL" = "true" ]; then
+		wait | CMD_uninstall
+		UNINSTALL="true"
+	fi
+
+	printTitle
+
+	# install APK, only if APKdone=false
+	if [ "$APKdone" = "false" ] && [[ "$APKname" == *".apk"* ]]; then
+		if [[ "$OBBfilePath" == *"fire"* ]]; then
+			printf "\n%*s\n\n" $((COLS/2)) "It may take a long time to install builds on this device.."
+		fi
+
+		printf "\nInstalling APK..\n"
+		if CMD_installAPK || (
+			(CMD_communicate && deviceConnect="true") || deviceConnect="false"
+			if [ "$deviceConnect" = "true" ]; then
+				errorMessage="FE1b - APK could not be installed."
+				printf "\n\nFE1b - APK could not be installed.\n"
+
+				( set -o posix ; set ) >/tmp/variables.after
+				echo "Please report this error code (FE1b) to Nick."; exit 1
+			else APKdone="false"; UNINSTALL="false"; INSTALL; fi
+		); then
+			APKdone="true"
+			adbWAIT; deviceConnect="true"; deviceID=$(adb devices)
+
+			if [ "$LAUNCH" = "true" ]; then
+				CMD_launch &
+				printf "\n\nLaunching app."; sleep 0.4; printf " ."; sleep 0.4; printf " ."; sleep 0.4; printf " .\n"
+				tput cnorm; installAgainPrompt
+			else
+				tput cnorm; installAgainPrompt
+			fi
+		else (exit 1); fi
+	fi
+	tput cnorm
+}
+
+UPSTALL(){
+	scriptTitle=" INSTALLING.. "; showIP="true"; updateAPK="true"
 
 	printHead; adbWAIT; UNINSTALL="false"
 	printf "\nMounting device...\n"
