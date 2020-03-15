@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0306
+# Build_0307
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0306"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0307"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -258,6 +258,7 @@ INIT(){
 	fi
 
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+	pkgs="$(adb shell pm list packages | grep 'budgestudios')"
 
 	# make logs directory, but do not overwrite if already present
 	mkdir ~/logs/ >/dev/null 2>&1
@@ -636,6 +637,8 @@ getOBB(){
 		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
+	elif [ "$OBBfilePath" = "tool" ]; then
+		toolMenu
 	elif [ "$OBBfilePath" = "fire" ]; then
 		OBBvalid="true"; OBBdone="true"
 		UNINSTALL="false"; LAUNCH="false"
@@ -665,6 +668,17 @@ getOBB(){
 	elif [[ "$OBBname" == "com."* ]]; then
 		OBBvalid="true"; LAUNCH="true"
 		printf "OBB Name: $OBBname\n\n"
+
+		if [ "$pkgs" == *"$OBBname"* ]; then
+			refreshUI
+			printf "\n%*s\n" $((COLS/2)) "This app already exists on this device!"
+			printf "\n%*s\n" $((0)) "Are you sure you want to continue? y/n?"
+			read -n 1 -s -r -p ''
+
+			if [ "$REPLY" = "y" ]; then return
+			elif [ "$REPLY" = "n" ]; then MAINd
+			else getOBB; fi
+		fi
 		launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
 	else
 		OBBvalid="false"
@@ -694,6 +708,8 @@ getAPK(){
 		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
+	elif [ "$APKfilePath" = "tool" ]; then
+		toolMenu
 	elif [[ "$APKname" == *".apk" ]]; then
 		APKvalid="true"
 		printf "APK Name: $APKname\n\n"
@@ -840,20 +856,24 @@ UPSTALL(){
 
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
-	scriptTitle="Install Again?"; showIP="true"
+	scriptTitle="What's next?"; showIP="true"
 	updateIP
 
 	refreshUI
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit"
-	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
+	printf "\n%*s\n" $((COLS/2)) "Press 't' to open the toolkit menu"
 	printf "\n%*s\n" $((COLS/2)) "Press 'r' to install different build"
+
+	if [ "$APKname" = "" ]; then APKname="You have yet to install a build!"; fi
 	printf "\n\n%*s\n" $((0)) "!Press any other key to install this build again!"
 	printf "\n%*s\n" $((0)) "$APKname"
+
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
 		return
 	elif [ "$REPLY" = "r" ]; then
-		OBBdone="false"; APKdone="false"; UNINSTALL="true"
+		OBBdone="false"; APKdone="false"
+		UNINSTALL="true"; scriptTitle="\_HappyDroid_/"
 
 		refreshUI; tput cnorm
 
@@ -867,17 +887,7 @@ installAgainPrompt(){
 			diff /tmp/variables.before /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
 		} || (echo "catch fails"; exit 1)
 	elif [ "$REPLY" = "t" ]; then
-		clear
-		if adb -d shell exit; then
-			updateIP
-			{
-				sleep 0.5
-				while (trap exitScript SIGINT SIGTERM); do
-					printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
-					sleep 1.99
-				done
-			} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1 || exit
-		else exit 1; fi
+		toolMenu
 	else
 		OBBdone="false"; APKdone="false"
 		installAgain
@@ -905,6 +915,36 @@ installAgain(){
 	tput cnorm
 }
 
+toolMenu(){
+	import ~/dvrDroid.sh
+	scriptTitle="Toolkit"; COLS=$(tput cols)
+	refreshUI
+	printf "\n%*s\n\n" $((0)) "Press one of the following keys to select your tool!"
+	printf "\n%*s\n" $((COLS/2)) "Press 'q' to go to Main Menu"
+	printf "\n%*s\n" $((COLS/2)) "Press 'p' to enter screen capture mode"
+	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
+	printf "\n\n%*s\n" $((COLS/2)) "!Press any other key to return to the previous menu!"
+
+	read -n 1 -s -r -p ''
+	if [ "$REPLY" = "q" ]; then
+		installAgainPrompt
+	elif [ "$REPLY" = "t" ]; then
+		clear
+		if adb -d shell exit; then
+			updateIP
+			{
+				sleep 0.5
+				while (trap exitScript SIGINT SIGTERM); do
+					printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+					sleep 1.99
+				done
+			} & (adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1) || installAgainPrompt
+		else installAgainPrompt; fi
+	elif [ "$REPLY" = "p" ]; then
+		snapDroid
+	else installAgainPrompt; fi
+}
+
 # update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
 	if (CMD_communicate); then
@@ -929,6 +969,23 @@ waiting(){
 	do
 		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.045
+	done
+}
+
+snapDroid(){
+	# remove all files on device containing 'rec.'
+	adb -d shell rm -f *"/sdcard/snap."*
+
+	until false; do
+		tStamp="$(date +'%Hh%Mm%Ss')"
+		snapName="snap.$tStamp.$$.PNG"
+		read -n 1 -s -r -p 'Press any key to snap!' snapControl
+		if [ "$snapControl" = "q" ]; then
+			toolMenu
+		else
+			adb -d shell screencap -p "/sdcard/$snapName"
+			wait && adb -d pull /sdcard/$snapName
+		fi
 	done
 }
 
