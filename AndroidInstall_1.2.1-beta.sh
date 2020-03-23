@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0311
+# Build_0312
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0311"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0312"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -51,6 +51,16 @@ exitScript() {
 
 	kill -- -$$ # Send SIGTERM to child/sub processes
 	kill $( jobs -p ) # kill any remaining processes
+
+	if [ "$topRun" = "true" ]; then
+		if [[ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
+			# try update, catch
+			MAINu && echo || lastCatch
+		else
+			# try install, catch
+			MAINd && echo || lastCatch
+		fi
+	fi
 }; trap exitScript SIGINT SIGTERM # set trap
 
 help(){
@@ -190,7 +200,7 @@ INIT(){
 
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-	waitMessage="-- waiting for device --"; OBBquest="OBB"; APKquest="APK"; showIP="true"; OBBinfo=""
+	waitMessage="-- waiting for device --"; OBBquest="OBB"; APKquest="APK"; showIP="true"; OBBinfo=""; topRun="false"
 
 	anim1=( # doge so like
 	"                        " "W                       " "Wo                      " "Wow                     " "Wow!                    " "Wow!                    " "Wow!                    "
@@ -942,10 +952,16 @@ installAgain(){
 toolMenu(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-	import ~/dvrDroid.sh
 	scriptTitle="Toolkit"; COLS=$(tput cols)
+	topRun="false"
 
 	refreshUI
+
+	if [ "$toolOops" = "true" ]; then
+		printf "%*s\n" $((COLS/2)) "$oops"
+		printf "%*s\n\n" $((COLS/2)) "Wrong Key!"
+		toolOops="false"
+	fi
 
 	printf "\n%*s" $((0)) "Press one of the following keys to select your tool!"
 	printf "%*s\n" $((COLS/2)) "GO BACK to Main Menu with 'q'"
@@ -956,6 +972,8 @@ toolMenu(){
 	if [ "$REPLY" = "q" ]; then
 		installAgainPrompt
 	elif [ "$REPLY" = "t" ]; then
+		topRun="true"
+
 		clear
 		if adb -d shell exit; then
 			updateIP
@@ -969,7 +987,10 @@ toolMenu(){
 		else installAgainPrompt; fi
 	elif [ "$REPLY" = "p" ]; then
 		snapDroid
-	else installAgainPrompt; fi
+	else
+		toolOops="true"
+		toolMenu
+	fi
 }
 
 # update the script on status of adb connection and call waiting function until it is ready
