@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0310
+# Build_0311
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0310"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0311"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -242,7 +242,7 @@ INIT(){
 			if [ "$verbose" = 0 ]; then clear; fi
 			echo "Initializing.." &
 
-			oops=$(figlet -c -F metal -t "Oops!") || oops=$(figlet -F metal -t "Oops!")
+			oops=$(figlet -c -f small -t "Oops!") || oops=$(figlet -f small -t "Oops!")
 			if [ "$verbose" = 0 ]; then clear; fi
 
 			printTitle(){
@@ -691,7 +691,7 @@ getOBB(){
 	until [ "$OBBvalid" = "true" ]; do
 		refreshUI
 		printf "%*s\n" $((COLS/2)) "$oops"
-		printf "\n%*s\n\n" $((COLS/2)) "That is not an OBB!"
+		printf "%*s\n\n" $((COLS/2)) "That is not an OBB!"
 		printf "I'm sorry, I don't know what to do with this file..\n\n$OBBname\n"
 
 		getOBB
