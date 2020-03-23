@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0307
+# Build_0308
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0307"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0308"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -186,7 +186,7 @@ INIT(){
 
 	# some default/starting variables values
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
-	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"; errExec="false"
+	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"; errExec="false"; noInstall="true"
 
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
@@ -221,11 +221,6 @@ INIT(){
 	"101011011101001110011001" "010111010101110110101001" "101010010101110000100010" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
 	)
 
-	printTitle(){
-		printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
-		printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
-	}
-
 	if [ "$qMode" = "false" ]; then
 		OBBquest="Drag in the folder containing the OBB file; press enter:"
 		OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
@@ -236,19 +231,26 @@ INIT(){
 		if figlet -t -w 0 -F metal "TEST FULL FIG"; then
 			if [ "$verbose" = 0 ]; then clear; fi
 			echo "Initializing.." &
-			oops=$(figlet -c -F metal -t "Oops!"); if [ "$verbose" = 0 ]; then clear; fi
+
+			oops=$(figlet -c -F metal -t "Oops!") || oops=$(figlet -F metal -t "Oops!")
+			if [ "$verbose" = 0 ]; then clear; fi
+
 			printTitle(){
-				figlet -c -F border -F gay -t "$scriptTitle"
+				figlet -c -F border -F gay -t "$scriptTitle" || figlet -F border -F gay -t "$scriptTitle"
 			}
 		elif figlet -w 0 -f small "TEST SIMPLE FIG"; then
 			if [ "$verbose" = 0 ]; then clear; fi
 			echo "Initializing.." &
-			oops=$(figlet -c -w $COLS -f small 'Oops!'); if [ "$verbose" = 0 ]; then clear; fi
+
+			oops=$(figlet -c -F metal -t "Oops!") || oops=$(figlet -F metal -t "Oops!")
+			if [ "$verbose" = 0 ]; then clear; fi
+
 			printTitle(){
-				figlet -c -w $COLS "$scriptTitle"
+				figlet -c -w $COLS "$scriptTitle" || figlet -w $COLS "$scriptTitle"
 			}
 		else
 			oops="Oops!"
+
 			printTitle(){
 				printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
 				printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
@@ -797,7 +799,7 @@ INSTALL(){
 			fi
 		else (exit 1); fi
 	fi
-	tput cnorm
+	tput cnorm; noInstall="false"
 }
 
 UPSTALL(){
@@ -851,7 +853,7 @@ UPSTALL(){
 			fi
 		else (exit 1); fi
 	fi
-	tput cnorm
+	tput cnorm; noInstall="false"
 }
 
 # check if user wants to install again on another device, or the same device if they choose to
@@ -864,13 +866,13 @@ installAgainPrompt(){
 	printf "\n%*s\n" $((COLS/2)) "Press 't' to open the toolkit menu"
 	printf "\n%*s\n" $((COLS/2)) "Press 'r' to install different build"
 
-	if [ "$APKname" = "" ]; then APKname="You have yet to install a build!"; fi
+	if [ "$APKname" = "" ]; then APKname="You have yet to install a build!"; noInstall="true"; fi
 	printf "\n\n%*s\n" $((0)) "!Press any other key to install this build again!"
 	printf "\n%*s\n" $((0)) "$APKname"
 
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
-		return
+		exitScript
 	elif [ "$REPLY" = "r" ]; then
 		OBBdone="false"; APKdone="false"
 		UNINSTALL="true"; scriptTitle="\_HappyDroid_/"
@@ -890,7 +892,18 @@ installAgainPrompt(){
 		toolMenu
 	else
 		OBBdone="false"; APKdone="false"
-		installAgain
+
+		if [ "$noInstall" = "true" ]; then
+			if [[ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
+				# try update, catch
+				MAINu && echo || lastCatch
+			else
+				# try install, catch
+				MAINd && echo || lastCatch
+			fi
+		else
+			installAgain
+		fi
 	fi
 }
 
@@ -976,10 +989,16 @@ snapDroid(){
 	# remove all files on device containing 'rec.'
 	adb -d shell rm -f *"/sdcard/snap."*
 
+	scriptTitle="SnapDroid"; refreshUI
+
 	until false; do
 		tStamp="$(date +'%Hh%Mm%Ss')"
 		snapName="snap.$tStamp.$$.PNG"
-		read -n 1 -s -r -p 'Press any key to snap!' snapControl
+
+		printf "\n%*s\n" $((0)) "Press any key to snap!"
+		printf "\n%*s\n" $((0)) "Return to HappyDroid? Press q!"
+		read -n 1 -s -r -p '' snapControl
+
 		if [ "$snapControl" = "q" ]; then
 			toolMenu
 		else
