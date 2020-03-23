@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0308
+# Build_0309
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0308"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0309"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -872,7 +872,7 @@ installAgainPrompt(){
 
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
-		exitScript
+		printf "\n%*s\n\n" $((0)) "Goodbye!"; exitScript
 	elif [ "$REPLY" = "r" ]; then
 		OBBdone="false"; APKdone="false"
 		UNINSTALL="true"; scriptTitle="\_HappyDroid_/"
@@ -931,12 +931,13 @@ installAgain(){
 toolMenu(){
 	import ~/dvrDroid.sh
 	scriptTitle="Toolkit"; COLS=$(tput cols)
+
 	refreshUI
-	printf "\n%*s\n\n" $((0)) "Press one of the following keys to select your tool!"
-	printf "\n%*s\n" $((COLS/2)) "Press 'q' to go to Main Menu"
+
+	printf "\n%*s" $((0)) "Press one of the following keys to select your tool!"
+	printf "%*s\n" $((COLS/2)) "GO BACK to Main Menu with 'q'"
 	printf "\n%*s\n" $((COLS/2)) "Press 'p' to enter screen capture mode"
 	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
-	printf "\n\n%*s\n" $((COLS/2)) "!Press any other key to return to the previous menu!"
 
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
@@ -995,15 +996,32 @@ snapDroid(){
 		tStamp="$(date +'%Hh%Mm%Ss')"
 		snapName="snap.$tStamp.$$.PNG"
 
-		printf "\n%*s\n" $((0)) "Press any key to snap!"
-		printf "\n%*s\n" $((0)) "Return to HappyDroid? Press q!"
+		printf "\n%*s\n" $((COLS/2)) "Return to HappyDroid? Press q!"
+		printf "\n%*s\n\n" $((COLS/2)) "Press any other key to snap!"
+
 		read -n 1 -s -r -p '' snapControl
 
 		if [ "$snapControl" = "q" ]; then
 			toolMenu
-		else
+		elif [ "$snapControl" = "e" ]; then
+			echo
 			adb -d shell screencap -p "/sdcard/$snapName"
-			wait && adb -d pull /sdcard/$snapName
+
+			wait && {
+				cd ~/Desktop
+				adb -d pull /sdcard/$snapName
+				printf "%*s\n\n" $((COLS/2)) "Saved to your Desktop!"
+				sleep 1; toolMenu
+			}
+		else
+			echo
+			adb -d shell screencap -p "/sdcard/$snapName"
+
+			wait && {
+				cd ~/Desktop
+				adb -d pull /sdcard/$snapName
+				printf "%*s\n\n" $((COLS/2)) "Saved to your Desktop!"
+			}
 		fi
 	done
 }
