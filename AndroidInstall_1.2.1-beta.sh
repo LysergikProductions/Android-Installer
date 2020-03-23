@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0309
+# Build_0310
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0309"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0310"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -60,7 +60,7 @@ help(){
 	printf "  -l      also [show-l]; show the copyright & license information\n"
 	printf "  -u      also [--update]; run the script in update mode (not working yet)\n"
 	printf "  -q      also [--quiet]; run the script in quiet mode\n"
-	printf "  -s      also [--safe]; run the script in safe mode\n"
+	printf "  -s      also [--safe]; disable network (and other) feature to improve performance\n"
 	printf "  -d      also [--debug]; run the script in debug mode. Add a -v to increase verbosity!\n\n"
 	printf "  -t      also [--top]; show device CPU and RAM usage\n"
 	printf "  -h      also [--help]; show this information\n\n"
@@ -623,6 +623,8 @@ MAINu(){
 }
 
 getOBB(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
 	if [ "$qMode" = "false" ]; then
 		printf "\n%*s\n" $((0)) "$OBBquest"; printf "$OBBinfo"
 	else
@@ -697,11 +699,13 @@ getOBB(){
 }
 
 getAPK(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
 	APKvalid="true"
+
 	printf "\n%*s\n\n" $((COLS/2)) "$APKquest"
 	read -p '' APKfilePath
 	APKfilePath="${APKfilePath%* }"
-
 	local cleanPath="${APKfilePath#*:*}"; APKname=$(basename "$cleanPath")
 
 	if [ "$APKfilePath" = "" ]; then
@@ -730,10 +734,12 @@ getAPK(){
 }
 
 INSTALL(){
-	tput civis
-	scriptTitle="Installing...  "; showIP="true"; updateAPK="false"
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-	printHead; adbWAIT
+	scriptTitle="Installing...  "
+	showIP="true"; updateAPK="false"
+
+	tput civis; printHead; adbWAIT
 
 	if [  "$qMode" = "false" ]; then
 		printf "Mounting device...\n"
@@ -803,11 +809,12 @@ INSTALL(){
 }
 
 UPSTALL(){
-	tput civis
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
 	scriptTitle="Installing...  "
 	showIP="true"; updateAPK="true"
 
-	printHead; adbWAIT
+	tput civis; printHead; adbWAIT
 
 	if [  "$qMode" = "false" ]; then
 		printf "Mounting device...\n"
@@ -858,6 +865,8 @@ UPSTALL(){
 
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
 	scriptTitle="What's next?"; showIP="true"
 	updateIP
 
@@ -908,6 +917,8 @@ installAgainPrompt(){
 }
 
 installAgain(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
 	adbWAIT
 	deviceID2=$(adb devices); wait
 
@@ -929,6 +940,8 @@ installAgain(){
 }
 
 toolMenu(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
 	import ~/dvrDroid.sh
 	scriptTitle="Toolkit"; COLS=$(tput cols)
 
@@ -987,6 +1000,8 @@ waiting(){
 }
 
 snapDroid(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
 	# remove all files on device containing 'rec.'
 	adb -d shell rm -f *"/sdcard/snap."*
 
