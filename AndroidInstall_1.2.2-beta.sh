@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0314
+# Build_0315
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0314"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0315"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -1011,21 +1011,30 @@ toolMenu(){
 		toolOops="false"
 	fi
 
-	printf "\n%*s" $((0)) "Press one of the following keys to select your tool!"
+	printf "\n%*s" $((0)) "Press one of the following keys!"
 	printf "%*s\n" $((COLS/2)) "GO BACK to Main Menu with 'q'"
 	printf "\n%*s\n" $((COLS/2)) "Press 'p' to enter screen capture mode"
-	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
+	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats (beta)"
 	printf "\n%*s\n" $((COLS/2)) "Press spacebar to run dvrDroid (beta)"
 
 	read -n 1 -s -r -p ''
 	if [ "$REPLY" = "q" ]; then
 		installAgainPrompt
 	elif [ "$REPLY" = " " ]; then
+		if [ "$sMode" = "true" ]; then
+			echo "Oops! Beta features don't work in safe mode!"; sleep 2
+			toolMenu
+		fi
+
 		scriptTitle="\_dvrDroid_/"; refreshUI
 		{ screenDVR && trap exitScript SIGINT SIGTERM; } || toolMenu
 	elif [ "$REPLY" = "t" ]; then
-		topRun="true"; clear
+		if [ "$sMode" = "true" ]; then
+			echo "Oops! Beta features don't work in safe mode!"; sleep 2
+			toolMenu
+		fi
 
+		topRun="true"; clear
 		if adb -d shell exit; then
 			updateIP
 			{

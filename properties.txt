@@ -1,6 +1,6 @@
 _version 1.2.0-release
 _newVersion 1.2.2-beta
-_build 0314
+_build 0315
 
 _scriptTitle \_HappyDroid_/
 
