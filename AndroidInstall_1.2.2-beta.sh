@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0313
+# Build_0314
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 # kill script if script would have root privileges
 if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-# remove any pre-existing tmp files, log all system variables at script execution, then check those files still exists
+# remove any pre-existing tmp files, log all system variables at script execution, then check those files still exist
 rm -f /tmp/variables.before /tmp/variables.after /tmp/usrIPdata.xml /tmp/devIPdata.xml
 if ! ( set -o posix ; set ) >/tmp/variables.before; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
 if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
@@ -34,11 +34,11 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0313"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0314"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
-# studio specific variables
+#!# studio specific variables #!#
 fireAPPS=( "GO BACK" "option1" "option2" "option3" "option4" "option5" "option6" "option7" )
 studio=""; gitName="Android-Installer"
 
@@ -53,13 +53,16 @@ exitScript() {
 	kill -- -$$ # Send SIGTERM to child/sub processes
 	kill $( jobs -p ) # kill any remaining processes
 
+	# this is alpha and not in use atm
 	if [ "$topRun" = "true" ]; then
 		if [[ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
 			# try update, catch
-			MAINu && echo || lastCatch
+			# MAINu && echo || lastCatch
+			echo "topRun was $topRun (true)"
 		else
 			# try install, catch
-			MAINd && echo || lastCatch
+			# MAINd && echo || lastCatch
+			echo "topRun was $topRun (true)"
 		fi
 	fi
 }; trap exitScript SIGINT SIGTERM # set trap
@@ -112,6 +115,7 @@ update_IPdata(){
 parse_IPdata(){
 	if [ "$verbose" = 1 ]; then printf "\n\nParsing IP DATA\n\n"; fi
 
+	# give 'parse_' functions a way to lookup the data from file using parameter expansion
 	readXML(){
 		IFS=\>
 		read -d \< ENTITY CONTENT
@@ -121,14 +125,15 @@ parse_IPdata(){
 		return $ret
 	}
 
-	parse_usrIP_XML(){
+	# extract specific data into convenient little variables
+	bounce_usrIPdata(){
 		if [[ "$TAG_NAME" = "IP" ]] ; then usrIP=$CONTENT; fi
 		if [[ "$TAG_NAME" = "CountryName" ]] ; then usrCountry=$CONTENT; fi
 		if [[ "$TAG_NAME" = "RegionName" ]] ; then usrRegion=$CONTENT; fi
 		if [[ "$TAG_NAME" = "City" ]] ; then usrCity=$CONTENT; fi
 	}
 
-	parse_devIP_XML(){
+	bounce_devIPdata(){
 		if [[ "$TAG_NAME" = "IP" ]] ; then devIP=$CONTENT; fi
 		if [[ "$TAG_NAME" = "CountryName" ]] ; then devCountry=$CONTENT; fi
 		if [[ "$TAG_NAME" = "RegionName" ]] ; then devRegion=$CONTENT; fi
@@ -136,11 +141,11 @@ parse_IPdata(){
 	}
 
 	while readXML; do
-		parse_usrIP_XML
+		bounce_usrIPdata
 	done < /tmp/usrIPdata.xml
 
 	while readXML; do
-		parse_devIP_XML
+		bounce_devIPdata
 	done < /tmp/devIPdata.xml
 
 	IFS=$ORIGINAL_IFS
@@ -158,8 +163,6 @@ getBitWidth(){
 		bitWidth="unknown"
 	fi
 }
-
-#function timeout() { perl -e 'alarm shift; exec @ARGV' "$@"; }
 
 # allow user to see the copyright, license, or the help page without running the script
 COLS=$(tput cols)
@@ -234,13 +237,15 @@ INIT(){
 	"101011011101001110011001" "010111010101110110101001" "101010010101110000100010" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
 	)
 
+	# show a bunch of info to the user if quiet mode is off, with even more verbosity when debug mode is on
 	if [ "$qMode" = "false" ]; then
 		OBBquest="Drag in the folder containing the OBB file; press enter:"
 		OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
 
 		APKquest="Drag APK anywhere here:"
 
-		if [ "$verbose" = 1 ]; then printf "\nTesting for figlet compatibility..\n"; sleep 1; fi
+		
+		if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then printf "\nTesting for figlet compatibility..\n"; sleep 1; fi
 		if figlet -t -w 0 -F metal "TEST FULL FIG"; then
 			if [ "$verbose" = 0 ]; then clear; fi
 			echo "Initializing.." &
@@ -272,6 +277,7 @@ INIT(){
 		echo "Initializing.." &
 	fi
 
+	# get some more initial data for the script to use later	
 	scriptDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 	pkgs="$(adb shell pm list packages | grep 'budgestudios')"
 
@@ -282,10 +288,9 @@ INIT(){
 	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 }
 
-clear; INIT # initializing now..
-# nothing up until the first call of MAIN will be run; only being loaded into memory
+clear; INIT # initializing right away..
 
-# set debug variant of core commands
+#!# set debug variant of core commands #!#
 if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	if [ "$verbose" = "2" ]; then set -x; fi
 	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb -d shell exit; }
@@ -361,7 +366,7 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 		printf "\nFINAL: caught error in MAINd's error handling\nI make a logfile with ALL system variables called ~/logs/FULL_$scriptEndDate.txt\n\n"
 		( set ) > ~/logs/"FULL_$scriptEndDate".txt 2>&1
 	}
-else # set default variant of core commands
+else #!# set default variant of core commands #!#
 	CMD_communicate(){ adb -d shell exit 2>/dev/null; }
 	CMD_uninstall(){ 
 		if [ "$updateAPK" = "true" ]; then
@@ -542,6 +547,7 @@ gitConfigs(){
 }
 
 printHead(){
+	trap exitScript SIGINT SIGTERM # reset trap
 	if [ "$loopFromError" = "false" ]; then
 		tput civis
 		if [ "$verbose" = 0 ]; then clear; fi
@@ -657,7 +663,9 @@ getOBB(){
 		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
-	elif [ "$OBBfilePath" = "tool" ]; then
+	elif [ "$OBBfilePath" = "q" ] || [ "$OBBfilePath" = "quit" ] || [ "$OBBfilePath" = "wq" ] || [ "$OBBfilePath" = "qw" ]; then
+		exitScript
+	elif [ "$OBBfilePath" = "tool" ] || [ "$OBBfilePath" = "tools" ]; then
 		toolMenu
 	elif [ "$OBBfilePath" = "fire" ]; then
 		OBBvalid="true"; OBBdone="true"
@@ -730,7 +738,9 @@ getAPK(){
 		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
-	elif [ "$APKfilePath" = "tool" ]; then
+	elif [ "$OBBfilePath" = "q" ] || [ "$OBBfilePath" = "quit" ] || [ "$OBBfilePath" = "wq" ] || [ "$OBBfilePath" = "qw" ]; then
+		exitScript
+	elif [ "$APKfilePath" = "tool" ] || [ "$APKfilePath" = "tools" ]; then
 		toolMenu
 	elif [[ "$APKname" == *".apk" ]]; then
 		APKvalid="true"
@@ -889,16 +899,16 @@ installAgainPrompt(){
 	refreshUI
 	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit"
 	printf "\n%*s\n" $((COLS/2)) "Press 't' to open the toolkit menu"
-	printf "\n%*s\n" $((COLS/2)) "Press 'r' to install different build"
+	printf "\n%*s\n" $((COLS/2)) "Press 'b' to install a new build"
 
 	if [ "$APKname" = "" ]; then APKname="You have yet to install a build!"; noInstall="true"; fi
 	printf "\n\n%*s\n" $((0)) "!Press any other key to install this build again!"
 	printf "\n%*s\n" $((0)) "$APKname"
 
 	read -n 1 -s -r -p ''
-	if [ "$REPLY" = "q" ]; then
+	if [ "$REPLY" = "q" ] || [ "$REPLY" = "w" ]; then
 		printf "\n%*s\n\n" $((0)) "Goodbye!"; exitScript
-	elif [ "$REPLY" = "r" ]; then
+	elif [ "$REPLY" = "b" ]; then
 		OBBdone="false"; APKdone="false"
 		UNINSTALL="true"; scriptTitle="\_HappyDroid_/"
 
@@ -942,10 +952,13 @@ installAgain(){
 		refreshUI
 		printf "\n\n%*s\n" $((COLS/2)) "This is the same device! Are you sure you want to install the build on this device again?"
 		printf "\n%*s\n" $((COLS/2)) "Press 'y' to install on the same device, or any other key when you have plugged in another device."
+		printf "\n%*s\n" $((COLS/2)) "Press 'q' to QUIT."
 
 		read -n 1 -s -r -p ''
 		if [ "$REPLY" = "y" ]; then
 			UNINSTALL="true"; INSTALL
+		elif [ "$REPLY" = "q" ] || [ "$REPLY" = "w" ]; then
+			exitScript
 		else
 			adbWAIT; deviceID2=$(adb devices); wait; installAgainPrompt; exit 1
 		fi
@@ -974,9 +987,9 @@ adbWAIT(){
 
 # show the waiting animation
 waiting(){
-	tput civis
-	for i in "${anim3[@]}"
-	do
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
+	for i in "${anim3[@]}"; do
 		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.045
 	done
@@ -1032,6 +1045,8 @@ toolMenu(){
 }
 
 screenDVR(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
 	# make sure SIGINT always works even in presence of infinite loops
 	exitScriptDVR() {
 		trap - SIGINT SIGTERM SIGTERM # clear the trap
