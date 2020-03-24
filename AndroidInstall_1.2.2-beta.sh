@@ -1,9 +1,9 @@
 #!/bin/bash
-# AndroidInstall_1.2.1-beta.sh
+# AndroidInstall_1.2.2-beta.sh
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0312
+# Build_0313
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0312"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0313"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -45,6 +45,7 @@ studio=""; gitName="Android-Installer"
 # make sure SIGINT always works even in presence of infinite loops
 exitScript() {
 	trap - SIGINT SIGTERM SIGTERM # clear the trap
+	adb -d shell echo \04; wait
 
 	CMD_rmALL # remove temporary files
 	IFS=$ORIGINAL_IFS # set original IFS
@@ -636,6 +637,9 @@ MAINu(){
 
 getOBB(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	COLS=$(tput cols)
+
+	printf "%*s\n" $((COLS)) "Type in 'tool' to access the tools menu"
 
 	if [ "$qMode" = "false" ]; then
 		printf "\n%*s\n" $((0)) "$OBBquest"; printf "$OBBinfo"
@@ -951,50 +955,6 @@ installAgain(){
 	tput cnorm
 }
 
-toolMenu(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
-
-	scriptTitle="Toolkit"; COLS=$(tput cols)
-	topRun="false"
-
-	refreshUI
-
-	if [ "$toolOops" = "true" ]; then
-		printf "%*s\n" $((COLS/2)) "$oops"
-		printf "%*s\n\n" $((COLS/2)) "Wrong Key!"
-		toolOops="false"
-	fi
-
-	printf "\n%*s" $((0)) "Press one of the following keys to select your tool!"
-	printf "%*s\n" $((COLS/2)) "GO BACK to Main Menu with 'q'"
-	printf "\n%*s\n" $((COLS/2)) "Press 'p' to enter screen capture mode"
-	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
-
-	read -n 1 -s -r -p ''
-	if [ "$REPLY" = "q" ]; then
-		installAgainPrompt
-	elif [ "$REPLY" = "t" ]; then
-		topRun="true"
-
-		clear
-		if adb -d shell exit; then
-			updateIP
-			{
-				sleep 0.5
-				while (trap exitScript SIGINT SIGTERM); do
-					printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
-					sleep 1.99
-				done
-			} & (adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1) || installAgainPrompt
-		else installAgainPrompt; fi
-	elif [ "$REPLY" = "p" ]; then
-		snapDroid
-	else
-		toolOops="true"
-		toolMenu
-	fi
-}
-
 # update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
 	if (CMD_communicate); then
@@ -1020,6 +980,109 @@ waiting(){
 		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.045
 	done
+}
+
+toolMenu(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
+	trap exitScript SIGINT SIGTERM # reset trap
+
+	scriptTitle="Toolkit"; COLS=$(tput cols)
+	topRun="false"
+
+	refreshUI
+
+	if [ "$toolOops" = "true" ]; then
+		printf "%*s\n" $((COLS/2)) "$oops"
+		printf "%*s\n\n" $((COLS/2)) "Wrong Key!"
+		toolOops="false"
+	fi
+
+	printf "\n%*s" $((0)) "Press one of the following keys to select your tool!"
+	printf "%*s\n" $((COLS/2)) "GO BACK to Main Menu with 'q'"
+	printf "\n%*s\n" $((COLS/2)) "Press 'p' to enter screen capture mode"
+	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats"
+	printf "\n%*s\n" $((COLS/2)) "Press spacebar to run dvrDroid (beta)"
+
+	read -n 1 -s -r -p ''
+	if [ "$REPLY" = "q" ]; then
+		installAgainPrompt
+	elif [ "$REPLY" = " " ]; then
+		scriptTitle="\_dvrDroid_/"; refreshUI
+		{ screenDVR && trap exitScript SIGINT SIGTERM; } || toolMenu
+	elif [ "$REPLY" = "t" ]; then
+		topRun="true"; clear
+
+		if adb -d shell exit; then
+			updateIP
+			{
+				sleep 0.5
+				while (trap exitScript SIGINT SIGTERM); do
+					printf "\n%*s\n" $((COLS/2)) "Device IP Location: $deviceLOC"
+					sleep 1.99
+				done
+			} & (adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1) || installAgainPrompt
+		else installAgainPrompt; fi
+	elif [ "$REPLY" = "p" ]; then
+		snapDroid
+	else
+		toolOops="true"
+		toolMenu
+	fi
+}
+
+screenDVR(){
+	# make sure SIGINT always works even in presence of infinite loops
+	exitScriptDVR() {
+		trap - SIGINT SIGTERM SIGTERM # clear the trap
+		tput cnorm
+		adb -d shell echo \04; wait
+
+		extract
+
+		# remove all files in dir /sdcard/ beginning with 'rec.'
+		adb -d shell rm -f *"/sdcard/rec."*; wait
+		toolMenu; trap - SIGINT SIGTERM SIGTERM; exit # clear the trap
+	}; trap exitScriptDVR SIGINT SIGTERM # set trap
+
+	read -r -p 'Enter the file path (or just drag the folder itself) of where you want to save the video sequences.. ' savePath
+	if [ "$savePath" = "" ]; then 
+		printf "\nDefaulting to ~/screenRecordings_Android/\n"
+		cd ~/screenRecordings_Android
+	else
+		cd $savePath
+	fi
+
+	adbWAIT
+
+	# remove all files on device containing 'rec.'
+	adb -d shell rm -f *"/sdcard/rec."*
+
+	extract(){
+		# kill script if script would have root privileges
+		if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
+		printf "\n%*s\n" $((0)) "Extracting.. $fileName .. to your computer!"
+		wait && adb pull sdcard/$fileName || { adbWAIT && adb pull sdcard/$fileName 1>/ dev/null; }
+	}
+
+	record(){
+		# kill script if script would have root privileges
+		if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+
+		printf "$stopInfo_f"
+		while true; do
+			tStamp="$(date +'%Hh%Mm%Ss')"
+			fileName="rec.$tStamp.$$.mp4"
+
+			printf "\n%*s\n\n" $((0)) "Starting new recording: $fileName"
+			adb -d shell screenrecord /sdcard/$fileName || { adbWAIT; wait; extract; }
+
+			# running extract in a sub-process means only 0.5 seconds or so of delay between videos
+			extract &
+		done
+	}
+	record && wait && exitScriptDVR
 }
 
 snapDroid(){
