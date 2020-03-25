@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0315
+# Build_0316
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ if ! file /tmp/variables.before 1>/dev/null; then kill $( jobs -p ) 2>/dev/null 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0315"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0316"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -45,7 +45,6 @@ studio=""; gitName="Android-Installer"
 # make sure SIGINT always works even in presence of infinite loops
 exitScript() {
 	trap - SIGINT SIGTERM SIGTERM # clear the trap
-	adb -d shell echo \04; wait
 
 	CMD_rmALL # remove temporary files
 	IFS=$ORIGINAL_IFS # set original IFS
@@ -79,9 +78,11 @@ help(){
 	printf "  -t      also [--top]; show device CPU and RAM usage\n"
 	printf "  -h      also [--help]; show this information\n\n"
 	printf " - INSTRUCTIONS -\n\n"
-	printf "Skip the OBB step using one of the following:\n\n  na, 0, .      OBB not applicable\n"
+	printf "Skip the OBB step using:\n\n  na, 0, .      OBB not applicable\n"
 	printf "  fire          Amazon build\n\n"
-	printf "  tool    enter this during either OBB or APK step to access toolkit menu"
+	printf "Other features:\n\n"
+	printf "  tool    enter this during either OBB or APK step to access toolkit menu\n"
+	printf "  q       enter this during either OBB or APK step to exit the script\n\n"
 }
 
 updateIP(){
@@ -239,8 +240,8 @@ INIT(){
 
 	# show a bunch of info to the user if quiet mode is off, with even more verbosity when debug mode is on
 	if [ "$qMode" = "false" ]; then
-		OBBquest="Drag in the folder containing the OBB file; press enter:"
-		OBBinfo="\nSkip? Type: na, 0, or .\nAmazon? Type: fire\n\n"
+		OBBquest="  Drag in the folder that contains the OBB file and press enter:"
+		OBBinfo="\n  Skip? Type: na, 0, or .\n  Amazon? Type: fire\n\n"
 
 		APKquest="Drag APK anywhere here:"
 
@@ -588,7 +589,7 @@ warnFIRE(){
 MAINd(){
 	deviceID=""; deviceID2=""
 
-	printf '\e[8;50;150t'; printf '\e[3;290;50t'
+	printf '\e[8;40;130t'; printf '\e[3;370;60t'
 	if [ "$verbose" = 1 ]; then printf "\nqMode is $qMode, sMode is $sMode\n\n"; fi	
 
 	if [ "$sMode" = "false" ]; then gitConfigs; fi
@@ -645,12 +646,12 @@ getOBB(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 	COLS=$(tput cols)
 
-	printf "%*s\n" $((COLS)) "Type in 'tool' to access the tools menu"
-
 	if [ "$qMode" = "false" ]; then
-		printf "\n%*s\n" $((0)) "$OBBquest"; printf "$OBBinfo"
+		printf "\n%*s\n" $((COLS)) "Enter 'tool' to access the toolkit  "
+		printf "%*s\n" $((0)) "$OBBquest"
+		printf "$OBBinfo"
 	else
-		printf "\n%*s\n" $((COLS/2)) "$OBBquest"; printf "$OBBinfo"
+		printf "%*s\n" $((COLS/2)) "$OBBquest"; printf "$OBBinfo"
 	fi
 	
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
@@ -1011,10 +1012,10 @@ toolMenu(){
 		toolOops="false"
 	fi
 
-	printf "\n%*s" $((0)) "Press one of the following keys!"
+	printf "\n%*s" $((0)) "  Press one of the following keys!"
 	printf "%*s\n" $((COLS/2)) "GO BACK to Main Menu with 'q'"
-	printf "\n%*s\n" $((COLS/2)) "Press 'p' to enter screen capture mode"
-	printf "\n%*s\n" $((COLS/2)) "Press 't' to see device CPU and RAM stats (beta)"
+	printf "\n%*s\n" $((COLS/2)) "Screen capture mode: p"
+	printf "\n%*s\n" $((COLS/2)) "Device CPU and RAM stats (beta): t"
 	printf "\n%*s\n" $((COLS/2)) "Press spacebar to run dvrDroid (beta)"
 
 	read -n 1 -s -r -p ''
@@ -1113,6 +1114,7 @@ snapDroid(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
 	# remove all files on device containing 'rec.'
+	adbWAIT
 	adb -d shell rm -f *"/sdcard/snap."*
 
 	scriptTitle="SnapDroid"; refreshUI
