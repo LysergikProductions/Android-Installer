@@ -1,8 +1,8 @@
 _version 1.2.0-release
-_newVersion 1.2.2-beta
-_build 0317
+_newVersion 1.2.4-beta
+_build 0318
 
 _scriptTitle \_HappyDroid_/
 
 _gitMESSAGE NO_PROBLEM_TOO_BIG!
-_dispGitTime 1.4
+_dispGitTime 1.5
