@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0320
+# Build_0321
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0320"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0321"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -948,6 +948,10 @@ installAgainPrompt(){
 	# ask for user input but do not allow user to drag in a file or directory
 	read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 	while [[ "$REPLY" == *"/"* ]] || [ "$REPLY" = "" ]; do
+		if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+			printf "\n%*s\n" $((0)) "Input ignored: the user dragged in a file or directory"
+		fi
+
 		read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 	done
 
@@ -1002,6 +1006,10 @@ installAgain(){
 		# ask for user input but do not allow user to drag in a file or directory
 		read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 		while [[ "$REPLY" == *"/"* ]] || [ "$REPLY" = "" ]; do
+			if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+				printf "\n%*s\n" $((0)) "Input ignored: the user dragged in a file or directory"
+			fi
+
 			read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 		done
 
@@ -1056,6 +1064,7 @@ toolMenu(){
 	scriptTitle="Toolkit"; COLS=$(tput cols)
 	topRun="false"
 
+	if [ "$verbose" = 0 ]; then clear; fi
 	refreshUI
 
 	if [ "$toolOops" = "true" ]; then
@@ -1073,6 +1082,10 @@ toolMenu(){
 	# ask for user input but do not allow user to drag in a file or directory
 	read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 	while [[ "$REPLY" == *"/"* ]] || [ "$REPLY" = "" ]; do
+		if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+			printf "\n%*s\n" $((0)) "Input ignored: the user dragged in a file or directory"
+		fi
+
 		read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 	done
 
