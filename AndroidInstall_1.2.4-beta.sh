@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0318
+# Build_0319
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0318"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0319"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -50,6 +50,8 @@ exitScript() {
 
 	CMD_rmALL # remove temporary files
 	IFS=$ORIGINAL_IFS # set original IFS
+
+	#printf '\e[8;$usr_tHeight;{$usr_tWidth}t'; printf '\e[3;370;60t'
 
 	kill -- -$$ # Send SIGTERM to child/sub processes
 	kill $( jobs -p ) # kill any remaining processes
@@ -171,7 +173,21 @@ getBitWidth(){
 COLS=$(tput cols)
 if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
 	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; fi
-	printf "\n2020 (C) Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n\n"; exit
+	printf "\n2020 (C) Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n\n"
+	if [[ "$*" = *"--top"* ]] || [[ "$*" = *"-t"* ]]; then
+		clear
+		if adb -d shell exit; then
+			updateIP
+			{
+				sleep 0.5
+				while (trap exitScript SIGINT SIGTERM); do
+					printf "\n%*s\n" $((COLS/2)) "Device Location: $deviceLOC"
+					sleep 1.99
+				done
+			} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1 || exit
+		else exit 1; fi		
+	fi
+	exit
 fi
 
 # if user didn't choose -c or -l at all, then check..
@@ -206,6 +222,11 @@ INIT(){
 	# some default/starting variables values
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
 	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"; errExec="false"; noInstall="true"
+	usr_tWidth=$(tput cols); usr_tHeight=$(tput lines)
+
+	if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+		echo "$usr_tWidth"; echo "$usr_tHeight"
+	fi
 
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
@@ -682,7 +703,7 @@ getOBB(){
 		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
 		getOBB
-	elif [ "$OBBfilePath" = "q" ] || [ "$OBBfilePath" = "quit" ] || [ "$OBBfilePath" = "wq" ] || [ "$OBBfilePath" = "qw" ]; then
+	elif [ "$OBBfilePath" = "q" ] || [ "$OBBfilePath" = "quit" ] || [ "$OBBfilePath" = "wq" ] || [ "$OBBfilePath" = "qw" ] || [ "$OBBfilePath" = "w" ]; then
 		exitScript
 	elif [ "$OBBfilePath" = "tool" ] || [ "$OBBfilePath" = "tools" ]; then
 		toolMenu
@@ -1180,5 +1201,5 @@ else
 fi
 
 # finally remove temporary data created by the script and exit
-CMD_rmALL
+CMD_rmALL; printf '\e[8;$usr_tHeight;{$usr_tWidth}t'; printf '\e[3;370;60t'
 printf "\nGoodbye!\n"; exit
