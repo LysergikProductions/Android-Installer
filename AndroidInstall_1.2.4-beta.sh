@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0319
+# Build_0320
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0319"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0320"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -945,7 +945,12 @@ installAgainPrompt(){
 	printf "\n\n%*s\n" $((0)) "!Press any other key to install this build again!"
 	printf "\n%*s\n" $((0)) "$APKname"
 
-	read -n 1 -s -r -p ''
+	# ask for user input but do not allow user to drag in a file or directory
+	read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+	while [[ "$REPLY" == *"/"* ]] || [ "$REPLY" = "" ]; do
+		read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+	done
+
 	if [ "$REPLY" = "q" ] || [ "$REPLY" = "w" ]; then
 		printf "\n%*s\n\n" $((0)) "Goodbye!"; exitScript
 	elif [ "$REPLY" = "b" ]; then
@@ -994,7 +999,12 @@ installAgain(){
 		printf "\n%*s\n" $((COLS/2)) "Press 'y' to install on the same device, or any other key when you have plugged in another device."
 		printf "\n%*s\n" $((COLS/2)) "Press 'q' to QUIT."
 
-		read -n 1 -s -r -p ''
+		# ask for user input but do not allow user to drag in a file or directory
+		read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+		while [[ "$REPLY" == *"/"* ]] || [ "$REPLY" = "" ]; do
+			read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+		done
+
 		if [ "$REPLY" = "y" ]; then
 			UNINSTALL="true"; INSTALL
 		elif [ "$REPLY" = "q" ] || [ "$REPLY" = "w" ]; then
@@ -1019,6 +1029,9 @@ adbWAIT(){
 			until (CMD_communicate); do
 				if [ "$sMode" = "false" ] && [ "$qMode" = "false" ]; then waiting; fi; deviceConnect="true"
 			done
+
+			# clear keyboard buffer to prevent user from sending input to future prompts
+			perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 		}
 		tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
@@ -1057,7 +1070,12 @@ toolMenu(){
 	printf "\n%*s\n" $((COLS/2)) "Device CPU and RAM stats (beta): t"
 	printf "\n%*s\n" $((COLS/2)) "Press spacebar to run dvrDroid (beta)"
 
-	read -n 1 -s -r -p ''
+	# ask for user input but do not allow user to drag in a file or directory
+	read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+	while [[ "$REPLY" == *"/"* ]] || [ "$REPLY" = "" ]; do
+		read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+	done
+
 	if [ "$REPLY" = "q" ]; then
 		installAgainPrompt
 	elif [ "$REPLY" = " " ]; then
