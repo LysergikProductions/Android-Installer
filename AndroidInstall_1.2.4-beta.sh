@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0321
+# Build_0323
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -26,17 +26,18 @@
 # kill script if script would have root privileges
 if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-# remove any pre-existing tmp files, log all system variables at script execution, then check those files still exist
+# remove any pre-existing tmp files
 rm -f $secureFile3 /tmp/variables.after /tmp/usrIPdata.xml /tmp/devIPdata.xml
-secureFile3=$(mktemp /tmp/$$.$RANDOM)
 
+# log all system variables at script execution, then check those files still exist
+secureFile3=$(mktemp /tmp/$$.$RANDOM)
 if ! ( set -o posix ; set ) > $secureFile3; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
 if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0321"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0323"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -159,7 +160,7 @@ parse_IPdata(){
 getBitWidth(){
 	if [ "$verbose" = 1 ]; then printf "\n\nGetting bitwidth..\n\n"; fi
 
-	bitWidth_raw=$(adb -d shell getprop ro.product.cpu.abi)
+	bitWidth_raw=$(adb -d shell getprop ro.product.cpu.abi 2>/dev/null)
 	if [[ "$bitWidth_raw" == *"arm64"* ]]; then
 		bitWidth="64-bit"
 	elif [[ "$bitWidth_raw" == *"armeabi"* ]]; then
@@ -218,7 +219,7 @@ else verbose=0; qMode="false"; fi
 # prepare script for running the MAIN function
 INIT(){
 	echo "Initializing.." &
-
+	
 	# some default/starting variables values
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
 	deviceConnect="true"; OBBdone="false"; APKdone="false"; UNINSTALL="true"; errExec="false"; noInstall="true"
@@ -933,7 +934,7 @@ UPSTALL(){
 installAgainPrompt(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-	scriptTitle="What's next?"; showIP="true"
+	scriptTitle="\_Menu_/"; showIP="true"
 	updateIP
 
 	refreshUI
@@ -941,7 +942,7 @@ installAgainPrompt(){
 	printf "\n%*s\n" $((COLS/2)) "Press 't' to open the toolkit menu"
 	printf "\n%*s\n" $((COLS/2)) "Press 'b' to install a new build"
 
-	if [ "$APKname" = "" ]; then APKname="You have yet to install a build!"; noInstall="true"; fi
+	if [ "$APKname" = "" ]; then APKname="You have not installed a build yet.."; noInstall="true"; fi
 	printf "\n\n%*s\n" $((0)) "!Press any other key to install this build again!"
 	printf "\n%*s\n" $((0)) "$APKname"
 
