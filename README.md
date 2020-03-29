@@ -1,10 +1,11 @@
 # Android-Installer v1.3
 
 ### Minimum requirements:
-- Bash shell
+- Bash shell (v3.0 or higher)
 - Android Debug Bridge
 
 ### Additional requirements for complete functionality:
+- Bash shell (v4.0 or higher)
 - Internet connection
 - Figlet (http://www.figlet.org/)
 
