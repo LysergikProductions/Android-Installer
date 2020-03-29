@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0324
+# Build_0325
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0324"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0325"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -634,7 +634,7 @@ warnFIRE(){
 
 # default MAIN function that uninstalls first in case of existing version of the app on the device
 MAINd(){
-	deviceID=""; deviceID2=""
+	deviceID=""; deviceID2=""; OBBrepeat="false"
 
 	printf '\e[8;40;130t'; printf '\e[3;370;60t'
 	if [ "$verbose" = 1 ]; then printf "\nqMode is $qMode, sMode is $sMode\n\n"; fi	
@@ -662,7 +662,8 @@ MAINd(){
 
 # update MAIN function that does not delete app data, and only updates the build (beta feature)
 MAINu(){
-	deviceID=""; deviceID2=""; scriptTitle="  MONKEY UPDATER  "
+	deviceID=""; deviceID2=""; OBBrepeat="false"
+	scriptTitle="\_SpaceDroid_/"
 
 	printf '\e[8;50;150t'; printf '\e[3;290;50t'
 	if [ "$verbose" = 1 ]; then printf "\nqMode is $qMode, sMode is $sMode\n\n"; fi	
