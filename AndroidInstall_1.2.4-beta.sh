@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0323
+# Build_0324
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0323"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0324"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -72,6 +72,10 @@ exitScript() {
 }; trap exitScript SIGINT SIGTERM # set trap
 
 help(){
+	printf '\e[8;40;130t'; printf '\e[3;303;60t'
+	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 16" > /dev/null 2>&1
+	printf "%*s\n\n" $((0)) ""
+
 	printf "  Help Page\n\n"
 	printf " - OPTIONS -\n\n"
 	printf "  -c      also [show-c]; show the copyright & license information\n"
@@ -87,7 +91,7 @@ help(){
 	printf "  fire          Amazon build\n\n"
 	printf "Other features:\n\n"
 	printf "  tool    enter this during either OBB or APK step to access toolkit menu\n"
-	printf "  q       enter this during either OBB or APK step to exit the script\n\n"
+	printf "  q       enter this during either OBB or APK step to exit the script\n\n\n\n\n\n\n\n\n\n\n"
 }
 
 updateIP(){
@@ -218,7 +222,7 @@ else verbose=0; qMode="false"; fi
 
 # prepare script for running the MAIN function
 INIT(){
-	echo "Initializing.." &
+	echo "Initializing.." & osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 	
 	# some default/starting variables values
 	loopFromError="false"; upToDate="error checking version"; errorMessage=" ..no error is saved here.. "
@@ -231,7 +235,8 @@ INIT(){
 
 	# text-UI elements and related variables
 	UIsep_title="------------------"; UIsep_head="-----------------------------------------"; UIsep_err0="--------------------------------"
-	waitMessage="-- waiting for device --"; OBBquest="OBB"; APKquest="APK"; showIP="true"; OBBinfo=""; topRun="false"
+	waitMessage="-- waiting for device --"; toolHint="Enter 'tool' to access the toolkit"
+	OBBquest="OBB"; APKquest="APK"; showIP="true"; OBBinfo=""; topRun="false"; OBBrepeat="false"
 
 	anim1=( # doge so like
 	"                        " "W                       " "Wo                      " "Wow                     " "Wow!                    " "Wow!                    " "Wow!                    "
@@ -264,8 +269,8 @@ INIT(){
 
 	# show a bunch of info to the user if quiet mode is off, with even more verbosity when debug mode is on
 	if [ "$qMode" = "false" ]; then
-		OBBquest="  Drag in the folder that contains the OBB file and press enter:"
-		OBBinfo="\n  Skip? Type: na, 0, or .\n  Amazon? Type: fire\n\n"
+		OBBquest1="Drag in the folder that contains the OBB file.."; OBBquest2="then press enter:"
+		OBBinfo="  Skip? Type: na, 0, or .\n  Amazon? Type: fire\n"
 
 		APKquest="Drag APK anywhere here:"
 
@@ -276,6 +281,7 @@ INIT(){
 			echo "Initializing.." &
 
 			oops=$(figlet -c -F metal -t "Oops!") || oops=$(figlet -F metal -t "Oops!")
+			OBBtitle=$(figlet -c -F metal -t "OBB") || oops=$(figlet -F metal -t "OBB")
 			if [ "$verbose" = 0 ]; then clear; fi
 
 			printTitle(){
@@ -286,13 +292,14 @@ INIT(){
 			echo "Initializing.." &
 
 			oops=$(figlet -c -f small -t "Oops!") || oops=$(figlet -f small -t "Oops!")
+			OBBtitle=$(figlet -c -f small -w $COLS "OBB") || oops=$(figlet -f small -w $COLS "OBB")
 			if [ "$verbose" = 0 ]; then clear; fi
 
 			printTitle(){
 				figlet -c -w $COLS "$scriptTitle" || figlet -w $COLS "$scriptTitle"
 			}
 		else
-			oops="Oops!"
+			oops="Oops!"; OBBtitle="OBB"
 
 			printTitle(){
 				printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
@@ -687,11 +694,15 @@ getOBB(){
 	COLS=$(tput cols)
 
 	if [ "$qMode" = "false" ]; then
-		printf "\n\t\t%*s\n" $((COLS/2)) "Enter 'tool' to access the toolkit"
-		printf "\n%*s\n" $((0)) "$OBBquest"
-		printf "$OBBinfo"
+		if [ "$OBBrepeat" = "false" ]; then
+			printf "\n\t\t%*s\n" $(((COLS/2)+1)) "$toolHint"
+		fi
+
+		printf "$OBBinfo"; printf "$OBBtitle"; echo
+		printf "%*s\n" $(((COLS/2)+24)) "$OBBquest1"
+		printf "\t%*s\n\n" $((COLS/2)) "$OBBquest2"
 	else
-		printf "%*s\n" $((COLS/2)) "$OBBquest"; printf "$OBBinfo"
+		printf "\n%*s\n" $(((COLS/2)+1)) "OBB"
 	fi
 	
 	read -p '' OBBfilePath #i.e. Server:\folder\ folder/folder/com.studio.platform.appName
@@ -700,9 +711,9 @@ getOBB(){
 	local cleanPath="${OBBfilePath#*:*}"; OBBname=$(basename "$cleanPath")
 
 	if [ "$OBBfilePath" = "" ]; then
-		refreshUI
+		refreshUI; OBBrepeat="true"
 		printf "%*s\n" $((COLS/2)) "$oops"
-		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the OBB!"
+		printf "%*s\n\n" $((COLS/2)) "You need to drag-in the OBB!"
 		getOBB
 	elif [ "$OBBfilePath" = "q" ] || [ "$OBBfilePath" = "quit" ] || [ "$OBBfilePath" = "wq" ] || [ "$OBBfilePath" = "qw" ] || [ "$OBBfilePath" = "w" ]; then
 		exitScript
@@ -745,8 +756,8 @@ getOBB(){
 			read -n 1 -s -r -p ''
 
 			if [ "$REPLY" = "y" ]; then return
-			elif [ "$REPLY" = "n" ]; then MAINd
-			else getOBB; fi
+			elif [ "$REPLY" = "n" ]; then refreshUI; OBBrepeat="true"; getOBB
+			else refreshUI; OBBrepeat="true"; getOBB; fi
 		fi
 		launchCMD="monkey -p $OBBname -c android.intent.category.LAUNCHER 1"
 	else
@@ -754,10 +765,10 @@ getOBB(){
 	fi
 
 	until [ "$OBBvalid" = "true" ]; do
-		refreshUI
+		refreshUI; OBBrepeat="true"
 		printf "%*s\n" $((COLS/2)) "$oops"
+		printf "$OBBname\n"
 		printf "%*s\n\n" $((COLS/2)) "That is not an OBB!"
-		printf "I'm sorry, I don't know what to do with this file..\n\n$OBBname\n"
 
 		getOBB
 	done
@@ -938,13 +949,21 @@ installAgainPrompt(){
 	updateIP
 
 	refreshUI
-	printf "\n%*s\n" $((COLS/2)) "Press 'q' to quit"
-	printf "\n%*s\n" $((COLS/2)) "Press 't' to open the toolkit menu"
-	printf "\n%*s\n" $((COLS/2)) "Press 'b' to install a new build"
 
-	if [ "$APKname" = "" ]; then APKname="You have not installed a build yet.."; noInstall="true"; fi
-	printf "\n\n%*s\n" $((0)) "!Press any other key to install this build again!"
-	printf "\n%*s\n" $((0)) "$APKname"
+	printf "\n\t\t%*s" $((0)) "Choose your destiny!"
+	printf "\t\t%*s\n" $((COLS/2)) "EXIT SCRIPT with 'q'"
+	printf "\n\t%*s\n" $((COLS/2)) "Open the toolkit menu: t"
+	printf "\n\t%*s\n" $((COLS/2)) "Install a different build: b"
+
+	if [ "$APKname" = "" ]; then
+		noInstall="true"
+		APKname="You have not installed a build yet.."
+		printf "\n%*s\n" $((0)) "$APKname"
+		printf "\t%*s\n" $((COLS/2)) "Press any other key to continue!"
+	else
+		printf "\n%*s\n" $((0)) "$APKname"
+		printf "\n\n%*s\n" $((0)) "!Press any other key to install ^that^ build again!"
+	fi
 
 	# ask for user input but do not allow user to drag in a file or directory
 	read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
@@ -1074,11 +1093,11 @@ toolMenu(){
 		toolOops="false"
 	fi
 
-	printf "\n%*s" $((0)) "  Press one of the following keys!"
-	printf "%*s\n" $((COLS/2)) "GO BACK to Main Menu with 'q'"
-	printf "\n%*s\n" $((COLS/2)) "Screen capture mode: p"
-	printf "\n%*s\n" $((COLS/2)) "Device CPU and RAM stats (beta): t"
-	printf "\n%*s\n" $((COLS/2)) "Press spacebar to run dvrDroid (beta)"
+	printf "\n\t\t%*s" $((0)) "Choose your destiny!"
+	printf "\t\t%*s\n" $((COLS/2)) "GO BACK to Main Menu with 'q'"
+	printf "\n\t%*s\n" $((COLS/2)) "Screen capture mode:    p"
+	printf "\n\t%*s\n" $((COLS/2)) "Device CPU and RAM stats (beta):    t"
+	printf "\n\t\t%*s\n" $(((COLS/2)-1)) "Continuous Screen Recording (beta):    spacebar"
 
 	# ask for user input but do not allow user to drag in a file or directory
 	read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
