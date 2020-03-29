@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0326
+# Build_0327
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0326"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0327"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -716,11 +716,11 @@ getOBB(){
 		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You need to drag-in the OBB!"
 		getOBB
-	elif [ "$OBBfilePath" = "q" ] || [ "$OBBfilePath" = "quit" ] || [ "$OBBfilePath" = "wq" ] || [ "$OBBfilePath" = "qw" ] || [ "$OBBfilePath" = "w" ]; then
+	elif [ "${OBBfilePath,,}" = "q" ] || [ "${OBBfilePath,,}" = "quit" ] || [ "${OBBfilePath,,}" = "wq" ] || [ "${OBBfilePath,,}" = "qw" ] || [ "${OBBfilePath,,}" = "w" ]; then
 		exitScript
-	elif [ "$OBBfilePath" = "tool" ] || [ "$OBBfilePath" = "tools" ]; then
+	elif [ "${OBBfilePath,,}" = "tool" ] || [ "${OBBfilePath,,}" = "tools" ]; then
 		toolMenu
-	elif [ "$OBBfilePath" = "fire" ]; then
+	elif [ "${OBBfilePath,,}" = "fire" ]; then
 		OBBvalid="true"; OBBdone="true"
 		UNINSTALL="false"; LAUNCH="false"
 
@@ -743,10 +743,10 @@ getOBB(){
 					;;
 			esac
 	      done
-	elif [ "$OBBfilePath" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
+	elif [ "${OBBfilePath,,}" = "na" ] || [ "$OBBfilePath" = "0" ] || [ "$OBBfilePath" = "." ]; then
 		OBBvalid="true"; OBBdone="true"; LAUNCH="false"; UNINSTALL="false"
 		printf "OBB Name: N/A"
-	elif [[ "$OBBname" == "com."* ]]; then
+	elif [[ "${OBBname,,}" == "com."* ]]; then
 		OBBvalid="true"; LAUNCH="true"
 		printf "OBB Name: $OBBname\n\n"
 
@@ -799,11 +799,11 @@ getAPK(){
 		printf "%*s\n" $((COLS/2)) "$oops"
 		printf "%*s\n\n" $((COLS/2)) "You forgot to drag the APK!"
 		getAPK
-	elif [ "$OBBfilePath" = "q" ] || [ "$OBBfilePath" = "quit" ] || [ "$OBBfilePath" = "wq" ] || [ "$OBBfilePath" = "qw" ]; then
+	elif [ "${APKfilePath,,}" = "q" ] || [ "${APKfilePath,,}" = "quit" ] || [ "${APKfilePath,,}" = "wq" ] || [ "${APKfilePath,,}" = "qw" ]; then
 		exitScript
-	elif [ "$APKfilePath" = "tool" ] || [ "$APKfilePath" = "tools" ]; then
+	elif [ "${APKfilePath,,}" = "tool" ] || [ "${APKfilePath,,}" = "tools" ]; then
 		toolMenu
-	elif [[ "$APKname" == *".apk" ]]; then
+	elif [[ "${APKname,,}" == *".apk" ]]; then
 		APKvalid="true"
 		printf "APK Name: $APKname\n\n"
 	else
