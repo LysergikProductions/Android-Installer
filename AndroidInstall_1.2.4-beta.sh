@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0325
+# Build_0326
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0325"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0326"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -754,7 +754,15 @@ getOBB(){
 			refreshUI
 			printf "\n%*s\n" $((COLS/2)) "This app already exists on this device!"
 			printf "\n%*s\n" $((0)) "Are you sure you want to continue? y/n?"
-			read -n 1 -s -r -p ''
+
+			read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+			while [[ "$REPLY" == *"/"* ]] || [ "$REPLY" = "" ]; do
+				if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+					printf "\n%*s\n" $((0)) "Input ignored: the user dragged in a file or directory"
+				fi
+
+				read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+			done
 
 			if [ "$REPLY" = "y" ]; then return
 			elif [ "$REPLY" = "n" ]; then refreshUI; OBBrepeat="true"; getOBB
@@ -1217,7 +1225,15 @@ snapDroid(){
 		printf "\n%*s\n" $((COLS/2)) "Return to HappyDroid? Press q!"
 		printf "\n%*s\n\n" $((COLS/2)) "Press any other key to snap!"
 
-		read -n 1 -s -r -p '' snapControl
+		# ask for user input but do not allow user to drag in a file or directory
+		read -n 1 -s -r -p '' snapControl && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+		while [[ "$snapControl" == *"/"* ]] || [ "$snapControl" = "" ]; do
+			if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+				printf "\n%*s\n" $((0)) "Input ignored: the user dragged in a file or directory"
+			fi
+	
+			read -n 1 -s -r -p '' snapControl && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+		done
 
 		if [ "$snapControl" = "q" ]; then
 			toolMenu
