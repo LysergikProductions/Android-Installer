@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0328
+# Build_0329
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0328"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0329"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -164,7 +164,7 @@ parse_IPdata(){
 getBitWidth(){
 	if [ "$verbose" = 1 ]; then printf "\n\nGetting bitwidth..\n\n"; fi
 
-	bitWidth_raw=$(adb -d shell getprop ro.product.cpu.abi 2>/dev/null)
+	bitWidth_raw=$(adb -d shell getprop ro.product.cpu.abi)
 	if [[ "$bitWidth_raw" == *"arm64"* ]]; then
 		bitWidth="64-bit"
 	elif [[ "$bitWidth_raw" == *"armeabi"* ]]; then
@@ -299,12 +299,26 @@ INIT(){
 				figlet -c -w $COLS "$scriptTitle" || figlet -w $COLS "$scriptTitle"
 			}
 		else
-			oops="Oops!"; OBBtitle="OBB"
+			brew install figlet; wait
+			
+			if figlet -w 0 -f small "TEST SIMPLE FIG"; then
+				if [ "$verbose" = 0 ]; then clear; fi
+				echo "Initializing.." &
 
-			printTitle(){
-				printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
-				printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
-			}
+				oops=$(figlet -c -f small -t "Oops!") || oops=$(figlet -f small -t "Oops!")
+				OBBtitle=$(figlet -c -f small -w $COLS "OBB") || oops=$(figlet -f small -w $COLS "OBB")
+				if [ "$verbose" = 0 ]; then clear; fi
+
+				printTitle(){
+					figlet -c -w $COLS "$scriptTitle" || figlet -w $COLS "$scriptTitle"
+				}
+			else
+				oops="Oops!"; OBBtitle="OBB"
+				printTitle(){
+					printf "\n%*s\n" $((COLS/2)) "$scriptTitle"
+					printf "%*s\n\n\n" $((COLS/2)) "$UIsep_title"
+				}
+			fi
 		fi
 		echo "Initializing.." &
 	fi
