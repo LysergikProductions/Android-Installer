@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0330
+# Build_0331
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0330"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0331"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -231,6 +231,17 @@ INIT(){
 
 	if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 		echo "$usr_tWidth"; echo "$usr_tHeight"
+	fi
+	
+	testVar1=""
+	if ! (echo ${testVar1,,}); then
+		if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+			echo "testing for bash v4+ parameter expansion compatibility"; echo
+		fi
+		
+		brew install bash
+		su; wait; echo "/usr/local/bin/bash" >> /etc/shells
+		wait; chsh -s /usr/local/bin/bash
 	fi
 
 	# text-UI elements and related variables
@@ -983,6 +994,7 @@ installAgainPrompt(){
 		printf "\n%*s\n" $((0)) "$APKname"
 		printf "\t%*s\n" $((COLS/2)) "Press any other key to continue!"
 	else
+		noInstall="false"
 		printf "\n%*s\n" $((0)) "$APKname"
 		printf "\n\n%*s\n" $((0)) "!Press any other key to install ^that^ build again!"
 	fi
@@ -1101,7 +1113,7 @@ waiting(){
 toolMenu(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
-	trap exitScript SIGINT SIGTERM # reset trap
+	getBitWidth
 
 	scriptTitle="Toolkit"; COLS=$(tput cols)
 	topRun="false"
@@ -1120,6 +1132,7 @@ toolMenu(){
 	printf "\n\t%*s\n" $((COLS/2)) "Screen capture mode:    p"
 	printf "\n\t%*s\n" $((COLS/2)) "Device CPU and RAM stats (beta):    t"
 	printf "\n\t\t%*s\n" $(((COLS/2)-1)) "Continuous Screen Recording (beta):    spacebar"
+	printf "\n\n\t%*s\n" $((COLS/2)) "Update IP location:    i"
 
 	# ask for user input but do not allow user to drag in a file or directory
 	read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
@@ -1160,6 +1173,8 @@ toolMenu(){
 		else installAgainPrompt; fi
 	elif [ "$REPLY" = "p" ]; then
 		snapDroid
+	elif [ "$REPLY" = "i" ]; then
+		updateIP; getBitWidth; toolMenu
 	else
 		toolOops="true"
 		toolMenu
