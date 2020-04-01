@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0337
+# Build_0338
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0337"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0338"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -88,7 +88,7 @@ updateIP(){
 		deviceIP="curl unavailable"
 		deviceLOC="curl unavailable"
 		return
-	elif ! adb -d shell ping "https://www.google.com" 2>&1; then
+	elif ! adb -d shell curl "www.google.com" >/dev/null 2>&1; then
 		deviceIP="Device can't connect to internet"
 		deviceLOC="Device can't connect to internet"
 		return
@@ -124,7 +124,7 @@ update_IPdata(){
 parse_IPdata(){
 	if [ "$verbose" = 1 ]; then printf "\n\nParsing IP DATA\n\n"; fi
 
-	# give 'parse_' functions a way to lookup the data from file using parameter expansion
+	# give 'bounce_' functions a way to lookup the data from file using parameter expansion
 	readXML(){
 		IFS=\>
 		read -d \< ENTITY CONTENT
@@ -555,7 +555,7 @@ gitConfigs(){
 
 	# clone repo or update it with git pull if it exists already
 	if ! (CMD_gitGet) && wait; then
-		if ! ping "https://www.google.com"; then
+		if ! ping -t 1 "www.google.com"; then
 			scriptTitle="$scriptTitleDEF"; warnNoFi="true"
 
 			if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
