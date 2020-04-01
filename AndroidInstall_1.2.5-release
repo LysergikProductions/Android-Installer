@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0345
+# Build_0346
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0345"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0346"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -59,8 +59,7 @@ exitScript() {
 }; trap exitScript SIGINT SIGTERM # set trap
 
 help(){
-	printf '\e[8;40;130t'; printf '\e[3;303;60t'
-	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 16" > /dev/null 2>&1
+	printf '\e[8;40;130t'
 	printf "%*s\n\n" $((0)) ""
 
 	printf "  Help Page\n\n"
