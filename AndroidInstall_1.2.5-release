@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0342
+# Build_0345
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0342"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0345"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -53,8 +53,6 @@ exitScript() {
 	IFS=$ORIGINAL_IFS # set original IFS
 
 	#printf '\e[8;$usr_tHeight;{$usr_tWidth}t'; printf '\e[3;370;60t'
-
-	printf "\n\n%*s\n\n" $((0)) "Goodbye!"
 
 	kill -- -$$ # Send SIGTERM to child/sub processes
 	kill $( jobs -p ) # kill any remaining processes
@@ -1193,6 +1191,7 @@ toolMenu(){
 	elif [ "$REPLY" = "p" ]; then
 		snapDroid
 	elif [ "$REPLY" = "i" ]; then
+		echo "Updating ip.. please wait" &
 		updateIP; getBitWidth; toolMenu
 	else
 		toolOops="true"
