@@ -45,4 +45,4 @@ as well as the 'studio' variable.
 
 The format for using any of the above 'options' is simply as follows, and they can be in any order:
 
-	bash [Script_FilePath] [option] [option] [option] [option]
+	$ bash [Script_FilePath] [option] [option] [option] [option]
