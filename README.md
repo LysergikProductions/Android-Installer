@@ -5,7 +5,7 @@
 - Android Debug Bridge
 
 ### Additional requirements for complete functionality:
-- Bash shell (v4.0 or higher)
+- Bash shell (v4.0 or higher) -> If below v4, the script will attempt to update bash.
 - Internet connection
 - Figlet (http://www.figlet.org/)
 
@@ -43,4 +43,6 @@ Otherwise, drag in the OBB to the terminal window and press enter to continue th
 If you want users to be able to have full script functionality, then before running this script, populate the fireAPPS array in the beginning of the source code,
 as well as the 'studio' variable.
 
-	bash [Script_FilePath] [option] [option] [option] [option]
+The format for using any of the above 'options' is simply as follows, and they can be in any order:
+
+	$ bash [Script_FilePath] [option] [option] [option] [option]
