@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0331
+# Build_0332
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,8 +37,8 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0331"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
-scriptTitleDEF="StoicDroid"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
+build="0332"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
 #!# studio specific variables #!#
@@ -54,21 +54,10 @@ exitScript() {
 
 	#printf '\e[8;$usr_tHeight;{$usr_tWidth}t'; printf '\e[3;370;60t'
 
+	printf "\n\n%*s\n\n" $((0)) "Goodbye!"
+
 	kill -- -$$ # Send SIGTERM to child/sub processes
 	kill $( jobs -p ) # kill any remaining processes
-
-	# this is alpha and not in use atm
-	if [ "$topRun" = "true" ]; then
-		if [[ "$*" == "--update" ]] || [[ "$*" == *"-u"* ]]; then
-			# try update, catch
-			# MAINu && echo || lastCatch
-			echo "topRun was $topRun (true)"
-		else
-			# try install, catch
-			# MAINd && echo || lastCatch
-			echo "topRun was $topRun (true)"
-		fi
-	fi
 }; trap exitScript SIGINT SIGTERM # set trap
 
 help(){
@@ -239,6 +228,13 @@ INIT(){
 			echo "testing for bash v4+ parameter expansion compatibility"; echo
 		fi
 		
+		if ! (brew --version > /dev/null 2>&1); then
+			if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+				echo "brew not installed.. installing now.."
+			fi
+			/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+		fi
+		
 		brew install bash
 		su; wait; echo "/usr/local/bin/bash" >> /etc/shells
 		wait; chsh -s /usr/local/bin/bash
@@ -278,7 +274,7 @@ INIT(){
 	"101011011101001110011001" "010111010101110110101001" "101010010101110000100010" "100111010000110101101011" "101100001111010111101001" "010101010100010101010100"
 	)
 
-	# show a bunch of info to the user if quiet mode is off, with even more verbosity when debug mode is on
+	# declare a bunch of info for the user if quiet mode is off, with even more verbosity when debug mode is on
 	if [ "$qMode" = "false" ]; then
 		OBBquest1="Drag in the folder that contains the OBB file.."; OBBquest2="then press enter:"
 		OBBinfo="  Skip? Type: na, 0, or .\n  Amazon? Type: fire\n"
@@ -548,7 +544,20 @@ gitConfigs(){
 	rm -rf ~/upt; mkdir ~/upt; cd ~/upt || return
 
 	# clone repo or update it with git pull if it exists already
-	(CMD_gitGet); wait
+	if ! (CMD_gitGet) && wait; then
+		if ! ping "https://www.google.com"; then
+			scriptTitle="$scriptTitleDEF"; warnNoFi="true"
+
+			if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+				echo
+				echo "Cannot connect to git; the terminal has no connection to the internet!"
+				sleep 2
+			fi
+
+			return
+		fi
+	fi
+
 	cd "$terminalPath" || return
 
 	rm -rf $secureFile
@@ -1089,7 +1098,7 @@ adbWAIT(){
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
 		{ sleep 3; printf "        Ensure only one device is connected!"; } & { 
 			until (CMD_communicate); do
-				if [ "$sMode" = "false" ] && [ "$qMode" = "false" ]; then waiting; fi; deviceConnect="true"
+				if [ "$qMode" = "false" ]; then waiting; fi; deviceConnect="true"
 			done
 
 			# clear keyboard buffer to prevent user from sending input to future prompts
