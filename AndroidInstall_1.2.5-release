@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0338
+# Build_0342
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0338"; scriptVersion=1.2.0-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0342"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
@@ -110,10 +110,9 @@ updateIP(){
 
 update_IPdata(){
 	if [ "$verbose" = 1 ]; then printf "\n\nUpdating IP DATA\n\n"; fi
-
-	# remove pre-existing files
 	rm -f >/tmp/usrIPdata.xml >/tmp/devIPdata.xml
 
+	# get IP addresses, then use them as inputs for the IPdata websites
 	usrIP=$(curl https://ipinfo.io/ip)
 	devIP=$(adb -d shell curl https://ipinfo.io/ip)
 
@@ -149,6 +148,7 @@ parse_IPdata(){
 		if [[ "$TAG_NAME" = "City" ]] ; then devCity=$CONTENT; fi
 	}
 
+	# check each line one-by-one to find/bounce the desired information
 	while readXML; do
 		bounce_usrIPdata
 	done < /tmp/usrIPdata.xml
@@ -1316,5 +1316,5 @@ else
 fi
 
 # finally remove temporary data created by the script and exit
-CMD_rmALL; printf '\e[8;$usr_tHeight;{$usr_tWidth}t'; printf '\e[3;370;60t'
+CMD_rmALL; #printf '\e[8;$usr_tHeight;{$usr_tWidth}t'; printf '\e[3;370;60t'
 printf "\nGoodbye!\n"; exit
