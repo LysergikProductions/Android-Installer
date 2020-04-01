@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0346
+# Build_0347
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"
 # remove any pre-existing tmp files
 rm -f $secureFile3 /tmp/variables.after /tmp/usrIPdata.xml /tmp/devIPdata.xml
 
-# log all system variables at script execution, then check those files still exist
+# log all system variables at script execution; kill script if signs of race attack are present
 secureFile3=$(mktemp /tmp/$$.$RANDOM)
 if ! ( set -o posix ; set ) > $secureFile3; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
 if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1; fi
@@ -39,6 +39,7 @@ scriptStartDate=""; scriptStartDate=$(date)
 
 build="0346"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
+
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
 
 #!# studio specific variables #!#
@@ -59,8 +60,7 @@ exitScript() {
 }; trap exitScript SIGINT SIGTERM # set trap
 
 help(){
-	printf '\e[8;40;130t'
-	printf "%*s\n\n" $((0)) ""
+	printf '\e[8;40;130t'; printf "%*s\n\n" $((0)) ""
 
 	printf "  Help Page\n\n"
 	printf " - OPTIONS -\n\n"
@@ -90,8 +90,10 @@ updateIP(){
 		deviceLOC="Device can't connect to internet"
 		return
 	else
+		# device has the minimum requirements for IP location feature, so try to updateIP
 		update_IPdata 2>/dev/null
 		parse_IPdata
+
 		deviceIP="$devIP"
 		deviceLOC="$devCity, $devRegion, $devCountry"
 	fi
@@ -101,6 +103,7 @@ updateIP(){
 	fi
 
 	if [ "$devIP" = "" ]; then
+		deviceIP="unexpected error"
 		deviceLOC="unexpected error"
 	fi
 }
@@ -174,7 +177,7 @@ getBitWidth(){
 COLS=$(tput cols)
 if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] || [[ "$*" == *"-l"* ]]; then
 	if [[ "$*" == *"--help"* ]] || [[ "$*" == *"-h"* ]]; then echo; help; fi
-	printf "\n2020 (C) Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n\n"
+		printf "\n2020 (C) Nikolas A. Wagner\nGNU GPLv3: https://www.gnu.org/licenses/\n\n"
 	if [[ "$*" = *"--top"* ]] || [[ "$*" = *"-t"* ]]; then
 		clear
 		if adb -d shell exit; then
@@ -353,6 +356,7 @@ clear; INIT # initializing right away..
 #!# set debug variant of core commands #!#
 if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	if [ "$verbose" = "2" ]; then set -x; fi
+
 	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb -d shell exit; }
 	CMD_uninstall(){ 
 		if [ "$updateAPK" = "true" ]; then
@@ -547,6 +551,7 @@ gitConfigs(){
 	secureFile2=$(mktemp /tmp/$$.$RANDOM.txt)
 
 	if [ "$verbose" = 1 ]; then printf "\nDownloading configs..\n\n"; fi
+
 	terminalPath=""; terminalPath=$(pwd)
 	rm -rf ~/upt; mkdir ~/upt; cd ~/upt || return
 
@@ -572,6 +577,7 @@ gitConfigs(){
 	
 	cat ~/upt/$gitName/properties.txt > $secureFile
 	cat ~/upt/$gitName/properties.txt > $secureFile2
+
 	if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 		echo; cat "$secureFile"; echo
 	fi
@@ -660,15 +666,16 @@ printHead(){
 }
 
 warnFIRE(){
+	tput civis
 	flashWarn=(
 		"!Remember!" "" "!Remember!" "" "!Remember!"
 	)
-	tput civis
-	for i in "${flashWarn[@]}"
-	do
+
+	for i in "${flashWarn[@]}"; do
 		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.3
 	done
+
 	printf "\r%*s\n\n" $((COLS/2)) "To test the store, use the download link method"
 	tput cnorm
 }
@@ -741,6 +748,7 @@ getOBB(){
 		fi
 
 		printf "$OBBinfo"; printf "$OBBtitle"; echo
+
 		printf "%*s\n" $(((COLS/2)+24)) "$OBBquest1"
 		printf "\t%*s\n\n" $((COLS/2)) "$OBBquest2"
 	else
@@ -813,6 +821,7 @@ getOBB(){
 		OBBvalid="false"
 	fi
 
+	# if OBB is still invalid after the if statements, make user try again
 	until [ "$OBBvalid" = "true" ]; do
 		refreshUI; OBBrepeat="true"
 		printf "%*s\n" $((COLS/2)) "$oops"
@@ -1314,5 +1323,4 @@ else
 fi
 
 # finally remove temporary data created by the script and exit
-CMD_rmALL; #printf '\e[8;$usr_tHeight;{$usr_tWidth}t'; printf '\e[3;370;60t'
-printf "\nGoodbye!\n"; exit
+CMD_rmALL; printf "\nGoodbye!\n"; exit
