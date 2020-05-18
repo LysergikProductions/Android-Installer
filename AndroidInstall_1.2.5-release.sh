@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0347
+# Build_0348
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0346"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0348"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
@@ -582,7 +582,7 @@ gitConfigs(){
 		echo; cat "$secureFile"; echo
 	fi
 
-	# check secureFiles still exists
+	# ensure both secureFiles still exist
 	file $secureFile >/dev/null 2>&1 || exit 1
 	file $secureFile2 >/dev/null 2>&1 || exit 1
 
@@ -609,7 +609,7 @@ gitConfigs(){
 		if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 			echo; cat "$secureFile2"; echo
 		fi
-		exitScript; exit 1
+		exitScript; exit 1 || echo ^z
 	fi
 
 	# check if script is up-to-date or not; update the script if not
@@ -685,7 +685,7 @@ MAINd(){
 	deviceID=""; deviceID2=""; OBBrepeat="false"
 
 	printf '\e[8;40;130t'; printf '\e[3;370;60t'
-	if [ "$verbose" = 1 ]; then printf "\nqMode is $qMode, sMode is $sMode\n\n"; fi	
+	if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then printf "\nqMode is $qMode, sMode is $sMode\n\n"; fi	
 
 	if [ "$sMode" = "false" ]; then gitConfigs; fi
 	COLS=$(tput cols); updateIP
@@ -695,17 +695,17 @@ MAINd(){
 	adb -d shell settings put global development_settings_enabled 1
 
 	refreshUI
-	tput cnorm # ensure cursor is visible and that crtl-C is functional
+	tput cnorm # ensure cursor is visible
 
 	getOBB; getAPK; INSTALL && echo || {
-		printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
+		printf "\nMAINd: caught fatal error in INSTALL\nSaving varLog now\n"
 
 		export scriptEndDate=""; scriptEndDate=$(date)
 		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
 		printf "\nFE0 - Fatal Error.\nCopying all var data into ~/logs/$scriptEndDate.txt\n\n"
 
 		diff $secureFile3 /tmp/variables.after > ~/logs/"$scriptEndDate".txt 2>&1
-	} || (echo "catch fails"; exit 1)
+	} || { echo "catch fails"; exit 1; }
 }
 
 # update MAIN function that does not delete app data, and only updates the build (beta feature)
@@ -724,11 +724,11 @@ MAINu(){
 	adb -d shell settings put global development_settings_enabled 1
 
 	refreshUI
-	tput cnorm # ensure cursor is visible and that crtl-C is functional
+	tput cnorm # ensure cursor is visible
 
 	echo "User data will not be deleted.."
 	getOBB; getAPK; UPSTALL && echo || {
-		printf "\nMAINd: caught fatal error in INSTALL\nSave varLog now\n"
+		printf "\nMAINd: caught fatal error in INSTALL\nSaving varLog now\n"
 
 		export scriptEndDate=""; scriptEndDate=$(date)
 		export errorMessage="FE0 - Fatal Error. Copying all var data into ~/logs/$scriptEndDate.txt"
@@ -740,9 +740,9 @@ MAINu(){
 
 getOBB(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
-	COLS=$(tput cols)
 
 	if [ "$qMode" = "false" ]; then
+		COLS=$(tput cols)
 		if [ "$OBBrepeat" = "false" ]; then
 			printf "\n\t\t%*s\n" $(((COLS/2)+1)) "$toolHint"
 		fi
@@ -752,6 +752,7 @@ getOBB(){
 		printf "%*s\n" $(((COLS/2)+24)) "$OBBquest1"
 		printf "\t%*s\n\n" $((COLS/2)) "$OBBquest2"
 	else
+		COLS=$(tput cols)
 		printf "\n%*s\n" $(((COLS/2)+1)) "OBB"
 	fi
 	
@@ -1062,7 +1063,7 @@ installAgainPrompt(){
 				MAINu && echo || lastCatch
 			else
 				# try install, catch
-				MAINd && echo || lastCatch
+				refreshUI && getOBB && echo || lastCatch
 			fi
 		else
 			installAgain
@@ -1133,6 +1134,13 @@ waiting(){
 		printf "\r%*s" $((COLS/2)) "$i"
 		sleep 0.045
 	done
+}
+
+redir_DVR(){
+	#trap - SIGINT SIGTERM SIGTERM # clear the trap
+	#trap exitScript SIGINT SIGTERM # set trap
+
+	exitScript
 }
 
 toolMenu(){
@@ -1212,15 +1220,14 @@ screenDVR(){
 
 	# make sure SIGINT always works even in presence of infinite loops
 	exitScriptDVR() {
-		trap - SIGINT SIGTERM SIGTERM # clear the trap
 		tput cnorm
 		adb -d shell echo \04; wait
 
 		extract
 
 		# remove all files in dir /sdcard/ beginning with 'rec.'
-		adb -d shell rm -f *"/sdcard/rec."*; wait
-		toolMenu; trap - SIGINT SIGTERM SIGTERM; exit # clear the trap
+		adb -d shell rm -f *"/sdcard/rec."* | wait
+		exit
 	}; trap exitScriptDVR SIGINT SIGTERM # set trap
 
 	read -r -p 'Enter the file path (or just drag the folder itself) of where you want to save the video sequences.. ' savePath
