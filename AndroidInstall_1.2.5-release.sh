@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0350
+# Build_0352
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0350"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0352"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
@@ -1229,15 +1229,20 @@ screenDVR(){
 
 		# remove all files in dir /sdcard/ beginning with 'rec.'
 		adb -d shell rm -f *"/sdcard/rec."* | wait
+
 		exit
 	}; trap exitScriptDVR SIGINT SIGTERM # set trap
 
 	read -r -p 'Enter the file path (or just drag the folder itself) of where you want to save the video sequences.. ' savePath
-	if [ "$savePath" = "" ]; then 
+
+	if [ "$savePath" = "q" ]; then
+		toolMenu
+	elif [ "$savePath" = "" ] || [[ ! "$savePath" == *"/"* ]]; then
 		printf "\nDefaulting to ~/screenRecordings_Android/\n"
 		cd ~/screenRecordings_Android && local openPath=~/screenRecordings_Android
 	else
-		cd $savePath && local openPath=$savePath
+		local openPath=$savePath
+		cd $savePath || return
 	fi
 
 	adbWAIT
@@ -1285,33 +1290,61 @@ snapDroid(){
 		tStamp="$(date +'%Hh%Mm%Ss')"
 		snapName="snap.$tStamp.$RANDOM.PNG"
 
-		printf "\n%*s\n" $((COLS/2)) "Return to HappyDroid? Press q!"
-		printf "\n%*s\n\n" $((COLS/2)) "Press any other key to snap!"
+		printf "\n\t\t%*s" $((0)) "Choose your destiny!"
+		printf "\t\t%*s\n" $((COLS/2)) "GO BACK to HappyDroid with 'q'"
+		printf "\n\t%*s\n" $((COLS/2)) "Snap and open file:    o"
+		printf "\n\t%*s\n" $((COLS/2)) "Snap and return to HappyDroid:    e"
+		printf "\n\t%*s\n" $((COLS/2)) "Basic Snap:    any other letter"
 
 		# ask for user input but do not allow user to drag in a file or directory
 		read -n 1 -s -r -p '' snapControl && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+
 		while [[ "$snapControl" == *"/"* ]] || [ "$snapControl" = "" ]; do
 			if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 				printf "\n%*s\n" $((0)) "Input ignored: the user dragged in a file or directory"
 			fi
-	
+			
 			read -n 1 -s -r -p '' snapControl && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 		done
 
 		if [ "$snapControl" = "q" ]; then
 			toolMenu
 		elif [ "$snapControl" = "e" ]; then
-			echo
+			refreshUI && adbWAIT; printf "Snapping screenshot..\n\n" &
 			adb -d shell screencap -p "/sdcard/$snapName"
 
 			wait && {
 				cd ~/Desktop
 				adb -d pull /sdcard/$snapName
 				printf "%*s\n\n" $((COLS/2)) "Saved to your Desktop!"
-				sleep 1; toolMenu
+				sleep 1.5; toolMenu
 			}
+		elif [ "$snapControl" = "o" ]; then
+			open -a Preview && open -a Terminal
+
+			refreshUI && adbWAIT; printf "Snapping screenshot..\n\n" &
+			adb -d shell screencap -p "/sdcard/$snapName"
+
+			wait && {
+				cd ~/Desktop
+				adb -d pull /sdcard/$snapName
+				printf "%*s\n\n" $((COLS/2)) "Saved to your Desktop!"
+			}
+			
+			open ~/Desktop/$snapName -a Preview
+		elif [ "$snapControl" =  "" ]; then
+			refreshUI && adbWAIT; printf "Snapping screenshot..\n\n" &
+			
+			adb -d shell screencap -p "/sdcard/$snapName"
+
+			wait && {
+				cd ~/Desktop
+				adb -d pull /sdcard/$snapName
+				printf "%*s\n\n" $((COLS/2)) "Saved to your Desktop!"
+			}			
 		else
-			echo
+			refreshUI && adbWAIT; printf "Snapping screenshot..\n\n" &
+			
 			adb -d shell screencap -p "/sdcard/$snapName"
 
 			wait && {
