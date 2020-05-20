@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0348
+# Build_0350
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0348"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0350"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
@@ -1218,12 +1218,14 @@ toolMenu(){
 screenDVR(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
+	open -a "QuickTime Player"; open -a Terminal
+
 	# make sure SIGINT always works even in presence of infinite loops
 	exitScriptDVR() {
 		tput cnorm
-		adb -d shell echo \04; wait
+		adb -d shell echo \04
 
-		extract
+		extract && open "$openPath/$fileName" -a "QuickTime Player"
 
 		# remove all files in dir /sdcard/ beginning with 'rec.'
 		adb -d shell rm -f *"/sdcard/rec."* | wait
@@ -1233,9 +1235,9 @@ screenDVR(){
 	read -r -p 'Enter the file path (or just drag the folder itself) of where you want to save the video sequences.. ' savePath
 	if [ "$savePath" = "" ]; then 
 		printf "\nDefaulting to ~/screenRecordings_Android/\n"
-		cd ~/screenRecordings_Android
+		cd ~/screenRecordings_Android && local openPath=~/screenRecordings_Android
 	else
-		cd $savePath
+		cd $savePath && local openPath=$savePath
 	fi
 
 	adbWAIT
@@ -1248,7 +1250,7 @@ screenDVR(){
 		if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
 		printf "\n%*s\n" $((0)) "Extracting.. $fileName .. to your computer!"
-		wait && adb pull sdcard/$fileName || { adbWAIT && adb pull sdcard/$fileName 1>/ dev/null; }
+		wait; adb pull sdcard/$fileName || { adbWAIT && adb pull sdcard/$fileName 1>/ dev/null; }; echo
 	}
 
 	record(){

@@ -1,8 +1,8 @@
 _version 1.2.5-release
 _newVersion 1.3.0-release
-_build 0347
+_build 0350
 
 _scriptTitle \_HappyDroid_/
 
-_gitMESSAGE NO_PROBLEM_TOO_BIG!
+_gitMESSAGE Try_screenDVR_in_the_tools_menu!
 _dispGitTime 1.4
