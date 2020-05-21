@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0352
+# Build_0353
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0352"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0353"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
@@ -1106,10 +1106,35 @@ installAgain(){
 	tput cnorm
 }
 
+# check power state of device (for locked or sleeping status)
+adbWAKE(){
+	devLock=""; devSleep=""
+
+	devLock=$(adb -d shell dumpsys power | grep 'mHoldingWakeLockSuspendBlocker')
+	devSleep=$(adb -d shell dumpsys power | grep 'mHoldingDisplaySuspendBlocker')
+
+	if [ "$verbose" = 2 ]; then
+		echo "$devLock"; echo "$devSleep"; echo
+	fi
+
+	while [[ ! "$devLock" == *"true" ]] && [[ ! "$devSleep" == *"true" ]]; do
+		echo "Please wake your device! Press any key to continue"; echo
+		read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
+
+		devLock=$(adb -d shell dumpsys power | grep 'mHoldingWakeLockSuspendBlocker')
+		devSleep=$(adb -d shell dumpsys power | grep 'mHoldingDisplaySuspendBlocker')
+
+		if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
+			echo "$devLock"; echo "$devSleep"; echo
+		fi
+	done
+}
+
 # update the script on status of adb connection and call waiting function until it is ready
 adbWAIT(){
 	if (CMD_communicate); then
 		export deviceConnect="true"
+		adbWAKE
 	else
 		tput civis
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
@@ -1121,6 +1146,9 @@ adbWAIT(){
 			# clear keyboard buffer to prevent user from sending input to future prompts
 			perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 		}
+
+		adbWAKE
+
 		tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
 	fi
@@ -1281,8 +1309,7 @@ snapDroid(){
 	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
 
 	# remove all files on device containing 'rec.'
-	adbWAIT
-	adb -d shell rm -f *"/sdcard/snap."*
+	adbWAIT; adb -d shell rm -f *"/sdcard/snap."*
 
 	scriptTitle="SnapDroid"; refreshUI
 
