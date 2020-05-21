@@ -5,4 +5,4 @@ _build 0353
 _scriptTitle \_HappyDroid_/
 
 _gitMESSAGE NOW_WITH_ZERO_CALORIES!
-_dispGitTime 1.4
+_dispGitTime 1.5
