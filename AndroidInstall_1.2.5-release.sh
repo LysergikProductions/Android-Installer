@@ -3,7 +3,7 @@
 # 2020 (C) Nikolas A. Wagner
 # License: GNU GPLv3
 
-# Build_0354
+# Build_0358
 
 	#This program is free software: you can redistribute it and/or modify
 	#it under the terms of the GNU General Public License as published by
@@ -24,7 +24,9 @@
 #                                          --  -  ---  -  --
 
 # kill script if script would have root privileges
-if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+checkRoot(){
+	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+}; checkRoot
 
 # remove any pre-existing tmp files
 rm -f $secureFile3 /tmp/variables.after /tmp/usrIPdata.xml /tmp/devIPdata.xml
@@ -37,7 +39,7 @@ if ! file $secureFile3 1>/dev/null; then kill $( jobs -p ) 2>/dev/null || exit 1
 # some global variables
 scriptStartDate=""; scriptStartDate=$(date)
 
-build="0354"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
+build="0358"; scriptVersion=1.2.5-release; author="Nikolas A. Wagner"; license="GNU GPLv3"
 scriptTitleDEF="\_NoFi : ( Droid_/"; scriptPrefix="AndroidInstall_"; scriptFileName=$(basename "$0")
 
 adbVersion=$(adb version); bashVersion=${BASH_VERSION}; currentVersion="_version errorGettingProperties.txt"
@@ -77,7 +79,9 @@ help(){
 	printf "  fire          Amazon build\n\n"
 	printf "Other features:\n\n"
 	printf "  tool    enter this during either OBB or APK step to access toolkit menu\n"
-	printf "  q       enter this during either OBB or APK step to exit the script\n\n\n\n\n\n\n\n\n\n\n"
+	printf "  q       enter this during either OBB or APK step to exit the script\n\n"
+	printf "Notes:\n\n"
+	printf "  root    the script cannot be run with root privileges (EUID=0)\n\n\n\n\n\n\n\n\n"
 }
 
 updateIP(){
@@ -189,7 +193,7 @@ if [[ "$*" == *"show-c"* ]] || [[ "$*" == *"-c"* ]] || [[ "$*" == *"show-l"* ]] 
 					sleep 1.99
 				done
 			} & adb -d shell top -d 2 -m 5 -o %MEM -o %CPU -o CMDLINE -s 1 || exit
-		else exit 1; fi		
+		else deviceLOC="device unavailable"; exit 1; fi		
 	fi
 	exit
 fi
@@ -246,7 +250,7 @@ INIT(){
 		fi
 		
 		brew install bash
-		su; wait; echo "/usr/local/bin/bash" >> /etc/shells
+		echo /usr/local/bin/bash | sudo tee -a /etc/shells
 		wait; chsh -s /usr/local/bin/bash
 	fi
 
@@ -287,7 +291,7 @@ INIT(){
 	# declare a bunch of info for the user if quiet mode is off, with even more verbosity when debug mode is on
 	if [ "$qMode" = "false" ]; then
 		OBBquest1="Drag in the folder that contains the OBB file.."; OBBquest2="then press enter:"
-		OBBinfo="  Skip? Type: na, 0, or .\n  Amazon? Type: fire\n"
+		OBBinfo="\tSkip? Type: na, 0, or .\n\tAmazon? Type: fire\n"
 
 		APKquest="Drag APK anywhere here:"
 
@@ -346,9 +350,6 @@ INIT(){
 
 	# make logs directory, but do not overwrite if already present
 	mkdir ~/logs/ >/dev/null 2>&1
-
-	# mac osx only; set font size to 15p
-	osascript -e "tell application \"Terminal\" to set the font size of window 1 to 15" > /dev/null 2>&1
 }
 
 clear; INIT # initializing right away..
@@ -360,9 +361,9 @@ if [ "$verbose" = 1 ] || [ "$verbose" = 2 ]; then
 	CMD_communicate(){ printf "\n\nChecking device connection status..\n"; adb -d shell exit; }
 	CMD_uninstall(){ 
 		if [ "$updateAPK" = "true" ]; then
-			echo "Keeping user data for $OBBname.."; adb shell cmd "$OBBname" uninstall -k; sleep 0.5
+			echo "Keeping user data for $OBBname.."; adb -d shell cmd "$OBBname" uninstall -k; sleep 0.5
 		else
-			echo "Uninstalling $OBBname.."; adb shell cmd "$OBBname" uninstall -k; sleep 0.5
+			echo "Uninstalling $OBBname.."; adb -d shell cmd "$OBBname" uninstall -k; sleep 0.5
 		fi
 	}
 
@@ -497,6 +498,7 @@ else #!# set default variant of core commands #!#
 			git pull >/dev/null 2>&1
 		}
 	}
+
 	printIP(){
 		getBitWidth
 		printf "Device Bit Width: $bitWidth\nDevice IP Location: $deviceLOC"
@@ -739,7 +741,7 @@ MAINu(){
 }
 
 getOBB(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
 
 	if [ "$qMode" = "false" ]; then
 		COLS=$(tput cols)
@@ -834,7 +836,7 @@ getOBB(){
 }
 
 getAPK(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
 
 	APKvalid="true"
 
@@ -871,7 +873,7 @@ getAPK(){
 }
 
 INSTALL(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
 
 	scriptTitle="Installing...  "
 	showIP="true"; updateAPK="false"
@@ -946,7 +948,7 @@ INSTALL(){
 }
 
 UPSTALL(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
 
 	scriptTitle="Installing...  "
 	showIP="true"; updateAPK="true"
@@ -1002,7 +1004,7 @@ UPSTALL(){
 
 # check if user wants to install again on another device, or the same device if they choose to
 installAgainPrompt(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
 
 	scriptTitle="\_Menu_/"; showIP="true"
 	updateIP
@@ -1072,7 +1074,7 @@ installAgainPrompt(){
 }
 
 installAgain(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
 
 	adbWAIT
 	deviceID2=$(adb devices); wait
@@ -1134,7 +1136,7 @@ adbWAKE(){
 adbWAIT(){
 	if (CMD_communicate); then
 		export deviceConnect="true"
-		adbWAKE
+		#adbWAKE
 	else
 		tput civis
 		printf "\n\n%*s\n" $((COLS/2)) "$waitMessage"
@@ -1147,7 +1149,7 @@ adbWAIT(){
 			perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
 		}
 
-		adbWAKE
+		#adbWAKE
 
 		tput cnorm
 		printf "\r%*s\n\n" $((COLS/2)) "!Device Connected!   "
@@ -1156,7 +1158,7 @@ adbWAIT(){
 
 # show the waiting animation
 waiting(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
 
 	for i in "${anim3[@]}"; do
 		printf "\r%*s" $((COLS/2)) "$i"
@@ -1171,15 +1173,42 @@ redir_DVR(){
 	exitScript
 }
 
-toolMenu(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+devApps(){
+	scriptTitle="ConfigDroid"; refreshUI; adbWAIT
 
-	getBitWidth
+	printf "Please copy/paste an entire single line to select an app:\n\n"
+
+	if [ "$studio" = "" ]; then
+		adb -d shell 'cd /sdcard/Android/data/ && ls'
+	else
+		adb -d shell 'cd /sdcard/Android/data/ && ls' | grep "$studio"
+	fi
+
+	echo; read -p '' appFig
+
+	if [ "$appFig" = "q" ]; then
+		toolMenu
+	elif [ "$appFig" = "" ]; then
+		refreshUI
+		printf "%*s\n" $((COLS/2)) "$oops"
+		printf "%*s\n\n" $((COLS/2)) "You need to copy and paste the single line above that references your app"
+		devApps
+	fi
+
+	cd ~/Desktop
+	adb -d pull "/sdcard/Android/data/$appFig/files/DataServerClient"
+	open ~/Desktop/DataServerClient
+
+	cd $terminalPath && toolMenu
+}
+
+toolMenu(){
+	checkRoot
 
 	scriptTitle="Toolkit"; COLS=$(tput cols)
 	topRun="false"
 
-	if [ "$verbose" = 0 ]; then clear; fi
+	#if [ "$verbose" = 0 ]; then clear; fi
 	refreshUI
 
 	if [ "$toolOops" = "true" ]; then
@@ -1194,6 +1223,7 @@ toolMenu(){
 	printf "\n\t%*s\n" $((COLS/2)) "Device CPU and RAM stats (beta):    t"
 	printf "\n\t\t%*s\n" $(((COLS/2)-1)) "Continuous Screen Recording (beta):    spacebar"
 	printf "\n\n\t%*s\n" $((COLS/2)) "Update IP location:    i"
+	printf "\n\t%*s\n" $((COLS/2)) "What configs did my device download?:    d"
 
 	# ask for user input but do not allow user to drag in a file or directory
 	read -n 1 -s -r -p '' && perl -e 'use POSIX; tcflush(0, TCIFLUSH);'
@@ -1236,7 +1266,9 @@ toolMenu(){
 		snapDroid
 	elif [ "$REPLY" = "i" ]; then
 		echo "Updating ip.. please wait" &
-		updateIP; getBitWidth; toolMenu
+		updateIP; toolMenu
+	elif [ "$REPLY" = "d" ]; then
+		devApps
 	else
 		toolOops="true"
 		toolMenu
@@ -1244,20 +1276,26 @@ toolMenu(){
 }
 
 screenDVR(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
+
+	extract(){
+		# kill script if script would have root privileges
+		checkRoot
+
+		printf "\n%*s\n" $((0)) "Extracting.. $fileName .. to your computer!"
+		adb -d pull sdcard/$fileName | wait
+
+		open "$fileName" -a "QuickTime Player"
+		echo; return
+	}
 
 	open -a "QuickTime Player"; open -a Terminal
 
 	# make sure SIGINT always works even in presence of infinite loops
 	exitScriptDVR() {
 		tput cnorm
-		adb -d shell echo \04
-
-		extract && open "$openPath/$fileName" -a "QuickTime Player"
-
-		# remove all files in dir /sdcard/ beginning with 'rec.'
-		adb -d shell rm -f *"/sdcard/rec."* | wait
-
+		
+		extract
 		exit
 	}; trap exitScriptDVR SIGINT SIGTERM # set trap
 
@@ -1267,51 +1305,48 @@ screenDVR(){
 		toolMenu
 	elif [ "$savePath" = "" ] || [[ ! "$savePath" == *"/"* ]]; then
 		printf "\nDefaulting to ~/screenRecordings_Android/\n"
-		cd ~/screenRecordings_Android && local openPath=~/screenRecordings_Android
+		cd ~/screenRecordings_Android && openPath='~/screenRecordings_Android'
 	else
-		local openPath=$savePath
+		openPath=$savePath
 		cd $savePath || return
 	fi
 
-	adbWAIT
-
 	# remove all files on device containing 'rec.'
-	adb -d shell rm -f *"/sdcard/rec."*
+	adbWAIT && adb -d shell rm -f *"/sdcard/rec."*
 
-	extract(){
-		# kill script if script would have root privileges
-		if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	loopRecord(){
+		checkRoot
 
-		printf "\n%*s\n" $((0)) "Extracting.. $fileName .. to your computer!"
-		wait; adb pull sdcard/$fileName || { adbWAIT && adb pull sdcard/$fileName 1>/ dev/null; }; echo
-	}
-
-	record(){
-		# kill script if script would have root privileges
-		if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
-
-		printf "$stopInfo_f"
 		while true; do
 			tStamp="$(date +'%Hh%Mm%Ss')"
 			fileName="rec.$tStamp.$$.mp4"
 
 			printf "\n%*s\n\n" $((0)) "Starting new recording: $fileName"
-			adb -d shell screenrecord /sdcard/$fileName || { adbWAIT; wait; extract; }
+			if ! adb -d exec-out screenrecord "/sdcard/$fileName"; then
+				toolMenu
+			fi
 
 			# running extract in a sub-process means only 0.5 seconds or so of delay between videos
 			extract &
 		done
 	}
-	record && wait && exitScriptDVR
+	
+	record(){
+		checkRoot
+
+		tStamp="$(date +'%Hh%Mm%Ss')"
+		fileName="rec.$tStamp.$$.mp4"
+
+		printf "\n%*s\n\n" $((0)) "Starting new recording: $fileName"
+		adb -d exec-out screenrecord /sdcard/$fileName || extract | wait
+	}
+	record && exit
 }
 
 snapDroid(){
-	if [ "$EUID" = 0 ]; then echo "You cannot run script this with root privileges!"; kill $( jobs -p ) 2>/dev/null || exit 1; fi
+	checkRoot
 
-	# remove all files on device containing 'rec.'
-	adbWAIT; adb -d shell rm -f *"/sdcard/snap."*
-
-	scriptTitle="SnapDroid"; refreshUI
+	scriptTitle="\_SnapDroid_/"; refreshUI
 
 	until false; do
 		tStamp="$(date +'%Hh%Mm%Ss')"
@@ -1320,7 +1355,7 @@ snapDroid(){
 		printf "\n\t\t%*s" $((0)) "Choose your destiny!"
 		printf "\t\t%*s\n" $((COLS/2)) "GO BACK to HappyDroid with 'q'"
 		printf "\n\t%*s\n" $((COLS/2)) "Snap and open file:    o"
-		printf "\n\t%*s\n" $((COLS/2)) "Snap and return to HappyDroid:    e"
+		printf "\n\t%*s\n" $((COLS/2)) "Delete screenshots on the device:    d"
 		printf "\n\t%*s\n" $((COLS/2)) "Basic Snap:    any other letter"
 
 		# ask for user input but do not allow user to drag in a file or directory
@@ -1336,16 +1371,31 @@ snapDroid(){
 
 		if [ "$snapControl" = "q" ]; then
 			toolMenu
-		elif [ "$snapControl" = "e" ]; then
-			refreshUI && adbWAIT; printf "Snapping screenshot..\n\n" &
-			adb -d shell screencap -p "/sdcard/$snapName"
+		elif [ "$snapControl" = "d" ]; then
+			refreshUI && adbWAIT; printf "Deleting screenshots on your device..\n\n" &
 
-			wait && {
-				cd ~/Desktop
-				adb -d pull /sdcard/$snapName
-				printf "%*s\n\n" $((COLS/2)) "Saved to your Desktop!"
-				sleep 1.5; toolMenu
-			}
+			# determine number of PNG files on the device matching those created by HappyDroid
+			snapRmvd=$(adb -d exec-out ls /sdcard/ | grep 'snap.' | wc -l)
+			# printf "$snapRmvd"
+			snapRmvd=$(($snapRmvd))
+
+			adb -d shell rm -rf *"/sdcard/snap."* *"/sdcard/Download/snap."* | wait
+
+			# determine number of PNG files remaining on the device
+			TP_snaps_PNG=$(adb -d shell grep -R '.PNG' /sdcard/Pictures /sdcard/DCIM /sdcard/Download | wc -l)
+			TP_snaps_png=$(adb -d shell grep -R '.png' /sdcard/Pictures /sdcard/DCIM /sdcard/Download | wc -l)
+			TP_root_PNG=$(adb -d exec-out ls /sdcard | grep '.PNG' | wc -l)
+			TP_root_png=$(adb -d exec-out ls /sdcard | grep '.png' | wc -l)
+
+			TP_total=$(($TP_snaps_PNG + TP_snaps_png + TP_root_PNG + TP_root_png))
+
+			if [ $TP_total = 0 ]; then
+				printf "Sorry, there weren't any PNG files to delete!\n\n"
+			elif [ "$snapRmvd" = 0 ]; then
+				printf "Sorry, I don't have permission to delete the $TP_total PNG files I found..\n\n"
+			else
+				printf "Success! $snapRmvd screenshots have been deleted from the device!\n\n"
+			fi
 		elif [ "$snapControl" = "o" ]; then
 			open -a Preview && open -a Terminal
 
@@ -1391,5 +1441,5 @@ else
 	MAINd && echo || lastCatch
 fi
 
-# finally remove temporary data created by the script and exit
-CMD_rmALL; printf "\nGoodbye!\n"; exit
+# finally, if script is not exited with an interrupt of some kind or via exitscript,
+CMD_rmALL; printf "\nFinally Goodbye!\n"; exitScript
